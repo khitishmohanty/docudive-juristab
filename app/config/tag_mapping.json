@@ -1,0 +1,17 @@
+{
+  "Header": "header",
+  "Title": "h1",
+  "Subtitle": "h2",
+  "Heading": "h3",
+  "Paragraph": "p",
+  "Footer": "footer",
+  "Page number": "span",
+  "Enum": "span",
+  "Figure": "figure",
+  "Footnote": "footer",
+  "List": "ul",
+  "Table": "table",
+  "Table of Contents (ToC)": "nav",
+  "Endnotes": "section",
+  "Glossary": "section"
+}
