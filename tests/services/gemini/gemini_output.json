@@ -13,9 +13,15 @@
   {
     "correlation-id": "2",
     "tag": "Title",
+<<<<<<< HEAD
     "content": "Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982",
     "act-name-citations": "Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982",
     "issuance-date": "1982",
+=======
+    "content": "Aboriginal Lands (Aborigines' Advancement\nLeague) (Watt Street, Northcote) Act 1982",
+    "act-name-citations": "Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982",
+    "issuance-date": null,
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "compliance-date": null,
     "legislative-body": null,
     "publication-date": null,
@@ -25,7 +31,11 @@
     "correlation-id": "3",
     "tag": "Subtitle",
     "content": "No. 9796 of 1982",
+<<<<<<< HEAD
     "act-name-citations": "No. 9796 of 1982",
+=======
+    "act-name-citations": "9796 of 1982",
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "issuance-date": "1982",
     "compliance-date": null,
     "legislative-body": null,
@@ -34,17 +44,26 @@
   },
   {
     "correlation-id": "4",
+<<<<<<< HEAD
     "tag": "Header",
     "content": "Authorised Version incorporating amendments as at",
     "act-name-citations": null,
     "issuance-date": null,
     "compliance-date": "20 May 2024",
+=======
+    "tag": "Subtitle",
+    "content": "Authorised Version incorporating amendments as at\n20 May 2024",
+    "act-name-citations": null,
+    "issuance-date": "20 May 2024",
+    "compliance-date": null,
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "legislative-body": null,
     "publication-date": null,
     "verification-flag": "Not Verified"
   },
   {
     "correlation-id": "5",
+<<<<<<< HEAD
     "tag": "Header",
     "content": "20 May 2024",
     "act-name-citations": null,
@@ -58,6 +77,10 @@
     "correlation-id": "6",
     "tag": "Paragraph",
     "content": "An Act to make provision with respect to a Crown Grant of land at Watt Street, Northcote in the Parish of Jika Jika.",
+=======
+    "tag": "Paragraph",
+    "content": "An Act to make provision with respect to a Crown Grant of land\nat Watt Street, Northcote in the Parish of Jika Jika.",
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "act-name-citations": null,
     "issuance-date": null,
     "compliance-date": null,
@@ -66,7 +89,11 @@
     "verification-flag": "Not Verified"
   },
   {
+<<<<<<< HEAD
     "correlation-id": "7",
+=======
+    "correlation-id": "6",
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "tag": "Heading",
     "content": "Preamble",
     "act-name-citations": null,
@@ -77,6 +104,7 @@
     "verification-flag": "Not Verified"
   },
   {
+<<<<<<< HEAD
     "correlation-id": "8",
     "tag": "Paragraph",
     "content": "WHEREAS the land shown on the Plan in the Schedule was temporarily reserved by Order in Council dated 27 October 1981 for an Aborigines Community Centre;",
@@ -84,13 +112,37 @@
     "issuance-date": null,
     "compliance-date": null,
     "legislative-body": "Order in Council",
+=======
+    "correlation-id": "7",
+    "tag": "Paragraph",
+    "content": "WHEREAS the land shown on the Plan in the\nSchedule was temporarily reserved by Order in\nCouncil dated 27 October 1981 for an Aborigines\nCommunity Centre;",
+    "act-name-citations": null,
+    "issuance-date": "27 October 1981",
+    "compliance-date": null,
+    "legislative-body": "Council",
+    "publication-date": null,
+    "verification-flag": "Not Verified"
+  },
+  {
+    "correlation-id": "8",
+    "tag": "Paragraph",
+    "content": "And whereas the Aborigines' Advancement League\n(Victoria) was appointed as the committee of\nmanagement of that land;",
+    "act-name-citations": null,
+    "issuance-date": null,
+    "compliance-date": null,
+    "legislative-body": null,
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "publication-date": null,
     "verification-flag": "Not Verified"
   },
   {
     "correlation-id": "9",
     "tag": "Paragraph",
+<<<<<<< HEAD
     "content": "And whereas the Aborigines' Advancement League (Victoria) was appointed as the committee of management of that land;",
+=======
+    "content": "And whereas it is in the interests of the Aboriginal\npeople of Victoria that the land be vested in the\nAborigines' Advancement League (Victoria):",
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "act-name-citations": null,
     "issuance-date": null,
     "compliance-date": null,
@@ -101,6 +153,7 @@
   {
     "correlation-id": "10",
     "tag": "Paragraph",
+<<<<<<< HEAD
     "content": "And whereas it is in the interests of the Aboriginal people of Victoria that the land be vested in the Aborigines' Advancement League (Victoria):",
     "act-name-citations": null,
     "issuance-date": null,
@@ -113,6 +166,9 @@
     "correlation-id": "11",
     "tag": "Paragraph",
     "content": "Be it therefore enacted by the Queen's Most Excellent Majesty by and with the advice and consent of the Legislative Council and the Legislative Assembly of Victoria in this present Parliament assembled and by the authority of the same as follows (that is to say):",
+=======
+    "content": "Be it therefore enacted by the Queen's Most Excellent Majesty\nby and with the advice and consent of the Legislative Council\nand the Legislative Assembly of Victoria in this present\nParliament assembled and by the authority of the same as\nfollows (that is to say):",
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "act-name-citations": null,
     "issuance-date": null,
     "compliance-date": null,
@@ -121,7 +177,11 @@
     "verification-flag": "Not Verified"
   },
   {
+<<<<<<< HEAD
     "correlation-id": "12",
+=======
+    "correlation-id": "11",
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "tag": "Heading",
     "content": "1 Short title and commencement",
     "act-name-citations": null,
@@ -132,6 +192,7 @@
     "verification-flag": "Not Verified"
   },
   {
+<<<<<<< HEAD
     "correlation-id": "12.1",
     "tag": "Enum",
     "content": "(1)",
@@ -146,6 +207,11 @@
     "correlation-id": "12.2",
     "tag": "Paragraph",
     "content": "This Act may be cited as the **Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982**.",
+=======
+    "correlation-id": "12",
+    "tag": "Paragraph",
+    "content": "(1) This Act may be cited as the Aboriginal Lands\n(Aborigines' Advancement League) (Watt\nStreet, Northcote) Act 1982.",
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "act-name-citations": "Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982",
     "issuance-date": "1982",
     "compliance-date": null,
@@ -154,9 +220,26 @@
     "verification-flag": "Not Verified"
   },
   {
+<<<<<<< HEAD
     "correlation-id": "12.3",
     "tag": "Enum",
     "content": "(2)",
+=======
+    "correlation-id": "13",
+    "tag": "Paragraph",
+    "content": "(2) This Act shall come into operation on a day to be\nfixed by proclamation of the Governor in Council\npublished in the *Government Gazette*.",
+    "act-name-citations": null,
+    "issuance-date": null,
+    "compliance-date": null,
+    "legislative-body": "Governor in Council",
+    "publication-date": "Government Gazette",
+    "verification-flag": "Not Verified"
+  },
+  {
+    "correlation-id": "14",
+    "tag": "Footer",
+    "content": "Authorised by the Chief Parliamentary Counsel",
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "act-name-citations": null,
     "issuance-date": null,
     "compliance-date": null,
@@ -165,6 +248,7 @@
     "verification-flag": "Not Verified"
   },
   {
+<<<<<<< HEAD
     "correlation-id": "12.4",
     "tag": "Paragraph",
     "content": "This Act shall come into operation on a day to be fixed by proclamation of the Governor in Council published in the *Government Gazette*.",
@@ -188,6 +272,9 @@
   },
   {
     "correlation-id": "14",
+=======
+    "correlation-id": "15",
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
     "tag": "Page number",
     "content": "1",
     "act-name-citations": null,

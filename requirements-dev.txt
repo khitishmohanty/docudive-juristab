@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 pytest
 pytest-mock
 python-dotenv
@@ -8,3 +9,13 @@ pandas
 openpyxl
 openai
 python-dotenv
+=======
+pytest
+pytest-mock
+python-dotenv
+requests
+black
+flake8
+pandas
+openpyxl
+>>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f
