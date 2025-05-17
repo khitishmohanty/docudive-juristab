@@ -1,0 +1,10 @@
+pytest
+pytest-mock
+python-dotenv
+requests
+black
+flake8
+pandas
+openpyxl
+openai
+python-dotenv
