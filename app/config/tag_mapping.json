@@ -1,20 +1,3 @@
-<<<<<<< HEAD
-{
-  "Header": "header",
-  "Title": "h1",
-  "Subtitle": "h2",
-  "Heading": "h3",
-  "Paragraph": "p",
-  "Footer": "footer",
-  "Page number": "span",
-  "Enum": "span",
-  "Figure": "figure",
-  "Footnote": "footer",
-  "List": "ul",
-  "Table": "table",
-  "Table of Contents (ToC)": "nav"
-}
-=======
 {
   "Header": "header",
   "Title": "h1",
@@ -32,4 +15,3 @@
   "Endnotes": "section",
   "Glossary": "section"
 }
->>>>>>> 0a83a9c1580e560899dd70f82a8bbcb59f0dcb6f

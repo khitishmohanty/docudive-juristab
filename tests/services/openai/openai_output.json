@@ -1,96 +1,134 @@
-[
-  {
+{
+  "1": {
     "correlation-id": 1,
     "tag": "Title",
     "content": "Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982",
+    "act-name-citations": "Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982",
+    "issuance-date": "",
+    "compliance-date": "",
+    "legislative-body": "",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
+  "2": {
     "correlation-id": 2,
     "tag": "Subtitle",
-    "content": "No. 9796 of 1982",
+    "content": "Authorised Version No. 005",
+    "act-name-citations": "",
+    "issuance-date": "20 May 2024",
+    "compliance-date": "",
+    "legislative-body": "",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
+  "3": {
     "correlation-id": 3,
     "tag": "Header",
-    "content": "Authorised Version No. 005",
+    "content": "No. 9796 of 1982\nAuthorised Version incorporating amendments as at 20 May 2024",
+    "act-name-citations": "No. 9796 of 1982",
+    "issuance-date": "",
+    "compliance-date": "20 May 2024",
+    "legislative-body": "",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
+  "4": {
     "correlation-id": 4,
     "tag": "Paragraph",
-    "content": "Authorised Version incorporating amendments as at 20 May 2024",
-    "issuance-date": "20 May 2024",
-    "verification-flag": "Not Verified"
-  },
-  {
-    "correlation-id": 5,
-    "tag": "Paragraph",
     "content": "An Act to make provision with respect to a Crown Grant of land at Watt Street, Northcote in the Parish of Jika Jika.",
-    "act-name-citations": "Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982",
+    "act-name-citations": "",
+    "issuance-date": "",
+    "compliance-date": "",
+    "legislative-body": "",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
-    "correlation-id": 6,
+  "5": {
+    "correlation-id": 5,
     "tag": "Heading",
     "content": "Preamble",
+    "act-name-citations": "",
+    "issuance-date": "",
+    "compliance-date": "",
+    "legislative-body": "",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
+  "6": {
+    "correlation-id": 6,
+    "tag": "Paragraph",
+    "content": "WHEREAS the land shown on the Plan in the Schedule was temporarily reserved by Order in Council dated 27 October 1981 for an Aborigines Community Centre:\nAnd whereas the Aborigines' Advancement League (Victoria) was appointed as the committee of management of that land:\nAnd whereas it is in the interests of the Aboriginal people of Victoria that the land be vested in the Aborigines' Advancement League (Victoria):",
+    "act-name-citations": "Order in Council dated 27 October 1981",
+    "issuance-date": "27 October 1981",
+    "compliance-date": "",
+    "legislative-body": "Aborigines' Advancement League (Victoria)",
+    "publication-date": "",
+    "verification-flag": "Not Verified"
+  },
+  "7": {
     "correlation-id": 7,
     "tag": "Paragraph",
-    "content": "WHEREAS the land shown on the Plan in the Schedule was temporarily reserved by Order in Council dated 27 October 1981 for an Aborigines Community Centre:",
-    "verification-flag": "Not Verified"
-  },
-  {
-    "correlation-id": 8,
-    "tag": "Paragraph",
-    "content": "And whereas the Aborigines' Advancement League (Victoria) was appointed as the committee of management of that land:",
-    "verification-flag": "Not Verified"
-  },
-  {
-    "correlation-id": 9,
-    "tag": "Paragraph",
-    "content": "And whereas it is in the interests of the Aboriginal people of Victoria that the land be vested in the Aborigines' Advancement League (Victoria):",
-    "verification-flag": "Not Verified"
-  },
-  {
-    "correlation-id": 10,
-    "tag": "Paragraph",
     "content": "Be it therefore enacted by the Queen's Most Excellent Majesty by and with the advice and consent of the Legislative Council and the Legislative Assembly of Victoria in this present Parliament assembled and by the authority of the same as follows (that is to say):",
+    "act-name-citations": "",
+    "issuance-date": "",
+    "compliance-date": "",
     "legislative-body": "Legislative Council and the Legislative Assembly of Victoria",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
-    "correlation-id": 11,
+  "8": {
+    "correlation-id": 8,
     "tag": "Heading",
     "content": "1 Short title and commencement",
+    "act-name-citations": "",
+    "issuance-date": "",
+    "compliance-date": "",
+    "legislative-body": "",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
-    "correlation-id": 12,
+  "9": {
+    "correlation-id": 9,
     "tag": "List",
-    "content": "(1) This Act may be cited as the Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982.",
+    "content": "1) This Act may be cited as the Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982.",
+    "act-name-citations": "Aboriginal Lands (Aborigines' Advancement League) (Watt Street, Northcote) Act 1982",
+    "issuance-date": "",
+    "compliance-date": "",
+    "legislative-body": "",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
-    "correlation-id": 13,
+  "10": {
+    "correlation-id": 10,
     "tag": "List",
-    "content": "(2) This Act shall come into operation on a day to be fixed by proclamation of the Governor in Council published in the Government Gazette.",
-    "publication-date": "published in the Government Gazette",
+    "content": "2) This Act shall come into operation on a day to be fixed by proclamation of the Governor in Council published in the Government Gazette.",
+    "act-name-citations": "",
+    "issuance-date": "",
+    "compliance-date": "",
+    "legislative-body": "Governor in Council",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
-    "correlation-id": 14,
+  "11": {
+    "correlation-id": 11,
     "tag": "Footer",
     "content": "Authorised by the Chief Parliamentary Counsel",
+    "act-name-citations": "",
+    "issuance-date": "",
+    "compliance-date": "",
+    "legislative-body": "",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   },
-  {
-    "correlation-id": 15,
+  "12": {
+    "correlation-id": 12,
     "tag": "Page number",
     "content": "1",
+    "act-name-citations": "",
+    "issuance-date": "",
+    "compliance-date": "",
+    "legislative-body": "",
+    "publication-date": "",
     "verification-flag": "Not Verified"
   }
-]
+}

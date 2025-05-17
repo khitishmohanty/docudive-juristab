@@ -18,7 +18,7 @@ from utils.csv_excel_converter import convert_json_to_csv_and_excel
 from utils.html_converter import convert_json_to_html
 
 # Prompt sent to Gemini
-GEMINI_PROMPT = """
+GEMINI_LAYOUT_PROMPT = """
 This is a document layout detection task. Identify the following items in the page sequentially and give me an output with the text with the following tags. Enum, Figure, Footnote, Header, Heading, List, Paragraph, Table, Table of Contents (ToC), Title, Subtitle, Footer, Page number, Endnotes, Glossary. Preserve the text styling information(Bold, italic and underline) in the output. Also, identify any act names or citations mentioned, issuance date, compliance date, legislative body, and publication date under a particular tag. Once you assigned a tag to one set of text dont reassign the same content or sub-content to any other tag. if any information is not present, leave that blank. give me the output in json format. in the first column put the numbers by which it can be identified as the correlation between the parent and child items and the associations. Make the node names as correlation-id, tag, content, act-name-citations, issuance-date, compliance-date, legislative-body, publication-date, verification-flag="Not Verified"
 """
 
@@ -51,7 +51,7 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
         print(f"📤 Processing image: {img_path}")
         try:
             image_base64 = encode_image_to_base64(img_path)
-            response_text = call_gemini_api(image_base64, GEMINI_PROMPT)
+            response_text = call_gemini_api(image_base64, GEMINI_LAYOUT_PROMPT)
 
             cleaned_json_str = extract_json_string(response_text)
             if not cleaned_json_str:
@@ -92,11 +92,12 @@ if __name__ == "__main__":
     image_dir = output_dir / "page_images"
 
     # Provide poppler_path if needed
-    poppler_path = r"C:\poppler-24.08.0\Library\bin"  # Set to None if added to PATH
+    poppler_path = None
 
     process_pdf(
-        pdf_path=pdf_path,
-        output_dir=output_dir,
-        image_dir=image_dir,
+        pdf_path=str(pdf_path),
+        output_dir=str(output_dir),
+        image_dir=str(image_dir),
         poppler_path=poppler_path
     )
+
