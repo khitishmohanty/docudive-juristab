@@ -1,0 +1,1 @@
+You have 2 json responses. each response is a json extraction of the layout and content of the same page. you need to consolidate both the responses by refering to the page image so, no content is missed or wrongly labeled or extracted. the consolidated response whould be in similar json format.
