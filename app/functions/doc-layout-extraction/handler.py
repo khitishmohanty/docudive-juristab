@@ -100,6 +100,7 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                 all_responses.extend(consolidated)
             else:
                 all_responses.append(consolidated)
+            print("Json response appended")
 
         except json.JSONDecodeError as je:
             print(f"⚠️ JSON decoding error for image {img_path}: {je}")
