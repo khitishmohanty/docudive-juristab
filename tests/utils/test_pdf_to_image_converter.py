@@ -5,15 +5,20 @@ from app.utils.pdf_to_image_converter import convert_pdf_to_images
 def test_pdf_to_images_conversion():
     # Define absolute paths
     current_dir = os.path.dirname(__file__)
-    assets_dir = os.path.abspath(os.path.join(current_dir, "../assets"))
-    pdf_path = os.path.join(assets_dir, "sample.pdf")
-    output_dir = os.path.join(assets_dir, "page_images")
+    project_root = os.path.abspath(os.path.join(current_dir, "../../"))
+    
+    input_dir = os.path.join(project_root, "tests", "assets", "inputs")
+    output_dir = os.path.join(project_root, "tests", "assets", "output_doc_layout", "page_images")
+    os.makedirs(output_dir, exist_ok=True)
+
+    pdf_path = os.path.join(input_dir, "sample.pdf")
 
     # Ensure sample PDF exists
-    assert os.path.exists(pdf_path), "❌ sample.pdf not found in tests/assets/"
+    assert os.path.exists(pdf_path), "❌ sample.pdf not found in tests/assets/inputs/"
 
     # Convert PDF to image files
-    image_files = convert_pdf_to_images(pdf_path=pdf_path, output_dir=output_dir)#, poppler_path="C:/poppler-24.08.0/Library/bin")
+    image_files = convert_pdf_to_images(pdf_path=pdf_path, output_dir=output_dir)
+    # Add `poppler_path=...` if needed on Windows
 
     # Validate output
     assert len(image_files) > 0, "❌ No image files were generated from PDF."
@@ -23,5 +28,5 @@ def test_pdf_to_images_conversion():
         assert image_file.endswith(".jpg"), f"❌ Invalid file extension: {image_file}"
 
     # Clean up generated images (optional)
-    #for f in glob.glob(os.path.join(output_dir, "*.jpg")):
-    #    os.remove(f)
+    # for f in glob.glob(os.path.join(output_dir, "*.jpg")):
+    #     os.remove(f)

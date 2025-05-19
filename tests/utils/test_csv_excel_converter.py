@@ -3,22 +3,26 @@ import pandas as pd
 from app.utils.json_converter import convert_json_to_csv_and_excel
 
 def test_json_to_csv_and_excel_from_file():
-    # Get absolute path to the assets folder
+    # Get current test directory
     current_dir = os.path.dirname(__file__)
-    assets_dir = os.path.abspath(os.path.join(current_dir, "../assets"))
+    project_root = os.path.abspath(os.path.join(current_dir, "../../"))
 
-    # Define file paths
-    json_path = os.path.join(assets_dir, "test_input.json")
-    csv_path = os.path.join(assets_dir, "test_output.csv")
-    xlsx_path = os.path.join(assets_dir, "test_output.xlsx")
+    # Define input and output paths
+    input_dir = os.path.join(project_root, "tests", "assets", "inputs")
+    output_dir = os.path.join(project_root, "tests", "assets", "output_doc_layout")
+    os.makedirs(output_dir, exist_ok=True)
+
+    json_path = os.path.join(input_dir, "test_input.json")
+    csv_path = os.path.join(output_dir, "test_output.csv")
+    xlsx_path = os.path.join(output_dir, "test_output.xlsx")
 
     # Ensure input file exists
-    assert os.path.exists(json_path), "❌ test_input.json not found in tests/assets/"
+    assert os.path.exists(json_path), "❌ test_input.json not found in tests/assets/inputs/"
 
     # Run conversion
     convert_json_to_csv_and_excel(
         json_input=json_path,
-        output_dir=assets_dir,
+        output_dir=output_dir,
         base_filename="test_output"
     )
 

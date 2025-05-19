@@ -2,21 +2,25 @@ import os
 from app.utils.html_converter import convert_json_to_html
 
 def test_convert_json_to_html_file_creation():
-    # Get absolute path to the assets folder
+    # Get absolute path to the test directory
     current_dir = os.path.dirname(__file__)
-    assets_dir = os.path.abspath(os.path.join(current_dir, "../assets"))
+    
+    # Define new paths
+    project_root = os.path.abspath(os.path.join(current_dir, "../../"))
+    input_dir = os.path.join(project_root, "tests", "assets", "inputs")
+    output_dir = os.path.join(project_root, "tests", "assets", "output_doc_layout")
+    os.makedirs(output_dir, exist_ok=True)
 
-    # Define paths
-    json_path = os.path.join(assets_dir, "test_input.json")
-    html_path = os.path.join(assets_dir, "test_output.html")
+    json_path = os.path.join(input_dir, "test_input.json")
+    html_path = os.path.join(output_dir, "test_output.html")
 
     # Ensure the input file exists
-    assert os.path.exists(json_path), "❌ test_input.json not found in tests/assets/"
+    assert os.path.exists(json_path), "❌ test_input.json not found in tests/assets/inputs/"
 
     # Convert to HTML
     convert_json_to_html(
         json_input=json_path,
-        output_dir=assets_dir,
+        output_dir=output_dir,
         output_filename="test_output.html"
     )
 

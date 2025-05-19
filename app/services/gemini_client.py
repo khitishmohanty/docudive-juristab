@@ -12,24 +12,11 @@ GEMINI_BASE_URL = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googl
 
 def call_gemini_api(
     image_base64: str,
-    prompt: str,
+    prompt_parts: list,
     api_key: Optional[str] = None,
     model: Optional[str] = None,
     mime_type: str = "image/jpeg"
 ) -> str:
-    """
-    Calls the Gemini API with an image and prompt, and returns the response.
-
-    Args:
-        image_base64 (str): Base64-encoded image string.
-        prompt (str): Text prompt to send to Gemini.
-        api_key (Optional[str]): Gemini API key. Defaults to value in .env.
-        model (Optional[str]): Model name. Defaults to value in .env.
-        mime_type (str): MIME type of the image (e.g., "image/jpeg", "image/png").
-
-    Returns:
-        str: The text response from Gemini API.
-    """
     api_key = api_key or GEMINI_API_KEY
     model = model or GEMINI_MODEL
     endpoint = f"{GEMINI_BASE_URL}/{model}:generateContent?key={api_key}"
@@ -45,11 +32,8 @@ def call_gemini_api(
                             "mimeType": mime_type,
                             "data": image_base64
                         }
-                    },
-                    {
-                        "text": prompt
                     }
-                ]
+                ] + prompt_parts
             }
         ]
     }
@@ -63,3 +47,4 @@ def call_gemini_api(
         raise RuntimeError(f"Failed to call Gemini API: {e}")
     except Exception as e:
         raise RuntimeError(f"Unexpected response structure: {e}")
+

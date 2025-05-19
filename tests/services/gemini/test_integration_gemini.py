@@ -10,8 +10,13 @@ load_dotenv()
 def test_integration_with_gemini():
     # Get the current directory of this test file
     current_dir = os.path.dirname(__file__)
-    image_path = os.path.join(current_dir, "sample.jpg")
-    output_path = os.path.join(current_dir, "gemini_output.json")
+
+    # Define paths
+    project_root = os.path.abspath(os.path.join(current_dir, "../../../"))
+    image_path = os.path.join(project_root, "tests", "assets", "inputs", "sample.jpg")
+    output_dir = os.path.join(project_root, "tests", "assets", "outputs_genai")
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, "gemini_output.json")
 
     # Load and encode the image as base64
     with open(image_path, "rb") as img_file:
