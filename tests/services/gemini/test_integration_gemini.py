@@ -1,42 +1,53 @@
 import os
-import json
 import re
+import json
 import base64
 from app.services.gemini_client import call_gemini_api
-from dotenv import load_dotenv
-
-load_dotenv()
+from app.utils.prompt_loader import load_json_prompt
 
 def test_integration_with_gemini():
-    # Get the current directory of this test file
+    # Setup paths
     current_dir = os.path.dirname(__file__)
-
-    # Define paths
     project_root = os.path.abspath(os.path.join(current_dir, "../../../"))
     image_path = os.path.join(project_root, "tests", "assets", "inputs", "sample.jpg")
-    output_dir = os.path.join(project_root, "tests", "assets", "outputs_genai")
+    prompt_path = os.path.join(project_root, "tests", "assets", "inputs", "gemini_layout_prompt.json")
+    output_dir = os.path.join(project_root, "tests", "assets", "outputs", "services")
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "gemini_output.json")
 
-    # Load and encode the image as base64
+    # Encode the image
     with open(image_path, "rb") as img_file:
         image_base64 = base64.b64encode(img_file.read()).decode("utf-8")
 
-    # Define the prompt
-    prompt = """
-    This is a document layout detection task. Identify the following items in the page sequentially and give me an output with the text with the following tags. Enum, Figure, Footnote, Header, Heading, List, Paragraph, Table, Table of Contents (ToC), Title, Subtitle, Footer, Page number. Preserve the text styling information(Bold, italic and underline) in the output. Also, identify any act names or citations mentioned, issuance date, compliance date, legislative body, and publication date under a particular tag. if any information is not present, leave that blank. give me the output in json format. in the first column put the numbers by which it can be identified as the correlation between the parent and child items and the associations. Make the node names as correlation-id, tag, content, act-name-citations, issuance-date, compliance-date, legislative-body, publication-date, verification-flag="Not Verified"
-    """
+    # Load prompt from JSON
+    prompt_data = load_json_prompt("gemini_layout_prompt.json")
+    prompt_details = prompt_data.get("prompt_details", {})
+    task_description = prompt_details.get("task_description", "")
+    output_instructions = prompt_details.get("output_format_instructions", {})
+    image_desc = prompt_details.get("input_image_description", "")
 
-    # Call the Gemini API
-    response = call_gemini_api(image_base64, prompt)
+    # Construct parts for Gemini API
+    prompt_parts = []
+    if task_description:
+        prompt_parts.append({"text": task_description})
+    if output_instructions:
+        prompt_parts.append({
+            "text": "Please follow the output format and schema strictly:\n" +
+                    json.dumps(output_instructions, indent=2)
+        })
+    if image_desc:
+        prompt_parts.append({"text": "Image description:\n" + image_desc})
 
-    # Clean up markdown-style formatting (if any)
+    # Call Gemini API
+    response = call_gemini_api(image_base64, prompt_parts)
+
+    # Clean up markdown block if returned
     cleaned_response = response.strip()
     if cleaned_response.startswith("```json") or cleaned_response.startswith("```"):
         cleaned_response = re.sub(r"^```(?:json)?\s*", "", cleaned_response)
         cleaned_response = re.sub(r"\s*```$", "", cleaned_response)
 
-    # Attempt to parse and save the cleaned JSON response
+    # Try parsing and saving JSON
     try:
         parsed_json = json.loads(cleaned_response)
         with open(output_path, "w", encoding="utf-8") as json_file:
@@ -44,7 +55,8 @@ def test_integration_with_gemini():
         print(f"✅ Saved Gemini output to {output_path}")
     except json.JSONDecodeError:
         print("❌ Response was not valid JSON. File not saved.")
+        print("🧪 Raw response:\n", cleaned_response)
 
-    # Assert the API response is not empty
+    # Basic assertions
     assert isinstance(response, str)
-    assert len(response) > 0
+    assert len(response.strip()) > 0

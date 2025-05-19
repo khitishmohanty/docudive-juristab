@@ -8,7 +8,7 @@ def test_pdf_to_images_conversion():
     project_root = os.path.abspath(os.path.join(current_dir, "../../"))
     
     input_dir = os.path.join(project_root, "tests", "assets", "inputs")
-    output_dir = os.path.join(project_root, "tests", "assets", "output_doc_layout", "page_images")
+    output_dir = os.path.join(project_root, "tests", "assets", "outputs", "utils", "page_images")
     os.makedirs(output_dir, exist_ok=True)
 
     pdf_path = os.path.join(input_dir, "sample.pdf")
@@ -25,7 +25,7 @@ def test_pdf_to_images_conversion():
 
     for image_file in image_files:
         assert os.path.exists(image_file), f"❌ Image file missing: {image_file}"
-        assert image_file.endswith(".jpg"), f"❌ Invalid file extension: {image_file}"
+        assert image_file.endswith((".jpg", ".jpeg")), f"❌ Invalid file extension: {image_file}"
 
     # Clean up generated images (optional)
     # for f in glob.glob(os.path.join(output_dir, "*.jpg")):

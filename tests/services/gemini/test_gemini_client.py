@@ -23,5 +23,5 @@ def test_call_gemini_success(sample_image_base64):
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = mock_response
 
-        result = call_gemini_api(sample_image_base64, "Describe this image.")
+        result = call_gemini_api(sample_image_base64, [{"text": "Describe this image."}])
         assert result == "This is a mocked Gemini response."

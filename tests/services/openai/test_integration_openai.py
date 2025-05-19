@@ -14,7 +14,7 @@ def test_integration_with_openai():
     # Define paths
     project_root = os.path.abspath(os.path.join(current_dir, "../../../"))
     image_path = os.path.join(project_root, "tests", "assets", "inputs", "sample.jpg")
-    output_dir = os.path.join(project_root, "tests", "assets", "outputs_genai")
+    output_dir = os.path.join(project_root, "tests", "assets", "outputs", "services")
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "openai_output.json")
 

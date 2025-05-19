@@ -8,7 +8,7 @@ def test_convert_json_to_html_file_creation():
     # Define new paths
     project_root = os.path.abspath(os.path.join(current_dir, "../../"))
     input_dir = os.path.join(project_root, "tests", "assets", "inputs")
-    output_dir = os.path.join(project_root, "tests", "assets", "output_doc_layout")
+    output_dir = os.path.join(project_root, "tests", "assets", "outputs", "utils")
     os.makedirs(output_dir, exist_ok=True)
 
     json_path = os.path.join(input_dir, "test_input.json")

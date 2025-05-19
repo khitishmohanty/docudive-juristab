@@ -35,7 +35,6 @@ Return a **valid JSON** with this structure:
       "act-name-citations": "Aboriginal Lands Act 1982",
       "issuance-date": "1982-12-01",
       "compliance-date": null,
-      "effective-date": null,
       "legislative-body": "Parliament of Victoria",
       "publication-date": null,
       "verification-flag": "Not Verified"

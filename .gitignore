@@ -50,9 +50,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-tests/assets/output_doc_layout
-tests/assets/outputs_genai
-tests/assets/page_images
+tests/assets/outputs/*
 
 # Translations
 *.mo
