@@ -92,6 +92,22 @@ def consolidate_responses(image_base64: str, gemini_json_input, openai_json_inpu
         print(f"❌ Consolidation failed with unexpected error: {e}")
         return {"gemini_original": gemini_json_input, "openai_original": openai_json_input, "verification_status_internal": "Fallback_Exception", "error_details": str(e)}
 
+def attach_page_number_tag(consolidated, page_number: int):
+    """Adds 'page_number' to each node if it's not already present."""
+    if isinstance(consolidated, list):
+        for node in consolidated:
+            if isinstance(node, dict) and "page_number" not in node:
+                node["page_number"] = page_number
+    elif isinstance(consolidated, dict):
+        if "document_elements" in consolidated and isinstance(consolidated["document_elements"], list):
+            for node in consolidated["document_elements"]:
+                if isinstance(node, dict) and "page_number" not in node:
+                    node["page_number"] = page_number
+        elif "page_number" not in consolidated:
+            consolidated["page_number"] = page_number
+    return consolidated
+
+
 
 def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: str = None) -> list:
     os.makedirs(image_dir, exist_ok=True)
@@ -191,6 +207,9 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                     openai_json_input=openai_json,
                     prompt_text=consolidation_prompt # Pass the text content
                 )
+                
+                consolidated_response_json = attach_page_number_tag(consolidated_response_json, page_num)
+
                 metrics["genai_response_consolidation_status"] = 200 if consolidated_response_json and not consolidated_response_json.get("error") else 500
                 metrics["genai_response_consolidation_response_length"] = len(json.dumps(consolidated_response_json)) if consolidated_response_json else 0
                 if consolidated_response_json.get("error"):
