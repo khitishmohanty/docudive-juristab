@@ -195,6 +195,14 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                 metrics["genai_response_consolidation_response_length"] = len(json.dumps(consolidated_response_json)) if consolidated_response_json else 0
                 if consolidated_response_json.get("error"):
                     metrics["json_consolidation_error_message"] = consolidated_response_json.get("error_details", consolidated_response_json.get("error"))
+                
+                # --- MODIFICATION START: Save consolidated response ---
+                consolidated_output_path = os.path.join(genai_output_dir, f"page_{page_num}_consolidated.json")
+                with open(consolidated_output_path, "w", encoding="utf-8") as f:
+                    json.dump(consolidated_response_json, f, indent=2, ensure_ascii=False)
+                #print(f"Saved consolidated response to: {consolidated_output_path}")
+                # --- MODIFICATION END ---
+                
                 print(f"json responses consolidated")
             except Exception as e:
                 print(f"⚠️ Consolidation function error: {e}")
@@ -209,7 +217,7 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                     # Construct the prompt for OpenAI verification
                     verification_api_prompt = f"{output_verification_prompt_text}\n\nExtracted JSON to verify for page {page_num}:\n{json.dumps(consolidated_response_json, indent=2)}"
                     
-                    print(f"Content verification for page {page_num}...")
+                    print(f"Content verification for page {page_num} started...")
                     verification_raw_response = call_openai_api(
                         prompt=verification_api_prompt,
                         image_base64=image_base64
@@ -222,7 +230,6 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                         current_page_verification_status = "fail"
                     else:
                         current_page_verification_status = f"fail - unclear response: {verification_raw_response[:100].strip()}"
-                    #print(f"Content verification for {page_num}: {verification_raw_response[:200]}...") # Log part of response
                     print(f"Verification status for page {page_num}: {current_page_verification_status}")
 
                 except Exception as e_verify:
@@ -234,13 +241,11 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                 current_page_verification_status = "fail - consolidated data not suitable for verification"
             
             metrics["verification_status"] = current_page_verification_status
-            # Add the verification status to the consolidated JSON itself if it's a dictionary
             if isinstance(consolidated_response_json, dict):
                 consolidated_response_json["page_verification_status"] = current_page_verification_status
             # --- End New Verification Step ---
 
-            # Append the potentially modified consolidated_response_json to all_responses
-            if isinstance(consolidated_response_json, list): # Should not happen if consolidation returns a dict per page
+            if isinstance(consolidated_response_json, list):
                 all_responses.extend(consolidated_response_json)
             elif isinstance(consolidated_response_json, dict):
                 all_responses.append(consolidated_response_json)
@@ -250,24 +255,21 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
 
             print(f"Page {page_num} processed and response appended.")
 
-        except Exception as e: # General error for the page processing
+        except Exception as e: 
             print(f"❌ Outer error processing page {page_num} ({img_path}): {e}")
             error_info = {"error": f"General error processing page {page_num}", "details": str(e), "page_verification_status": "fail - page processing error"}
             all_responses.append(error_info)
-            metrics["verification_status"] = error_info["page_verification_status"] # Ensure metric is updated
+            metrics["verification_status"] = error_info["page_verification_status"] 
 
         page_metrics.append(metrics)
-        # Consider rate limits if API calls are frequent
-        # if page_num < len(image_paths): time.sleep(1) # Optional delay
+        # if page_num < len(image_paths): time.sleep(1) 
 
-    master_json_path = os.path.join(output_dir, "layout_with_verification.json") # Renamed output file
+    master_json_path = os.path.join(output_dir, "layout_with_verification.json")
     with open(master_json_path, "w", encoding="utf-8") as f:
         json.dump(all_responses, f, indent=2, ensure_ascii=False)
     print(f"✅ Master JSON with verification status saved to: {master_json_path}")
 
-    # Data conversion to CSV/Excel/HTML
     if all_responses:
-        # Ensure all items are dicts for conversion, or handle mixed types
         dict_responses = [item for item in all_responses if isinstance(item, dict)]
         if not dict_responses:
             print("No dictionary data found in all_responses to convert to tabular formats.")
@@ -276,12 +278,12 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                 convert_json_to_csv_and_excel(dict_responses, output_dir, base_filename="layout_with_verification")
                 convert_json_to_html(dict_responses, output_dir, output_filename="layout_with_verification.html")
             except Exception as e_convert:
-                 print(f"❌ Error during CSV/Excel/HTML conversion: {e_convert}")   
+                print(f"❌ Error during CSV/Excel/HTML conversion: {e_convert}")   
     else:
         print("No responses to convert.")
 
     summary_df = pd.DataFrame(page_metrics)
-    summary_excel_path = os.path.join(output_dir, "page_summary_with_verification.xlsx") # Renamed summary
+    summary_excel_path = os.path.join(output_dir, "page_summary_with_verification.xlsx")
     try:
         summary_df.to_excel(summary_excel_path, index=False)
         print(f"✅ Page-level summary with verification written to: {summary_excel_path}")
