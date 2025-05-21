@@ -443,9 +443,9 @@ def enrich_pdf(pdf_path: str, enrichment_prompt: dict, output_dir: str) -> None:
         with open(path, "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
 
-    genai_output_dir = os.path.join(output_dir, "genai_outputs")
-    os.makedirs(genai_output_dir, exist_ok=True)
-    enrichment_output_path = os.path.join(genai_output_dir, "pdf_enrichment_output.json")
+    #genai_output_dir = os.path.join(output_dir, "genai_outputs")
+    os.makedirs(output_dir, exist_ok=True)
+    enrichment_output_path = os.path.join(output_dir, "enrichment_output.json")
 
     try:
         pdf_base64 = encode_pdf_to_base64(pdf_path)
@@ -474,43 +474,47 @@ def enrich_pdf(pdf_path: str, enrichment_prompt: dict, output_dir: str) -> None:
 
 if __name__ == "__main__":
     base_dir = Path(__file__).resolve().parent
-    project_root_path = base_dir.parents[2] 
+    project_root_path = base_dir.parents[2]
     print(f"Project root determined as: {project_root_path}")
 
+    # Define input PDF path
     pdf_path = project_root_path / "tests" / "assets" / "inputs" / "sample.pdf"
+
+    # Define output directories
     output_dir_path = project_root_path / "tests" / "assets" / "outputs" / "functions" / "output_doc_layout"
     image_dir_path = output_dir_path / "page_images"
-    genai_output_dir = os.path.join(output_dir_path, "genai_outputs")
+    genai_output_dir = output_dir_path / "genai_outputs"
+
+    # Ensure output folders exist
+    os.makedirs(output_dir_path, exist_ok=True)
+    os.makedirs(image_dir_path, exist_ok=True)
     os.makedirs(genai_output_dir, exist_ok=True)
-    
-    poppler_path_env = None
 
     print(f"Input PDF path: {pdf_path}")
     print(f"Output directory: {output_dir_path}")
     print(f"Image directory: {image_dir_path}")
 
+    # Ensure PDF exists
     if not pdf_path.exists():
         print(f"❌ ERROR: PDF file not found at {pdf_path}")
-        sys.exit(1) 
-    
-    os.makedirs(output_dir_path, exist_ok=True)
-    os.makedirs(image_dir_path, exist_ok=True)
+        sys.exit(1)
 
+    # Process PDF for layout extraction
     page_summary_data = process_pdf(
         pdf_path=str(pdf_path),
         output_dir=str(output_dir_path),
         image_dir=str(image_dir_path),
-        poppler_path=poppler_path_env # Pass None if not used or handled by system PATH
+        poppler_path=None
     )
-    
+
+    # Perform enrichment-level extraction
     enrich_pdf(
         pdf_path=str(pdf_path),
         enrichment_prompt=enrichment_prompt,
         output_dir=str(output_dir_path)
     )
 
-
-
+    # Final summary
     if page_summary_data:
         print("✅ PDF processing complete. Page summary with verification generated.")
     else:
