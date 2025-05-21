@@ -84,22 +84,18 @@ def call_gemini_api(
 
 def call_gemini_with_pdf(
     pdf_base64: str,
-    enrichment_prompt_path: str = "enrichment_prompt.json",
+    enrichment_prompt_dict: dict,
     api_key: Optional[str] = None,
     model: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Calls Gemini API with a PDF file and enrichment prompt.
+    Calls Gemini API with a PDF file and enrichment prompt (as a dictionary).
     """
     api_key = api_key or GEMINI_API_KEY
     model = model or GEMINI_MODEL
     endpoint = f"{GEMINI_BASE_URL}/{model}:generateContent?key={api_key}"
 
-    # Load prompt from JSON
-    with open(enrichment_prompt_path, "r", encoding="utf-8") as f:
-        prompt_data = json.load(f)
-
-    prompt_details = prompt_data.get("prompt_details", {})
+    prompt_details = enrichment_prompt_dict.get("prompt_details", {})
     task_description = prompt_details.get("task_description", "")
     output_format_instructions = prompt_details.get("output_format_instructions", {})
 
@@ -152,3 +148,4 @@ def call_gemini_with_pdf(
         raise RuntimeError(f"❌ Failed to call Gemini API: {e}")
     except Exception as e:
         raise RuntimeError(f"❌ Unexpected response structure from Gemini: {e}")
+

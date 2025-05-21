@@ -510,6 +510,7 @@ if __name__ == "__main__":
     )
 
 
+
     if page_summary_data:
         print("✅ PDF processing complete. Page summary with verification generated.")
     else:
