@@ -60,16 +60,16 @@ def consolidate_responses(image_base64: str, gemini_json_input, openai_json_inpu
     global gemini_prompt
 
     try:
+        # Extract details from the gemini_prompt
         prompt_details = gemini_prompt.get("prompt_details", {})
         task = prompt_details.get("task_description", "Consolidate the provided JSON outputs based on the task.")
         schema_obj = prompt_details.get("output_format_instructions", {})
         schema_str = json.dumps(schema_obj, indent=2)
         image_desc = prompt_details.get("input_image_description", "")
 
-        consolidation_instructions = prompt_text
-
+        # Compose the full consolidation prompt
         prompt_parts = [
-            {"text": consolidation_instructions},
+            {"text": prompt_text},
             {"text": f"Original Task Description: {task}"},
             {"text": f"Image context (if relevant for consolidation): {image_desc}"},
             {"text": f"Strictly adhere to this Output JSON Schema:\n{schema_str}"},
@@ -77,20 +77,43 @@ def consolidate_responses(image_base64: str, gemini_json_input, openai_json_inpu
             {"text": f"OPENAI RESPONSE TO CONSOLIDATE:\n{json.dumps(openai_json_input, indent=2)}"}
         ]
 
-        result_text = call_gemini_api(image_base64, prompt_parts)
+        # Call Gemini for consolidation
+        gemini_response = call_gemini_api(image_base64, prompt_parts)
+        result_text = gemini_response["text"]
         cleaned_json_str = extract_json_string(result_text)
-        
+
         if cleaned_json_str:
-            return json.loads(cleaned_json_str)
-        return {"error": "Consolidation failed to produce valid JSON", "gemini_original": gemini_json_input, "openai_original": openai_json_input, "verification_status_internal": "Fallback_NoValidJson"}
+            parsed_result = json.loads(cleaned_json_str)
+            parsed_result["_consolidation_input_tokens"] = gemini_response.get("input_tokens", 0)
+            parsed_result["_consolidation_output_tokens"] = gemini_response.get("output_tokens", 0)
+            parsed_result["_consolidation_cost_usd"] = gemini_response.get("cost", 0.0)
+            return parsed_result
+
+        return {
+            "error": "Consolidation failed to produce valid JSON",
+            "gemini_original": gemini_json_input,
+            "openai_original": openai_json_input,
+            "verification_status_internal": "Fallback_NoValidJson"
+        }
 
     except json.JSONDecodeError as je:
         print(f"❌ Consolidation JSON DECODING ERROR: {je}")
         print(f"Problematic JSON string during consolidation was: >>>\n{cleaned_json_str}\n<<<")
-        return {"gemini_original": gemini_json_input, "openai_original": openai_json_input, "verification_status_internal": "Fallback_JsonDecodeError", "error_details": str(je)}
+        return {
+            "gemini_original": gemini_json_input,
+            "openai_original": openai_json_input,
+            "verification_status_internal": "Fallback_JsonDecodeError",
+            "error_details": str(je)
+        }
+
     except Exception as e:
         print(f"❌ Consolidation failed with unexpected error: {e}")
-        return {"gemini_original": gemini_json_input, "openai_original": openai_json_input, "verification_status_internal": "Fallback_Exception", "error_details": str(e)}
+        return {
+            "gemini_original": gemini_json_input,
+            "openai_original": openai_json_input,
+            "verification_status_internal": "Fallback_Exception",
+            "error_details": str(e)
+        }
 
 def attach_page_number_tag(consolidated, page_number: int):
     """Adds 'page_number' to each node if it's not already present."""
@@ -132,10 +155,22 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
         metrics = {
             "page": page_num,
             "gemini_api_status": None, "gemini_response_length": 0, "gemini_error_message": "",
+            "gemini_input_tokens": 0,
+            "gemini_output_tokens": 0,
+            "gemini_cost_usd": 0.0,
             "openai_api_status": None, "openai_response_length": 0, "openai_error_message": "",
+            "openai_input_tokens": 0,
+            "openai_output_tokens": 0,
+            "openai_cost_usd": 0.0,
             "genai_response_consolidation_status": None, "genai_response_consolidation_response_length": 0,
             "json_consolidation_error_message": "",
-            "verification_status": "failed - verification not performed" # Default status for the new verification
+            "consolidation_input_tokens": 0,
+            "consolidation_output_tokens": 0,
+            "consolidation_cost_usd": 0.0,
+            "verification_status": "failed - verification not performed", # Default status for the new verification
+            "verification_input_tokens": 0,
+            "verification_output_tokens": 0,
+            "verification_cost_usd": 0.0,
         }
         gemini_json_str = ""
         openai_json_str = ""
@@ -143,13 +178,15 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
         try:
             image_base64 = encode_image_to_base64(img_path)
 
-            # Call Gemini
+            # --- Call Gemini ---
             gemini_json = {}
             try:
+                # Prepare prompt parts
                 prompt_details = gemini_prompt.get("prompt_details", {})
                 task_description = prompt_details.get("task_description", "")
                 output_format_instructions_obj = prompt_details.get("output_format_instructions", {})
                 input_image_desc_from_prompt = prompt_details.get("input_image_description", "")
+
                 gemini_api_parts = [
                     {"text": text} for text in [
                         task_description,
@@ -157,107 +194,179 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                         f"Contextual description of the image provided:\n{input_image_desc_from_prompt}" if input_image_desc_from_prompt else None
                     ] if text and text.strip()
                 ]
+
                 if not gemini_api_parts:
                     raise ValueError("Could not construct any valid text prompt parts from gemini_prompt for the primary Gemini API call.")
-                gemini_raw = call_gemini_api(image_base64, gemini_api_parts)
-                with open(os.path.join(genai_output_dir, f"page_{page_num}_gemini_raw.txt"), "w", encoding="utf-8") as f: f.write(gemini_raw)
+
+                # Make the API call
+                gemini_response = call_gemini_api(image_base64, gemini_api_parts)
+                gemini_raw = gemini_response["text"]
+
+                # Save raw response
+                with open(os.path.join(genai_output_dir, f"page_{page_num}_gemini_raw.txt"), "w", encoding="utf-8") as f:
+                    f.write(gemini_raw)
+
+                # Extract metrics
                 metrics["gemini_api_status"] = 200
+                metrics["gemini_input_tokens"] = gemini_response.get("input_tokens", 0)
+                metrics["gemini_output_tokens"] = gemini_response.get("output_tokens", 0)
+                metrics["gemini_cost_usd"] = gemini_response.get("cost", 0.0)
+
+                # Parse JSON response
                 gemini_json_str = extract_json_string(gemini_raw)
                 metrics["gemini_response_length"] = len(gemini_json_str or "")
                 gemini_json = json.loads(gemini_json_str) if gemini_json_str else {"error": "Empty JSON string from Gemini."}
-                print("Received and parsed Gemini response")
+
+                print("✅ Received and parsed Gemini response")
+
             except json.JSONDecodeError as je:
                 print(f"⚠️ JSON DECODING ERROR (Primary Gemini Call): {je}")
-                metrics["gemini_api_status"] = 500 
+                metrics["gemini_api_status"] = 500
                 metrics["gemini_error_message"] = f"JSONDecodeError: {je}"
-                gemini_json = {"error": f"JSONDecodeError from Gemini: {je}", "raw_output": gemini_json_str}
+                gemini_json = {"error": f"JSONDecodeError from Gemini: {je}", "raw_output": gemini_raw}
+
             except Exception as e:
                 print(f"⚠️ Gemini API error: {e}")
                 metrics["gemini_api_status"] = 500
                 metrics["gemini_error_message"] = str(e)
                 gemini_json = {"error": f"Gemini API call failed: {e}"}
 
+
             # Call OpenAI for initial layout extraction
             openai_json = {}
             try:
-                openai_raw = call_openai_api(openai_prompt, image_base64=image_base64) # Removed image_path assuming base64 is preferred
-                with open(os.path.join(genai_output_dir, f"page_{page_num}_openai_raw.txt"), "w", encoding="utf-8") as f: f.write(openai_raw)
+                openai_response = call_openai_api(openai_prompt, image_base64=image_base64)
+                openai_raw = openai_response["text"]
+
+                # Save raw response
+                with open(os.path.join(genai_output_dir, f"page_{page_num}_openai_raw.txt"), "w", encoding="utf-8") as f:
+                    f.write(openai_raw)
+
+                # Metrics for API status and token usage
                 metrics["openai_api_status"] = 200
+                metrics["openai_input_tokens"] = openai_response.get("input_tokens", 0)
+                metrics["openai_output_tokens"] = openai_response.get("output_tokens", 0)
+                metrics["openai_cost_usd"] = openai_response.get("cost", 0.0)
+
+                # Parse JSON content
                 openai_json_str = extract_json_string(openai_raw)
                 metrics["openai_response_length"] = len(openai_json_str or "")
                 openai_json = json.loads(openai_json_str) if openai_json_str else {"error": "Empty JSON string from OpenAI."}
-                print("Received and parsed OpenAI response")
+
+                print("✅ Received and parsed OpenAI response")
+
             except json.JSONDecodeError as je:
                 print(f"⚠️ JSON DECODING ERROR (OpenAI Call): {je}")
                 metrics["openai_api_status"] = 500
                 metrics["openai_error_message"] = f"JSONDecodeError: {je}"
-                openai_json = {"error": f"JSONDecodeError from OpenAI: {je}", "raw_output": openai_json_str}
+                openai_json = {"error": f"JSONDecodeError from OpenAI: {je}", "raw_output": openai_raw}
+
             except Exception as e:
                 print(f"⚠️ OpenAI API error: {e}")
                 metrics["openai_api_status"] = 500
                 metrics["openai_error_message"] = str(e)
                 openai_json = {"error": f"OpenAI API call failed: {e}"}
 
-            # Consolidate results
+
+            # --- Consolidate Results ---
             consolidated_response_json = {}
             try:
                 consolidated_response_json = consolidate_responses(
                     image_base64=image_base64,
                     gemini_json_input=gemini_json,
                     openai_json_input=openai_json,
-                    prompt_text=consolidation_prompt # Pass the text content
+                    prompt_text=consolidation_prompt  # Pass the text content
                 )
-                
+
+                # Attach page number to each node
                 consolidated_response_json = attach_page_number_tag(consolidated_response_json, page_num)
 
+                # Set consolidation metrics
                 metrics["genai_response_consolidation_status"] = 200 if consolidated_response_json and not consolidated_response_json.get("error") else 500
                 metrics["genai_response_consolidation_response_length"] = len(json.dumps(consolidated_response_json)) if consolidated_response_json else 0
+
                 if consolidated_response_json.get("error"):
                     metrics["json_consolidation_error_message"] = consolidated_response_json.get("error_details", consolidated_response_json.get("error"))
-                
-                # --- MODIFICATION START: Save consolidated response ---
+
+                # Add consolidation token/cost metrics (if available)
+                metrics["consolidation_input_tokens"] = consolidated_response_json.get("_consolidation_input_tokens", 0)
+                metrics["consolidation_output_tokens"] = consolidated_response_json.get("_consolidation_output_tokens", 0)
+                metrics["consolidation_cost_usd"] = consolidated_response_json.get("_consolidation_cost_usd", 0.0)
+
+                # Clean internal token/cost info from the JSON before saving
+                for key in ["_consolidation_input_tokens", "_consolidation_output_tokens", "_consolidation_cost_usd"]:
+                    if isinstance(consolidated_response_json, dict) and key in consolidated_response_json:
+                        del consolidated_response_json[key]
+
+                # Save consolidated response to disk
                 consolidated_output_path = os.path.join(genai_output_dir, f"page_{page_num}_consolidated.json")
                 with open(consolidated_output_path, "w", encoding="utf-8") as f:
                     json.dump(consolidated_response_json, f, indent=2, ensure_ascii=False)
-                #print(f"Saved consolidated response to: {consolidated_output_path}")
-                # --- MODIFICATION END ---
-                
-                print(f"json responses consolidated")
+
+                print("✅ JSON responses consolidated and saved.")
+
             except Exception as e:
                 print(f"⚠️ Consolidation function error: {e}")
                 metrics["genai_response_consolidation_status"] = 500
                 metrics["json_consolidation_error_message"] = str(e)
-                consolidated_response_json = {"gemini_original": gemini_json, "openai_original": openai_json, "verification_status_internal": "Fallback_ConsolidationException", "error_details": f"Consolidation function error: {str(e)}"}
+                consolidated_response_json = {
+                    "gemini_original": gemini_json,
+                    "openai_original": openai_json,
+                    "verification_status_internal": "Fallback_ConsolidationException",
+                    "error_details": f"Consolidation function error: {str(e)}"
+                }
 
-            # --- New Verification Step using OpenAI ---
+            # --- Verification Step using OpenAI ---
             current_page_verification_status = "failed - verification condition not met"
-            if isinstance(consolidated_response_json, dict) and not consolidated_response_json.get("error") and not consolidated_response_json.get("verification_status_internal", "").startswith("Fallback"):
+
+            if (
+                isinstance(consolidated_response_json, dict)
+                and not consolidated_response_json.get("error")
+                and not consolidated_response_json.get("verification_status_internal", "").startswith("Fallback")
+            ):
                 try:
-                    # Construct the prompt for OpenAI verification
-                    verification_api_prompt = f"{output_verification_prompt_text}\n\nExtracted JSON to verify for page {page_num}:\n{json.dumps(consolidated_response_json, indent=2)}"
-                    
-                    print(f"Content verification for page {page_num} started...")
-                    verification_raw_response = call_openai_api(
+                    # Construct verification prompt
+                    verification_api_prompt = (
+                        f"{output_verification_prompt_text}\n\n"
+                        f"Extracted JSON to verify for page {page_num}:\n"
+                        f"{json.dumps(consolidated_response_json, indent=2)}"
+                    )
+
+                    print(f"🔍 Content verification for page {page_num} started...")
+
+                    verification_response = call_openai_api(
                         prompt=verification_api_prompt,
                         image_base64=image_base64
                     )
-                    
-                    # Simple pass/fail check based on keywords in response
-                    if "pass" in verification_raw_response.lower():
+                    verification_text = verification_response["text"]
+
+                    # Store verification cost details in metrics
+                    metrics["verification_input_tokens"] = verification_response.get("input_tokens", 0)
+                    metrics["verification_output_tokens"] = verification_response.get("output_tokens", 0)
+                    metrics["verification_cost_usd"] = verification_response.get("cost", 0.0)
+
+                    # Determine pass/fail from response
+                    if "pass" in verification_text.lower():
                         current_page_verification_status = "pass"
-                    elif "fail" in verification_raw_response.lower():
+                    elif "fail" in verification_text.lower():
                         current_page_verification_status = "fail"
                     else:
-                        current_page_verification_status = f"fail - unclear response: {verification_raw_response[:100].strip()}"
-                    print(f"Verification status for page {page_num}: {current_page_verification_status}")
+                        current_page_verification_status = f"fail - unclear response: {verification_text[:100].strip()}"
+
+                    print(f"✅ Verification status for page {page_num}: {current_page_verification_status}")
 
                 except Exception as e_verify:
                     print(f"⚠️ OpenAI verification API error for page {page_num}: {e_verify}")
                     current_page_verification_status = f"fail - verification API error: {str(e_verify)}"
+
             elif consolidated_response_json.get("error") or consolidated_response_json.get("verification_status_internal", "").startswith("Fallback"):
-                current_page_verification_status = f"fail - skipped due to consolidation error: {consolidated_response_json.get('error_details', consolidated_response_json.get('error', 'Unknown consolidation issue'))}"
-            else: # E.g. if consolidated_response_json is not a dict or other unexpected cases
+                current_page_verification_status = (
+                    f"fail - skipped due to consolidation error: "
+                    f"{consolidated_response_json.get('error_details', consolidated_response_json.get('error', 'Unknown consolidation issue'))}"
+                )
+            else:
                 current_page_verification_status = "fail - consolidated data not suitable for verification"
+
             
             metrics["verification_status"] = current_page_verification_status
             if isinstance(consolidated_response_json, dict):
@@ -272,7 +381,7 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                 print(f"⚠️ Unexpected type from consolidation: {type(consolidated_response_json)}. Appending as error.")
                 all_responses.append({"error": "Unexpected consolidation output type", "page": page_num, "raw_consolidated_output": str(consolidated_response_json), "page_verification_status": current_page_verification_status})
 
-            print(f"Page {page_num} processed and response appended.")
+            print(f"✅ Page {page_num} processed and response appended.")
 
         except Exception as e: 
             print(f"❌ Outer error processing page {page_num} ({img_path}): {e}")
