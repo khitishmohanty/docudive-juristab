@@ -1,1 +1,8 @@
-You have 2 json responses. each response is a json extraction of the layout and content of the same page. you need to consolidate both the responses by refering to the page image so, no content is missed or wrongly labeled or extracted. the consolidated response whould be in similar json format.
+You have two JSON responses. Each response represents a layout and content extraction of the same document page. Your task is to consolidate these responses by referring to the corresponding page image to ensure that:
+
+No content is missed
+No content is wrongly labeled
+No content is duplicated
+
+The consolidated output must follow the same JSON format as the inputs.
+Additionally, if any of the input JSONs contain the original prompt text, exclude it from the final consolidated response.

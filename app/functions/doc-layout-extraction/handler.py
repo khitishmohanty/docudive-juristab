@@ -24,11 +24,14 @@ from utils.pdf_text_extractor import (
     extract_text_from_ocr,
     is_fidelity_preserved,
 )
+from services.gemini_client import call_gemini_with_pdf
+
 
 # Load prompts from file
 gemini_prompt = load_json_prompt("gemini_layout_prompt.json")
 openai_prompt = load_text_prompt("openai_layout_prompt.txt")
 consolidation_prompt = load_text_prompt("consolidation_prompt.txt")
+enrichment_prompt = load_json_prompt("enrichment_prompt.json")
 # New prompt for output verification
 output_verification_prompt_text = load_text_prompt("output_verification_prompt.txt")
 
@@ -55,6 +58,9 @@ def encode_image_to_base64(image_path: str) -> str:
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode("utf-8")
 
+def encode_pdf_to_base64(pdf_path: str) -> str:
+    with open(pdf_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
 
 def consolidate_responses(image_base64: str, gemini_json_input, openai_json_input, prompt_text: str) -> dict:
     global gemini_prompt
@@ -426,6 +432,45 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
 
     return page_metrics
 
+def enrich_pdf(pdf_path: str, enrichment_prompt: dict, output_dir: str) -> None:
+    """
+    Uses Gemini to extract structured information from a full PDF using the provided enrichment prompt dict.
+    Stores the result in output_dir/genai_outputs/pdf_enrichment_output.json.
+    """
+    from services.gemini_client import call_gemini_with_pdf  # Ensure this exists
+
+    def encode_pdf_to_base64(path: str) -> str:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+
+    genai_output_dir = os.path.join(output_dir, "genai_outputs")
+    os.makedirs(genai_output_dir, exist_ok=True)
+    enrichment_output_path = os.path.join(genai_output_dir, "pdf_enrichment_output.json")
+
+    try:
+        pdf_base64 = encode_pdf_to_base64(pdf_path)
+        enrichment_response = call_gemini_with_pdf(pdf_base64, enrichment_prompt_dict=enrichment_prompt)
+        raw_text = enrichment_response.get("text", "")
+
+        # Try to parse JSON from response
+        try:
+            enrichment_json_str = extract_json_string(raw_text)
+            enrichment_json = json.loads(enrichment_json_str) if enrichment_json_str else {}
+        except Exception as je:
+            enrichment_json = {
+                "error": "Failed to parse JSON from enrichment response",
+                "raw_text": raw_text,
+                "exception": str(je)
+            }
+
+        with open(enrichment_output_path, "w", encoding="utf-8") as f:
+            json.dump(enrichment_json, f, indent=2, ensure_ascii=False)
+
+        print(f"✅ Enrichment output saved to: {enrichment_output_path}")
+
+    except Exception as e:
+        print(f"❌ Failed to enrich PDF with Gemini: {e}")
+
 
 if __name__ == "__main__":
     base_dir = Path(__file__).resolve().parent
@@ -457,6 +502,13 @@ if __name__ == "__main__":
         image_dir=str(image_dir_path),
         poppler_path=poppler_path_env # Pass None if not used or handled by system PATH
     )
+    
+    enrich_pdf(
+        pdf_path=str(pdf_path),
+        enrichment_prompt=enrichment_prompt,
+        output_dir=str(output_dir_path)
+    )
+
 
     if page_summary_data:
         print("✅ PDF processing complete. Page summary with verification generated.")

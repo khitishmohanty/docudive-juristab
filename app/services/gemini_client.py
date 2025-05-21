@@ -80,3 +80,75 @@ def call_gemini_api(
         raise RuntimeError(f"❌ Failed to call Gemini API: {e}")
     except Exception as e:
         raise RuntimeError(f"❌ Unexpected response structure from Gemini: {e}")
+
+
+def call_gemini_with_pdf(
+    pdf_base64: str,
+    enrichment_prompt_path: str = "enrichment_prompt.json",
+    api_key: Optional[str] = None,
+    model: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Calls Gemini API with a PDF file and enrichment prompt.
+    """
+    api_key = api_key or GEMINI_API_KEY
+    model = model or GEMINI_MODEL
+    endpoint = f"{GEMINI_BASE_URL}/{model}:generateContent?key={api_key}"
+
+    # Load prompt from JSON
+    with open(enrichment_prompt_path, "r", encoding="utf-8") as f:
+        prompt_data = json.load(f)
+
+    prompt_details = prompt_data.get("prompt_details", {})
+    task_description = prompt_details.get("task_description", "")
+    output_format_instructions = prompt_details.get("output_format_instructions", {})
+
+    # Construct prompt parts
+    prompt_parts = [
+        {"text": task_description},
+        {"text": f"Strictly follow the output format:\n{json.dumps(output_format_instructions, indent=2)}"}
+    ]
+
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "inlineData": {
+                            "mimeType": "application/pdf",
+                            "data": pdf_base64
+                        }
+                    }
+                ] + prompt_parts
+            }
+        ]
+    }
+
+    try:
+        response = requests.post(endpoint, headers=headers, json=payload)
+        response.raise_for_status()
+        result = response.json()
+
+        # Extract main response text
+        text = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+
+        # Extract token usage
+        usage = result.get("usageMetadata", {})
+        input_tokens = usage.get("promptTokenCount", 0)
+        output_tokens = usage.get("candidatesTokenCount", 0)
+
+        # Calculate cost
+        cost = GEMINI_INPUT_TOKEN_PRICE * input_tokens + GEMINI_OUTPUT_TOKEN_PRICE * output_tokens
+
+        return {
+            "text": text,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cost": cost
+        }
+
+    except requests.exceptions.RequestException as e:
+        raise RuntimeError(f"❌ Failed to call Gemini API: {e}")
+    except Exception as e:
+        raise RuntimeError(f"❌ Unexpected response structure from Gemini: {e}")
