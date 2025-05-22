@@ -1,5 +1,6 @@
 import os
 import imghdr
+import json
 from openai import OpenAI
 from typing import Optional, List, Dict
 from dotenv import load_dotenv
@@ -21,18 +22,7 @@ def call_openai_api(prompt: str,
                     image_base64: Optional[str] = None,
                     model: Optional[str] = None,
                     image_path: Optional[str] = None) -> Dict:
-    """
-    Calls OpenAI's Vision API (GPT-4o or similar) with an optional image and prompt.
-    Calculates cost using separate per-million token prices for input and output.
 
-    Returns:
-        dict: {
-            "text": <completion>,
-            "input_tokens": int,
-            "output_tokens": int,
-            "cost": float
-        }
-    """
     model = model or OPENAI_MODEL
 
     try:
@@ -88,3 +78,21 @@ def call_openai_api(prompt: str,
 
     except Exception as e:
         raise RuntimeError(f"Failed to call OpenAI API: {e}")
+
+
+def call_openai_with_json(json_file_path: str, prompt: str, model: Optional[str] = None) -> Dict:
+
+    try:
+        # Load JSON content and format as string
+        with open(json_file_path, "r", encoding="utf-8") as f:
+            json_data = json.load(f)
+            json_text = json.dumps(json_data, indent=2)
+
+        # Create full prompt
+        combined_prompt = f"{prompt}\n\nHere is the JSON input:\n{json_text}"
+
+        # Use existing function to call OpenAI and calculate cost
+        return call_openai_api(prompt=combined_prompt, model=model)
+
+    except Exception as e:
+        raise RuntimeError(f"Failed to call OpenAI API with JSON input: {e}")

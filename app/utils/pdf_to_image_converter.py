@@ -33,5 +33,6 @@ def convert_pdf_to_images(
         img.save(image_path, format="JPEG")  # Always use "JPEG" format for saving
         image_paths.append(image_path)
 
-    print(f"✅ Converted {len(image_paths)} pages to images in: {output_dir}")
+    #print(f"✅ Converted {len(image_paths)} pages to images in: {output_dir}")
+    print(f"✅ Converted {len(image_paths)} pages to images")
     return image_paths

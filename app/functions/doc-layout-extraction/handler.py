@@ -25,6 +25,8 @@ from utils.pdf_text_extractor import (
     is_fidelity_preserved,
 )
 from services.gemini_client import call_gemini_with_pdf
+from services.openai_client import call_openai_api, call_openai_with_json
+
 
 
 # Load prompts from file
@@ -32,8 +34,9 @@ gemini_prompt = load_json_prompt("gemini_layout_prompt.json")
 openai_prompt = load_text_prompt("openai_layout_prompt.txt")
 consolidation_prompt = load_text_prompt("consolidation_prompt.txt")
 enrichment_prompt = load_json_prompt("enrichment_prompt.json")
-# New prompt for output verification
 output_verification_prompt_text = load_text_prompt("output_verification_prompt.txt")
+sanitize_prompt_text = load_text_prompt("sanitize_prompt.txt")
+
 
 
 def extract_json_string(raw_text: str) -> str:
@@ -144,7 +147,8 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
     genai_output_dir = os.path.join(output_dir, "genai_outputs")
     os.makedirs(genai_output_dir, exist_ok=True)
 
-    print(f"📄 Converting PDF to images from: {pdf_path}")
+    #print(f"📄 Converting PDF to images from: {pdf_path}")
+    print(f"📄 Converting PDF to images")
     image_paths = convert_pdf_to_images(pdf_path, image_dir, poppler_path=poppler_path)
 
     all_responses = []
@@ -173,10 +177,14 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
             "consolidation_input_tokens": 0,
             "consolidation_output_tokens": 0,
             "consolidation_cost_usd": 0.0,
+            "sanitize_input_tokens": 0,
+            "sanitize_output_tokens": 0,
+            "sanitize_cost_usd": 0.0,
+            "sanitize_status": "not attempted",
             "verification_status": "failed - verification not performed", # Default status for the new verification
             "verification_input_tokens": 0,
             "verification_output_tokens": 0,
-            "verification_cost_usd": 0.0,
+            "verification_cost_usd": 0.0
         }
         gemini_json_str = ""
         openai_json_str = ""
@@ -308,8 +316,33 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                 consolidated_output_path = os.path.join(genai_output_dir, f"page_{page_num}_consolidated.json")
                 with open(consolidated_output_path, "w", encoding="utf-8") as f:
                     json.dump(consolidated_response_json, f, indent=2, ensure_ascii=False)
-
+                    
                 print("✅ JSON responses consolidated and saved.")
+
+                # --- Sanitize JSON to remove embedded prompt content ---
+                try:
+                    sanitize_response = call_openai_with_json(
+                        json_file_path=consolidated_output_path,
+                        prompt=sanitize_prompt_text
+                    )
+
+                    # Save the sanitized version
+                    sanitized_output_path = os.path.join(genai_output_dir, f"page_{page_num}_sanitized.json")
+                    with open(sanitized_output_path, "w", encoding="utf-8") as f:
+                        f.write(sanitize_response.get("text", ""))
+
+                    print(f"✅ Sanitized JSON saved for page {page_num}")
+
+                    # Optionally store metrics
+                    metrics["sanitize_input_tokens"] = sanitize_response.get("input_tokens", 0)
+                    metrics["sanitize_output_tokens"] = sanitize_response.get("output_tokens", 0)
+                    metrics["sanitize_cost_usd"] = sanitize_response.get("cost", 0.0)
+
+                except Exception as e:
+                    print(f"⚠️ Sanitization failed for page {page_num}: {e}")
+                    metrics["sanitize_status"] = f"fail - {str(e)}"
+
+                
 
             except Exception as e:
                 print(f"⚠️ Consolidation function error: {e}")
@@ -322,72 +355,73 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                     "error_details": f"Consolidation function error: {str(e)}"
                 }
 
-            # --- Verification Step using OpenAI ---
-            current_page_verification_status = "failed - verification condition not met"
+            # --- Verification Step using sanitized JSON ---
+                current_page_verification_status = "failed - verification condition not met"
 
-            if (
-                isinstance(consolidated_response_json, dict)
-                and not consolidated_response_json.get("error")
-                and not consolidated_response_json.get("verification_status_internal", "").startswith("Fallback")
-            ):
-                try:
-                    # Construct verification prompt
-                    verification_api_prompt = (
-                        f"{output_verification_prompt_text}\n\n"
-                        f"Extracted JSON to verify for page {page_num}:\n"
-                        f"{json.dumps(consolidated_response_json, indent=2)}"
-                    )
+                # Extract sanitized JSON from sanitize_response (skip if it's empty or invalid)
+                sanitized_text = sanitize_response.get("text", "")
+                if not sanitized_text.strip():
+                    print(f"⚠️ Empty sanitized response for page {page_num}")
+                    sanitized_response_json = {
+                        "error": "Sanitized response was empty",
+                        "page": page_num
+                    }
+                    current_page_verification_status = "fail - empty sanitized text"
+                else:
+                    try:
+                        sanitized_response_json = json.loads(sanitized_text)
+                    except json.JSONDecodeError as e:
+                        print(f"⚠️ Failed to parse sanitized JSON: {e}")
+                        sanitized_response_json = {
+                            "error": "Failed to parse sanitized JSON",
+                            "exception": str(e),
+                            "raw_text": sanitized_text,
+                            "page": page_num
+                        }
+                        current_page_verification_status = "fail - JSON decode error"
 
-                    print(f"🔍 Content verification for page {page_num} started...")
+                # Verification only if parsing was successful
+                if isinstance(sanitized_response_json, dict) and "error" not in sanitized_response_json:
+                    try:
+                        verification_api_prompt = (
+                            f"{output_verification_prompt_text}\n\n"
+                            f"Sanitized JSON to verify for page {page_num}:\n"
+                            f"{json.dumps(sanitized_response_json, indent=2)}"
+                        )
 
-                    verification_response = call_openai_api(
-                        prompt=verification_api_prompt,
-                        image_base64=image_base64
-                    )
-                    verification_text = verification_response["text"]
+                        print(f"🔍 Content verification for page {page_num} started...")
 
-                    # Store verification cost details in metrics
-                    metrics["verification_input_tokens"] = verification_response.get("input_tokens", 0)
-                    metrics["verification_output_tokens"] = verification_response.get("output_tokens", 0)
-                    metrics["verification_cost_usd"] = verification_response.get("cost", 0.0)
+                        verification_response = call_openai_api(
+                            prompt=verification_api_prompt,
+                            image_base64=image_base64
+                        )
+                        verification_text = verification_response["text"]
 
-                    # Determine pass/fail from response
-                    if "pass" in verification_text.lower():
-                        current_page_verification_status = "pass"
-                    elif "fail" in verification_text.lower():
-                        current_page_verification_status = "fail"
-                    else:
-                        current_page_verification_status = f"fail - unclear response: {verification_text[:100].strip()}"
+                        metrics["verification_input_tokens"] = verification_response.get("input_tokens", 0)
+                        metrics["verification_output_tokens"] = verification_response.get("output_tokens", 0)
+                        metrics["verification_cost_usd"] = verification_response.get("cost", 0.0)
 
-                    print(f"✅ Verification status for page {page_num}: {current_page_verification_status}")
+                        if "pass" in verification_text.lower():
+                            current_page_verification_status = "pass"
+                        elif "fail" in verification_text.lower():
+                            current_page_verification_status = "fail"
+                        else:
+                            current_page_verification_status = f"fail - unclear: {verification_text[:100].strip()}"
 
-                except Exception as e_verify:
-                    print(f"⚠️ OpenAI verification API error for page {page_num}: {e_verify}")
-                    current_page_verification_status = f"fail - verification API error: {str(e_verify)}"
+                        print(f"✅ Verification status for page {page_num}: {current_page_verification_status}")
 
-            elif consolidated_response_json.get("error") or consolidated_response_json.get("verification_status_internal", "").startswith("Fallback"):
-                current_page_verification_status = (
-                    f"fail - skipped due to consolidation error: "
-                    f"{consolidated_response_json.get('error_details', consolidated_response_json.get('error', 'Unknown consolidation issue'))}"
-                )
-            else:
-                current_page_verification_status = "fail - consolidated data not suitable for verification"
+                    except Exception as e_verify:
+                        print(f"⚠️ Verification API error for page {page_num}: {e_verify}")
+                        current_page_verification_status = f"fail - verification API error: {str(e_verify)}"
 
-            
-            metrics["verification_status"] = current_page_verification_status
-            if isinstance(consolidated_response_json, dict):
-                consolidated_response_json["page_verification_status"] = current_page_verification_status
-            # --- End New Verification Step ---
+                # Always attach status and append
+                metrics["verification_status"] = current_page_verification_status
+                sanitized_response_json["page_verification_status"] = current_page_verification_status
+                all_responses.append(sanitized_response_json)
 
-            if isinstance(consolidated_response_json, list):
-                all_responses.extend(consolidated_response_json)
-            elif isinstance(consolidated_response_json, dict):
-                all_responses.append(consolidated_response_json)
-            else:
-                print(f"⚠️ Unexpected type from consolidation: {type(consolidated_response_json)}. Appending as error.")
-                all_responses.append({"error": "Unexpected consolidation output type", "page": page_num, "raw_consolidated_output": str(consolidated_response_json), "page_verification_status": current_page_verification_status})
 
-            print(f"✅ Page {page_num} processed and response appended.")
+                print(f"✅ Page {page_num} processed and response appended.")
+
 
         except Exception as e: 
             print(f"❌ Outer error processing page {page_num} ({img_path}): {e}")
