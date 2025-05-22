@@ -188,14 +188,17 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
         }
         gemini_json_str = ""
         openai_json_str = ""
+        consolidated_response_json = {}
+        sanitize_response = {} 
+        sanitized_response_json = {}
+        image_base64 = None
         
-        try:
+        try: # Outermost try for the entire page processing
             image_base64 = encode_image_to_base64(img_path)
 
             # --- Call Gemini ---
-            gemini_json = {}
+            gemini_raw = "" # Initialize for error reporting
             try:
-                # Prepare prompt parts
                 prompt_details = gemini_prompt.get("prompt_details", {})
                 task_description = prompt_details.get("task_description", "")
                 output_format_instructions_obj = prompt_details.get("output_format_instructions", {})
@@ -208,179 +211,121 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                         f"Contextual description of the image provided:\n{input_image_desc_from_prompt}" if input_image_desc_from_prompt else None
                     ] if text and text.strip()
                 ]
+                if not gemini_api_parts: raise ValueError("Could not construct any valid text prompt parts for Gemini.")
 
-                if not gemini_api_parts:
-                    raise ValueError("Could not construct any valid text prompt parts from gemini_prompt for the primary Gemini API call.")
-
-                # Make the API call
-                gemini_response = call_gemini_api(image_base64, gemini_api_parts)
-                gemini_raw = gemini_response["text"]
-
-                # Save raw response
-                with open(os.path.join(genai_output_dir, f"page_{page_num}_gemini_raw.txt"), "w", encoding="utf-8") as f:
-                    f.write(gemini_raw)
-
-                # Extract metrics
+                gemini_api_call_response = call_gemini_api(image_base64, gemini_api_parts)
+                gemini_raw = gemini_api_call_response["text"]
+                with open(os.path.join(genai_output_dir, f"page_{page_num}_gemini_raw.txt"), "w", encoding="utf-8") as f: f.write(gemini_raw)
+                
                 metrics["gemini_api_status"] = 200
-                metrics["gemini_input_tokens"] = gemini_response.get("input_tokens", 0)
-                metrics["gemini_output_tokens"] = gemini_response.get("output_tokens", 0)
-                metrics["gemini_cost_usd"] = gemini_response.get("cost", 0.0)
-
-                # Parse JSON response
+                metrics["gemini_input_tokens"] = gemini_api_call_response.get("input_tokens", 0)
+                metrics["gemini_output_tokens"] = gemini_api_call_response.get("output_tokens", 0)
+                metrics["gemini_cost_usd"] = gemini_api_call_response.get("cost", 0.0)
+                
                 gemini_json_str = extract_json_string(gemini_raw)
                 metrics["gemini_response_length"] = len(gemini_json_str or "")
-                gemini_json = json.loads(gemini_json_str) if gemini_json_str else {"error": "Empty JSON string from Gemini."}
-
+                gemini_json = json.loads(gemini_json_str) if gemini_json_str else {"error": "Empty JSON string from Gemini.", "page_number": page_num}
+                if not isinstance(gemini_json, dict): gemini_json = {"data": gemini_json, "error": "Gemini response not a dict", "page_number": page_num}
+                elif "page_number" not in gemini_json: gemini_json["page_number"] = page_num
                 print("✅ Received and parsed Gemini response")
-
             except json.JSONDecodeError as je:
                 print(f"⚠️ JSON DECODING ERROR (Primary Gemini Call): {je}")
-                metrics["gemini_api_status"] = 500
-                metrics["gemini_error_message"] = f"JSONDecodeError: {je}"
-                gemini_json = {"error": f"JSONDecodeError from Gemini: {je}", "raw_output": gemini_raw}
-
+                metrics["gemini_api_status"] = 500; metrics["gemini_error_message"] = f"JSONDecodeError: {je}"
+                gemini_json = {"error": f"JSONDecodeError from Gemini: {je}", "raw_output": gemini_raw, "page_number": page_num}
             except Exception as e:
                 print(f"⚠️ Gemini API error: {e}")
-                metrics["gemini_api_status"] = 500
-                metrics["gemini_error_message"] = str(e)
-                gemini_json = {"error": f"Gemini API call failed: {e}"}
+                metrics["gemini_api_status"] = 500; metrics["gemini_error_message"] = str(e)
+                gemini_json = {"error": f"Gemini API call failed: {e}", "page_number": page_num}
 
-
-            # Call OpenAI for initial layout extraction
-            openai_json = {}
+            # --- Call OpenAI ---
+            openai_raw = "" # Initialize for error reporting
             try:
-                openai_response = call_openai_api(openai_prompt, image_base64=image_base64)
-                openai_raw = openai_response["text"]
+                openai_api_call_response = call_openai_api(openai_prompt, image_base64=image_base64)
+                openai_raw = openai_api_call_response["text"]
+                with open(os.path.join(genai_output_dir, f"page_{page_num}_openai_raw.txt"), "w", encoding="utf-8") as f: f.write(openai_raw)
 
-                # Save raw response
-                with open(os.path.join(genai_output_dir, f"page_{page_num}_openai_raw.txt"), "w", encoding="utf-8") as f:
-                    f.write(openai_raw)
-
-                # Metrics for API status and token usage
                 metrics["openai_api_status"] = 200
-                metrics["openai_input_tokens"] = openai_response.get("input_tokens", 0)
-                metrics["openai_output_tokens"] = openai_response.get("output_tokens", 0)
-                metrics["openai_cost_usd"] = openai_response.get("cost", 0.0)
+                metrics["openai_input_tokens"] = openai_api_call_response.get("input_tokens", 0)
+                metrics["openai_output_tokens"] = openai_api_call_response.get("output_tokens", 0)
+                metrics["openai_cost_usd"] = openai_api_call_response.get("cost", 0.0)
 
-                # Parse JSON content
                 openai_json_str = extract_json_string(openai_raw)
                 metrics["openai_response_length"] = len(openai_json_str or "")
-                openai_json = json.loads(openai_json_str) if openai_json_str else {"error": "Empty JSON string from OpenAI."}
-
+                openai_json = json.loads(openai_json_str) if openai_json_str else {"error": "Empty JSON string from OpenAI.", "page_number": page_num}
+                if not isinstance(openai_json, dict): openai_json = {"data": openai_json, "error": "OpenAI response not a dict", "page_number": page_num}
+                elif "page_number" not in openai_json: openai_json["page_number"] = page_num
                 print("✅ Received and parsed OpenAI response")
-
             except json.JSONDecodeError as je:
                 print(f"⚠️ JSON DECODING ERROR (OpenAI Call): {je}")
-                metrics["openai_api_status"] = 500
-                metrics["openai_error_message"] = f"JSONDecodeError: {je}"
-                openai_json = {"error": f"JSONDecodeError from OpenAI: {je}", "raw_output": openai_raw}
-
+                metrics["openai_api_status"] = 500; metrics["openai_error_message"] = f"JSONDecodeError: {je}"
+                openai_json = {"error": f"JSONDecodeError from OpenAI: {je}", "raw_output": openai_raw, "page_number": page_num}
             except Exception as e:
                 print(f"⚠️ OpenAI API error: {e}")
-                metrics["openai_api_status"] = 500
-                metrics["openai_error_message"] = str(e)
-                openai_json = {"error": f"OpenAI API call failed: {e}"}
+                metrics["openai_api_status"] = 500; metrics["openai_error_message"] = str(e)
+                openai_json = {"error": f"OpenAI API call failed: {e}", "page_number": page_num}
 
 
-            # --- Consolidate Results ---
-            consolidated_response_json = {}
+            # --- Consolidate, Sanitize, Verify Block ---
             try:
                 consolidated_response_json = consolidate_responses(
                     image_base64=image_base64,
                     gemini_json_input=gemini_json,
                     openai_json_input=openai_json,
-                    prompt_text=consolidation_prompt  # Pass the text content
+                    prompt_text=consolidation_prompt
                 )
-
-                # Attach page number to each node
                 consolidated_response_json = attach_page_number_tag(consolidated_response_json, page_num)
-
-                # Set consolidation metrics
+                
                 metrics["genai_response_consolidation_status"] = 200 if consolidated_response_json and not consolidated_response_json.get("error") else 500
-                metrics["genai_response_consolidation_response_length"] = len(json.dumps(consolidated_response_json)) if consolidated_response_json else 0
-
-                if consolidated_response_json.get("error"):
-                    metrics["json_consolidation_error_message"] = consolidated_response_json.get("error_details", consolidated_response_json.get("error"))
-
-                # Add consolidation token/cost metrics (if available)
+                metrics["genai_response_consolidation_response_length"] = len(json.dumps(consolidated_response_json))
+                if consolidated_response_json.get("error"): metrics["json_consolidation_error_message"] = consolidated_response_json.get("error_details", consolidated_response_json.get("error"))
                 metrics["consolidation_input_tokens"] = consolidated_response_json.get("_consolidation_input_tokens", 0)
                 metrics["consolidation_output_tokens"] = consolidated_response_json.get("_consolidation_output_tokens", 0)
                 metrics["consolidation_cost_usd"] = consolidated_response_json.get("_consolidation_cost_usd", 0.0)
-
-                # Clean internal token/cost info from the JSON before saving
                 for key in ["_consolidation_input_tokens", "_consolidation_output_tokens", "_consolidation_cost_usd"]:
-                    if isinstance(consolidated_response_json, dict) and key in consolidated_response_json:
-                        del consolidated_response_json[key]
+                    if isinstance(consolidated_response_json, dict) and key in consolidated_response_json: del consolidated_response_json[key]
 
-                # Save consolidated response to disk
                 consolidated_output_path = os.path.join(genai_output_dir, f"page_{page_num}_consolidated.json")
-                with open(consolidated_output_path, "w", encoding="utf-8") as f:
-                    json.dump(consolidated_response_json, f, indent=2, ensure_ascii=False)
-                    
+                with open(consolidated_output_path, "w", encoding="utf-8") as f: json.dump(consolidated_response_json, f, indent=2, ensure_ascii=False)
                 print("✅ JSON responses consolidated and saved.")
 
-                # --- Sanitize JSON to remove embedded prompt content ---
+                # --- Sanitize JSON ---
                 try:
-                    sanitize_response = call_openai_with_json(
-                        json_file_path=consolidated_output_path,
-                        prompt=sanitize_prompt_text
-                    )
-
-                    # Save the sanitized version
+                    sanitize_response = call_openai_with_json(json_file_path=consolidated_output_path, prompt=sanitize_prompt_text)
                     sanitized_output_path = os.path.join(genai_output_dir, f"page_{page_num}_sanitized.json")
-                    with open(sanitized_output_path, "w", encoding="utf-8") as f:
-                        f.write(sanitize_response.get("text", ""))
-
+                    with open(sanitized_output_path, "w", encoding="utf-8") as f: f.write(sanitize_response.get("text", ""))
                     print(f"✅ Sanitized JSON saved for page {page_num}")
-
-                    # Optionally store metrics
                     metrics["sanitize_input_tokens"] = sanitize_response.get("input_tokens", 0)
                     metrics["sanitize_output_tokens"] = sanitize_response.get("output_tokens", 0)
                     metrics["sanitize_cost_usd"] = sanitize_response.get("cost", 0.0)
+                    metrics["sanitize_status"] = "success"
+                except Exception as e_sanitize:
+                    print(f"⚠️ Sanitization failed for page {page_num}: {e_sanitize}")
+                    metrics["sanitize_status"] = f"fail - {str(e_sanitize)}"
+                    # sanitize_response remains {}, .get("text", "") will handle it below
 
-                except Exception as e:
-                    print(f"⚠️ Sanitization failed for page {page_num}: {e}")
-                    metrics["sanitize_status"] = f"fail - {str(e)}"
-
-                
-
-            except Exception as e:
-                print(f"⚠️ Consolidation function error: {e}")
-                metrics["genai_response_consolidation_status"] = 500
-                metrics["json_consolidation_error_message"] = str(e)
-                consolidated_response_json = {
-                    "gemini_original": gemini_json,
-                    "openai_original": openai_json,
-                    "verification_status_internal": "Fallback_ConsolidationException",
-                    "error_details": f"Consolidation function error: {str(e)}"
-                }
-
-            # --- Verification Step using sanitized JSON ---
+                # --- Verification Step using sanitized JSON ---
                 current_page_verification_status = "failed - verification condition not met"
-
-                # Extract sanitized JSON from sanitize_response (skip if it's empty or invalid)
                 sanitized_text = sanitize_response.get("text", "")
+
                 if not sanitized_text.strip():
                     print(f"⚠️ Empty sanitized response for page {page_num}")
-                    sanitized_response_json = {
-                        "error": "Sanitized response was empty",
-                        "page": page_num
-                    }
+                    sanitized_response_json = {"error": "Sanitized response was empty", "page_number": page_num}
                     current_page_verification_status = "fail - empty sanitized text"
                 else:
                     try:
                         sanitized_response_json = json.loads(sanitized_text)
-                    except json.JSONDecodeError as e:
-                        print(f"⚠️ Failed to parse sanitized JSON: {e}")
+                        if not isinstance(sanitized_response_json, dict): # Ensure dict for consistency
+                            sanitized_response_json = {"parsed_non_dict_content": sanitized_response_json, "page_number": page_num}
+                        elif "page_number" not in sanitized_response_json:
+                             sanitized_response_json["page_number"] = page_num
+                    except json.JSONDecodeError as e_json_decode_sanitize:
+                        print(f"⚠️ Failed to parse sanitized JSON: {e_json_decode_sanitize}")
                         sanitized_response_json = {
-                            "error": "Failed to parse sanitized JSON",
-                            "exception": str(e),
-                            "raw_text": sanitized_text,
-                            "page": page_num
+                            "error": "Failed to parse sanitized JSON", "exception": str(e_json_decode_sanitize),
+                            "raw_text": sanitized_text, "page_number": page_num
                         }
                         current_page_verification_status = "fail - JSON decode error"
-
-                # Verification only if parsing was successful
+                
                 if isinstance(sanitized_response_json, dict) and "error" not in sanitized_response_json:
                     try:
                         verification_api_prompt = (
@@ -388,49 +333,63 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
                             f"Sanitized JSON to verify for page {page_num}:\n"
                             f"{json.dumps(sanitized_response_json, indent=2)}"
                         )
-
                         print(f"🔍 Content verification for page {page_num} started...")
-
-                        verification_response = call_openai_api(
-                            prompt=verification_api_prompt,
-                            image_base64=image_base64
-                        )
+                        verification_response = call_openai_api(prompt=verification_api_prompt, image_base64=image_base64)
                         verification_text = verification_response["text"]
-
                         metrics["verification_input_tokens"] = verification_response.get("input_tokens", 0)
                         metrics["verification_output_tokens"] = verification_response.get("output_tokens", 0)
                         metrics["verification_cost_usd"] = verification_response.get("cost", 0.0)
 
-                        if "pass" in verification_text.lower():
-                            current_page_verification_status = "pass"
-                        elif "fail" in verification_text.lower():
-                            current_page_verification_status = "fail"
-                        else:
-                            current_page_verification_status = f"fail - unclear: {verification_text[:100].strip()}"
-
+                        if "pass" in verification_text.lower(): current_page_verification_status = "pass"
+                        elif "fail" in verification_text.lower(): current_page_verification_status = "fail"
+                        else: current_page_verification_status = f"fail - unclear: {verification_text[:100].strip()}"
                         print(f"✅ Verification status for page {page_num}: {current_page_verification_status}")
-
                     except Exception as e_verify:
                         print(f"⚠️ Verification API error for page {page_num}: {e_verify}")
                         current_page_verification_status = f"fail - verification API error: {str(e_verify)}"
+                elif isinstance(sanitized_response_json, dict) and "error" in sanitized_response_json:
+                     current_page_verification_status = f"fail - input to verification was error object: {sanitized_response_json.get('error', 'unknown error')}"
 
-                # Always attach status and append
+
                 metrics["verification_status"] = current_page_verification_status
-                sanitized_response_json["page_verification_status"] = current_page_verification_status
+                if isinstance(sanitized_response_json, dict):
+                    sanitized_response_json["page_verification_status"] = current_page_verification_status
+                else: # Fallback if somehow not a dict
+                    sanitized_response_json = {
+                        "error": "Sanitized response was not a dictionary before final status assignment",
+                        "original_content": sanitized_response_json, "page_number": page_num,
+                        "page_verification_status": current_page_verification_status
+                    }
                 all_responses.append(sanitized_response_json)
+                print(f"✅ Page {page_num} processed and response appended (main path).")
 
+            except Exception as e_consolidate_sanitize_verify_block:
+                print(f"⚠️ Error in main processing block (consolidate/sanitize/verify) for page {page_num}: {e_consolidate_sanitize_verify_block}")
+                metrics["genai_response_consolidation_status"] = metrics.get("genai_response_consolidation_status") or 500
+                metrics["json_consolidation_error_message"] = (metrics.get("json_consolidation_error_message", "") + f"; Block error: {str(e_consolidate_sanitize_verify_block)}").strip()
+                metrics["verification_status"] = "fail - processing block error"
 
-                print(f"✅ Page {page_num} processed and response appended.")
+                error_payload_for_all_responses = {
+                    "error": f"Main processing block failure for page {page_num}", "details": str(e_consolidate_sanitize_verify_block),
+                    "page_number": page_num, "page_verification_status": metrics["verification_status"],
+                    "gemini_attempt_available": bool(gemini_json), 
+                    "openai_attempt_available": bool(openai_json),
+                    "consolidation_attempt_available": bool(consolidated_response_json) and consolidated_response_json != {} # Check if it's not the initial empty dict
+                }
+                all_responses.append(error_payload_for_all_responses)
+                print(f"🔴 Appended error object for page {page_num} due to processing block failure.")
 
-
-        except Exception as e: 
-            print(f"❌ Outer error processing page {page_num} ({img_path}): {e}")
-            error_info = {"error": f"General error processing page {page_num}", "details": str(e), "page_verification_status": "fail - page processing error"}
-            all_responses.append(error_info)
-            metrics["verification_status"] = error_info["page_verification_status"] 
+        except Exception as e_outer_page_processing: 
+            print(f"❌ Outer error processing page {page_num} ({img_path}): {e_outer_page_processing}")
+            page_error_info = {
+                "error": f"General error processing page {page_num}", "details": str(e_outer_page_processing),
+                "page_number": page_num, "page_verification_status": "fail - page processing error"
+            }
+            all_responses.append(page_error_info)
+            metrics["verification_status"] = page_error_info["page_verification_status"] 
 
         page_metrics.append(metrics)
-        # if page_num < len(image_paths): time.sleep(1) 
+        # if page_num < len(image_paths): time.sleep(1) # Consider if rate limiting is needed
 
     master_json_path = os.path.join(output_dir, "layout_with_verification.json")
     with open(master_json_path, "w", encoding="utf-8") as f:
@@ -438,6 +397,7 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
     print(f"✅ Master JSON with verification status saved to: {master_json_path}")
 
     if all_responses:
+        # Filter for dictionary items only, as some might be other types if errors occur unexpectedly
         dict_responses = [item for item in all_responses if isinstance(item, dict)]
         if not dict_responses:
             print("No dictionary data found in all_responses to convert to tabular formats.")
@@ -448,7 +408,7 @@ def process_pdf(pdf_path: str, output_dir: str, image_dir: str, poppler_path: st
             except Exception as e_convert:
                 print(f"❌ Error during CSV/Excel/HTML conversion: {e_convert}")   
     else:
-        print("No responses to convert.")
+        print("No responses to convert because all_responses is empty.") # Should not happen with the fix if there are pages
 
     summary_df = pd.DataFrame(page_metrics)
     summary_excel_path = os.path.join(output_dir, "page_summary_with_verification.xlsx")
