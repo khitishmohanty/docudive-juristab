@@ -1,8 +1,8 @@
 import os
-import imghdr
+import imghdr # Not used in this specific function, but present in the original file context
 import json
 from openai import OpenAI
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any, TypedDict, Literal, Union # Added Union here
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,6 +18,45 @@ OPENAI_OUTPUT_TOKEN_PRICE = float(os.getenv("OPENAI_OUTPUT_TOKEN_PRICE_PER_MILLI
 # OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+
+# Define TypedDicts for more specific type hinting
+
+class FileDetail(TypedDict):
+    """Specifies the structure for the 'file' part of a file content block."""
+    file_id: Optional[str] # file_id can be None before it's assigned
+
+class FileContentPart(TypedDict):
+    """Specifies the structure for a file content block."""
+    type: Literal["file"]
+    file: FileDetail
+
+class TextContentPart(TypedDict):
+    """Specifies the structure for a text content block."""
+    type: Literal["text"]
+    text: str
+
+# A UserContentItem can be either a FileContentPart or a TextContentPart
+UserContentItem = Union[FileContentPart, TextContentPart] # Requires `from typing import Union`
+
+class Message(TypedDict):
+    """Specifies the structure for a message object sent to the API."""
+    role: Literal["user"] # Assuming only "user" role for this specific function
+    content: List[UserContentItem]
+
+class OpenAIUsage(TypedDict): # To represent response.usage if it's not None
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int # Usually present as well
+
+class OpenAIFileCallResponse(TypedDict):
+    """Specifies the structure of the dictionary returned by this function."""
+    text: str
+    input_tokens: int
+    output_tokens: int
+    cost: float
+    model_used: str
+    uploaded_file_id: Optional[str]
+    
 def call_openai_api(prompt: str,
                     image_base64: Optional[str] = None,
                     model: Optional[str] = None,
@@ -96,3 +135,90 @@ def call_openai_with_json(json_file_path: str, prompt: str, model: Optional[str]
 
     except Exception as e:
         raise RuntimeError(f"Failed to call OpenAI API with JSON input: {e}")
+    
+def call_openai_with_pdf(pdf_path: str, prompt: str, model: Optional[str] = None) -> OpenAIFileCallResponse: # Changed return type
+    """
+    Calls the OpenAI Chat Completions API with a prompt and a PDF file.
+    The PDF is uploaded to OpenAI and referenced by its ID.
+    The uploaded file is deleted after the API call.
+    """
+    model_to_use = model or OPENAI_MODEL
+    uploaded_file_id: Optional[str] = None
+
+    try:
+        # Step 1: Upload the PDF file
+        with open(pdf_path, "rb") as pdf_file_obj:
+            #print(f"Uploading PDF: {pdf_path}...")
+            uploaded_file = client.files.create(file=pdf_file_obj, purpose="user_data") #
+            uploaded_file_id = uploaded_file.id #
+            #print(f"PDF uploaded successfully. File ID: {uploaded_file_id}")
+
+        # Step 2: Construct messages for the chat API
+        user_content: List[UserContentItem] = [ # Changed type hint
+            {
+                "type": "file",
+                "file": { # This inner dict matches FileDetail
+                    "file_id": uploaded_file_id
+                }
+            },
+            {
+                "type": "text",
+                "text": prompt
+            }
+        ]
+        
+        messages: List[Message] = [{"role": "user", "content": user_content}] # Changed type hint
+
+        # Step 3: API call
+        #print(f"Sending prompt and PDF (ID: {uploaded_file_id}) to model: {model_to_use}...")
+        response = client.chat.completions.create(
+            model=model_to_use,
+            messages=messages, # type: ignore # May need to ignore if OpenAI's SDK types are not perfectly aligned with our TypedDict
+            max_tokens=4000
+        )
+
+        # Step 4: Extract usage data
+        text_response = response.choices[0].message.content if response.choices[0].message.content else ""
+        
+        # The 'usage' object from the OpenAI API response might be None.
+        # It's good practice to access its attributes only if it's not None.
+        usage_data = response.usage # This object could be None.
+        
+        input_tokens = 0
+        output_tokens = 0
+
+        if usage_data: # Check if usage_data is not None
+            input_tokens = usage_data.prompt_tokens
+            output_tokens = usage_data.completion_tokens #
+        
+        #print(f"Received response. Input tokens: {input_tokens}, Output tokens: {output_tokens}")
+
+        # Calculate cost
+        cost = (
+            (input_tokens * OPENAI_INPUT_TOKEN_PRICE) +
+            (output_tokens * OPENAI_OUTPUT_TOKEN_PRICE)
+        ) / 1_000_000
+
+        # Construct the return dictionary according to OpenAIFileCallResponse
+        result: OpenAIFileCallResponse = {
+            "text": text_response,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cost": cost,
+            "model_used": model_to_use,
+            "uploaded_file_id": uploaded_file_id
+        }
+        return result
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise RuntimeError(f"Failed to call OpenAI API with PDF: {e}")
+    
+    finally:
+        if uploaded_file_id:
+            try:
+                #print(f"Deleting uploaded file: {uploaded_file_id}...")
+                client.files.delete(file_id=uploaded_file_id) #
+                #print(f"File {uploaded_file_id} deleted successfully.")
+            except Exception as delete_error:
+                print(f"Error deleting file {uploaded_file_id}: {delete_error}")

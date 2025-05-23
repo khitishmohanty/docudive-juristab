@@ -19,12 +19,13 @@ Perform layout analysis and content extraction from the attached document image.
    - In `content`, return either:
      - A JSON array of rows and cells
      - Or a Markdown formatted table
+     - or if the content has hyperlink, return the content with the hyperlink information
 6. For each element, extract the following metadata if present:
    - `act-name-citations`: Legal references such as cited legislation or case law (semicolon-separated)
    - `issuance-date`, `compliance-date`, `effective-date`, `publication-date`: In YYYY-MM-DD format
    - `judgment-date`: Date of judgment if mentioned (YYYY-MM-DD)
    - `legislative-body`: The legislative or issuing authority
-   - `url`: The cited url
+   - `url`: The raw URL if available (can be used by the system for reference even though it's embedded in content). semicolon-separated
    - If metadata is missing, return `null`
 7. For **each element**, add this:
    - `"verification-flag": "Not Verified"`
