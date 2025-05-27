@@ -2,8 +2,7 @@ import json
 import os
 import pandas as pd
 
-from utils.csv_excel_converter import convert_json_to_csv_and_excel
-from utils.html_converter import convert_json_to_html
+from utils.file_converters import convert_json_to_csv_and_excel, convert_json_to_html
 
 def _save_results(all_responses: list, page_metrics: list, output_dir: str) -> None:
     """Saves all responses to JSON, CSV, Excel, HTML and page metrics to Excel/CSV."""

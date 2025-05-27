@@ -26,5 +26,6 @@ def _initialize_page_metrics(page_num_actual: int) -> dict:
         "hyperlink_error_message": "",
         "verification_status": "failed - verification not performed",
         "verification_input_tokens": 0, "verification_output_tokens": 0, "verification_cost_usd": 0.0,
-        "time_sec_verification": 0.0
+        "time_sec_verification": 0.0,
+        "direct_text_extraction_status" : "not_attempted", "direct_text_char_count" : 0, "ocr_text_extraction_status" : "not_attempted", "ocr_text_char_count" : 0
     }

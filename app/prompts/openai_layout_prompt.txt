@@ -33,23 +33,21 @@ Perform layout analysis and content extraction from the attached document image.
 ### Output Format:
 Return a **valid JSON** with the following structure:
 ```json
-{
-  "document_elements": [
-    {
-      "correlation-id": "1",
-      "tag": "Clause",
-      "content": "**Clause 1: Obligations**\\nParty A must deliver goods within 7 days.",
-      "clause-type": "Obligation/Requirement",
-      "act-name-citations": "Contract Law Act 2020",
-      "url": null,
-      "issuance-date": "2020-01-01",
-      "compliance-date": "2020-01-08",
-      "effective-date": "2020-01-01",
-      "publication-date": null,
-      "judgment-date": null,
-      "legislative-body": "Victorian Parliament",
-      "verification-flag": "Not Verified"
-    }
-    ...
-  ]
-}
+[
+  {
+    "correlation-id": null,
+    "tag": "figure",
+    "content": "AUTHENTICATED\nU.S. GOVERNMENT\n MATION\nGPO",
+    "clause-type": null,
+    "act-name-citations": null,
+    "url": null,
+    "issuance-date": null,
+    "compliance-date": null,
+    "effective-date": null,
+    "publication-date": null,
+    "judgment-date": null,
+    "legislative-body": null,
+    "verification-flag": "Not Verified"
+  }
+  ...
+]

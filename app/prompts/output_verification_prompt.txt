@@ -18,4 +18,25 @@ Confirm that the text content exists in the image exactly or with very minimal v
 
 Confirm the layout tag (e.g., is the content really a Header, Paragraph, List, etc.).
 Identify any missing, misplaced, or incorrectly tagged content.
-Output Pass if all content matches and the layout tags are correct. Otherwise, output Fail.
+Output Pass if all content matches and the layout tags are correct. Otherwise, output Fail. If any extra content present like "element_object_schema" or field definitions, then also mark as Fail.
+
+Return a **valid JSON** with the following structure:
+```json
+[
+  {
+    "correlation-id": null,
+    "tag": "figure",
+    "content": "AUTHENTICATED\nU.S. GOVERNMENT\n MATION\nGPO",
+    "clause-type": null,
+    "act-name-citations": null,
+    "url": null,
+    "issuance-date": null,
+    "compliance-date": null,
+    "effective-date": null,
+    "publication-date": null,
+    "judgment-date": null,
+    "legislative-body": null,
+    "verification-flag": "Not Verified"
+  }
+  ...
+]
