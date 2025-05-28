@@ -36,6 +36,10 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
+# Models
+models/deepseek-r1-14b/*
+models/deepseek-r1-32b/*
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
