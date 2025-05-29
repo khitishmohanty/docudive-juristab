@@ -1,8 +1,8 @@
-Perform layout analysis and content extraction from the attached document image.
+Perform layout analysis and content extraction from the attached document. I have attached current and previous page. refer the previous page to identify subheadings and headings properly.
 
 ### Your tasks:
 1. Identify and label each structural element in the **order it appears** on the page using one of these tags:
-   - 'Enum', 'Figure', 'Footnote', 'Header', 'Heading', 'List', 'Paragraph', 'Table', 'Table of Contents', 'Title', 'Subtitle', 'Footer', 'Page number', 'Endnotes', 'Glossary', 'Clause'
+   - 'Enum', 'Figure', 'Footnote', 'Header', 'Heading', 'SubHeading', 'List', 'Paragraph', 'Table', 'Table of Contents', 'Title', 'Subtitle', 'Footer', 'Page number', 'Endnotes', 'Glossary', 'Clause'
 2. For each element:
    - Preserve styling using Markdown:
      - **bold** for bold text
