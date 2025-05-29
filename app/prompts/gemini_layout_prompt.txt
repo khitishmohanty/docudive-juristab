@@ -2,7 +2,7 @@ Perform layout analysis and content extraction from the attached document. I hav
 
 ### Your tasks:
 1. Identify and label each structural element in the **order it appears** on the page using one of these tags:
-   - 'Enum', 'Figure', 'Footnote', 'Header', 'Heading', 'SubHeading', 'List', 'Paragraph', 'Table', 'Table of Contents', 'Title', 'Subtitle', 'Footer', 'Page number', 'Endnotes', 'Glossary', 'Clause'
+   - 'Enum', 'Figure', 'Footnote', 'Header', 'Heading-h1', 'Heading-h2', 'Heading-h3', 'Heading-h4','List', 'Paragraph', 'Table', 'Table of Contents', 'Title', 'Subtitle', 'Footer', 'Page number', 'Endnotes', 'Glossary', 'Clause'
 2. For each element:
    - Preserve styling using Markdown:
      - **bold** for bold text

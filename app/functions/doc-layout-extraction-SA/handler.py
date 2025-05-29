@@ -19,8 +19,8 @@ from utils.pdf_text_extractor import extract_text_from_pdf_page, extract_text_fr
 from utils.text_utils import _verify_item_content_in_direct_text_fuzzy
 
 from core.layout_gemini import _call_gemini_for_layout
-from core.layout_openai import _call_openai_for_layout
-from core.page_processor import _orchestrate_page_processing
+# from core.layout_openai import _call_openai_for_layout # Assuming you might use this later
+from core.page_processor import _orchestrate_page_processing # Assuming you might use this later
 from core.finalizer import _save_results
 
 
@@ -36,10 +36,10 @@ def process_pdf(pdf_path: str, output_dir: str, temp_page_dir: str) -> list:
     all_responses = []
     page_metrics_list = []
     
-    poppler_bin_path = None
-    MIN_DIRECT_PYPDF2_TEXT_LENGTH_THRESHOLD = 20  # Min characters for direct text to be considered "sufficient"
+    poppler_bin_path = None # Set this if not in PATH and using OCR
+    MIN_DIRECT_PYPDF2_TEXT_LENGTH_THRESHOLD = 20
     MIN_FITZ_TEXT_LENGTH_THRESHOLD = 20
-    FUZZY_MATCH_THRESHOLD = 88 # Configurable threshold for fuzzy matching
+    FUZZY_MATCH_THRESHOLD = 88
     
     try:
         pdf_document = fitz.open(pdf_path)
@@ -47,40 +47,35 @@ def process_pdf(pdf_path: str, output_dir: str, temp_page_dir: str) -> list:
         print(f"❌ Failed to open PDF {pdf_path}: {e}")
         return []
 
+    prev_pdf_page_base64 = None # Initialize previous page base64
+
     for page_index in range(len(pdf_document)):
         page_num_actual = page_index + 1
         print("---------------------")
         print(f"📤 Processing page: {page_num_actual}")
 
         metrics = _initialize_page_metrics(page_num_actual)
-        # Metrics for the "previous fallback mechanism" (Direct PyPDF2 -> OCR)
         metrics["fallback_text_method_used"] = "none"
         metrics["fallback_text_status"] = "not_attempted"
         metrics["fallback_text_char_count"] = 0
-        # Metrics for Fitz extraction
         metrics["fitz_extraction_status"] = "not_attempted"
-        metrics["fitz_text_char_count"] = 0 # Text from Fitz
+        metrics["fitz_text_char_count"] = 0
         metrics["fitz_link_count"] = 0
-        # Final chosen text for verification
         metrics["verification_text_source"] = "none"
         
         page_processing_start_time = time.time()
 
         temp_pdf_page_path = os.path.join(temp_page_dir, f"temp_page_{page_num_actual}.pdf")
-        pdf_page_base64 = None
-        chosen_text_for_page = ""
+        current_pdf_page_base64 = None
+        chosen_text_from_fallback = "" # Initialize here
+        fitz_page_text = "" # Initialize here
         hyperlinks_from_fitz = []
-        actual_direct_text_for_page = "" # Store direct text separately for verification
-
-        # Initialize hyperlink data structure for the current page
-        # This will now be returned by the subfunction.
-        # extracted_hyperlinks_data = {"hyperlinks": [], "status": "not_attempted", "error_message": ""}
 
         try:
             temp_pdf_creation_start_time = time.time()
             _create_temp_page_pdf(pdf_document, page_index, temp_pdf_page_path)
             metrics["time_sec_temp_pdf_creation"] = time.time() - temp_pdf_creation_start_time
-            pdf_page_base64 = encode_pdf_to_base64(temp_pdf_page_path)
+            current_pdf_page_base64 = encode_pdf_to_base64(temp_pdf_page_path)
 
             # --- Block 1: "Previous Fallback Mechanism" (Direct PyPDF2 -> OCR) ---
             direct_pypdf2_sufficient = False
@@ -109,10 +104,12 @@ def process_pdf(pdf_path: str, output_dir: str, temp_page_dir: str) -> list:
                         metrics["fallback_text_status"] = "success"
                         print(f"✅ OCR text extracted for fallback mechanism page {page_num_actual}.")
                     else:
+                        chosen_text_from_fallback = "" # Ensure it's empty if OCR yields nothing
                         metrics["fallback_text_method_used"] = "ocr_fallback"
                         metrics["fallback_text_status"] = "ocr_empty_result"
                 except Exception as e_ocr:
                     print(f"⚠️ OCR extraction failed for page {page_num_actual}: {e_ocr}")
+                    chosen_text_from_fallback = "" # Ensure it's empty on failure
                     metrics["fallback_text_method_used"] = "ocr_fallback"
                     metrics["fallback_text_status"] = f"ocr_fail: {str(e_ocr)}"
             
@@ -120,7 +117,6 @@ def process_pdf(pdf_path: str, output_dir: str, temp_page_dir: str) -> list:
             if chosen_text_from_fallback.strip():
                 fb_text_path = os.path.join(genai_output_dir, f"page_{page_num_actual}_fallback_text.txt")
                 with open(fb_text_path, "w", encoding="utf-8") as f: f.write(chosen_text_from_fallback)
-                #print(f"✅ Fallback text saved to {fb_text_path}")
                 print(f"✅ Fallback text saved")
 
 
@@ -144,12 +140,13 @@ def process_pdf(pdf_path: str, output_dir: str, temp_page_dir: str) -> list:
             except Exception as e_fitz:
                 print(f"⚠️ Fitz extraction failed for page {page_num_actual}: {e_fitz}")
                 metrics["fitz_extraction_status"] = f"fail: {str(e_fitz)}"
-                fitz_page_text = "" # Ensure empty on failure for decision making
+                fitz_page_text = "" 
                 hyperlinks_from_fitz = []
-                with open(fitz_output_path, "w", encoding="utf-8") as f: # Save error info
+                with open(fitz_output_path, "w", encoding="utf-8") as f: 
                     json.dump({"error": f"Fitz extraction failed: {str(e_fitz)}", "page_number": page_num_actual}, f, indent=2)
 
             # --- Determine Text for Content Verification ---
+            text_for_content_verification = ""
             if metrics["fitz_extraction_status"] == "success" and fitz_page_text.strip():
                 text_for_content_verification = fitz_page_text
                 metrics["verification_text_source"] = "fitz"
@@ -159,36 +156,54 @@ def process_pdf(pdf_path: str, output_dir: str, temp_page_dir: str) -> list:
                 metrics["verification_text_source"] = metrics["fallback_text_method_used"]
                 print(f"ℹ️ Using Fallback text for content verification on page {page_num_actual} (Fitz text unavailable/empty).")
             else:
-                text_for_content_verification = "" # No usable text from either method
                 metrics["verification_text_source"] = "none_available"
                 print(f"ℹ️ No text available from Fitz or Fallback for content verification on page {page_num_actual}.")
 
-
             # --- GenAI Layout Calls ---
-            gemini_json = _call_gemini_for_layout(pdf_page_base64, page_num_actual, genai_output_dir, metrics)
-            #openai_json = _call_openai_for_layout(temp_pdf_page_path, page_num_actual, genai_output_dir, metrics)
+            # Pass both current and previous page base64 strings
+            gemini_json = _call_gemini_for_layout(
+                current_pdf_page_base64=current_pdf_page_base64,
+                prev_pdf_page_base64=prev_pdf_page_base64, # Pass previous page
+                page_num_actual=page_num_actual,
+                genai_output_dir=genai_output_dir,
+                metrics=metrics
+            )
+            
+            # For the next iteration, the current page becomes the previous page
+            prev_pdf_page_base64 = current_pdf_page_base64 
 
-            # --- Orchestration Call ---
-            #final_page_response = _orchestrate_page_processing(
-            #    pdf_page_base64, gemini_json, openai_json,
-            #    page_num_actual, genai_output_dir, temp_pdf_page_path, metrics
-            #)
+            # --- Orchestration Call (Example, if you re-enable it) ---
+            # final_page_response = _orchestrate_page_processing(
+            # pdf_page_base64, gemini_json, openai_json, # Assuming openai_json is also generated
+            # page_num_actual, genai_output_dir, temp_pdf_page_path, metrics
+            # )
+            # For now, let's assume gemini_json is the primary response to work with
+            final_page_response = gemini_json 
+
 
             # --- Content Verification Step ---
-            # This modifies final_page_response in place by updating "verification-flag"
-            #if isinstance(final_page_response, dict):
-            #    final_page_response = _verify_item_content_in_direct_text_fuzzy( # Ensure this function is correctly imported/defined
-            #        final_page_response, 
-            #        text_for_content_verification, 
-            #        page_num_actual,
-            #        fuzzy_threshold=FUZZY_MATCH_THRESHOLD 
-            #    )
-            #    print(f"✅ Content verification against chosen extracted text completed for page {page_num_actual}.")
-            #else:
-            #    print(f"⚠️ Skipping content verification for page {page_num_actual} as final_page_response is not a dictionary.")
+            if isinstance(final_page_response, dict):
+                 # Ensure _verify_item_content_in_direct_text_fuzzy can handle the structure of gemini_json
+                final_page_response_verified = _verify_item_content_in_direct_text_fuzzy(
+                    final_page_response.copy(), # Pass a copy if the function modifies in place and you need original
+                    text_for_content_verification,
+                    page_num_actual,
+                    fuzzy_threshold=FUZZY_MATCH_THRESHOLD
+                )
+                # Assuming _verify_item_content_in_direct_text_fuzzy returns the modified dict or adds keys to it.
+                # Update final_page_response if the verification function returns a new dict.
+                # If it modifies in place, this assignment might not be strictly necessary but is good for clarity.
+                final_page_response = final_page_response_verified 
+                print(f"✅ Content verification against chosen extracted text completed for page {page_num_actual}.")
+            else:
+                print(f"⚠️ Skipping content verification for page {page_num_actual} as final_page_response is not a dictionary.")
+                if isinstance(final_page_response, list): # Handle case where Gemini might return a list directly
+                     # You might need to wrap it in a dict or iterate through it for verification
+                    print(f"ℹ️ Gemini response is a list. Verification logic might need adjustment.")
 
-            #all_responses.append(final_page_response)
-            #print(f"✅ Page {page_num_actual} processed and response appended.")
+
+            all_responses.append(final_page_response)
+            print(f"✅ Page {page_num_actual} processed and response appended.")
 
         except Exception as e_outer_page_processing:
             print(f"❌ Outer error processing page {page_num_actual} (temp PDF: {temp_pdf_page_path}): {e_outer_page_processing}")
@@ -197,8 +212,16 @@ def process_pdf(pdf_path: str, output_dir: str, temp_page_dir: str) -> list:
                 "page_number": page_num_actual, "page_verification_status": "fail - page processing error"
             }
             all_responses.append(page_error_info)
-            metrics["verification_status"] = metrics.get("verification_status", "fail - page processing error")
-            metrics["text_extraction_status"] = metrics.get("text_extraction_status", "fail_due_to_outer_error")
+            metrics["verification_status"] = metrics.get("verification_status", "fail - page processing error") # Ensure key exists
+            metrics["text_extraction_status"] = metrics.get("text_extraction_status", "fail_due_to_outer_error") # Ensure key exists
+            # Update prev_pdf_page_base64 even in case of error for this page,
+            # so the next page doesn't incorrectly use an older page.
+            # If current_pdf_page_base64 was successfully created before the error, use it.
+            if current_pdf_page_base64:
+                prev_pdf_page_base64 = current_pdf_page_base64
+            else: # If temp page creation failed, reset prev_pdf_page_base64 for next iteration
+                prev_pdf_page_base64 = None
+
 
         finally:
             metrics["time_sec_total_page_processing"] = time.time() - page_processing_start_time
@@ -227,51 +250,39 @@ if __name__ == "__main__":
     except ImportError: print("⚠️ PyPDF2 library not found. Direct PyPDF2 text extraction will fail.")
     try: from pdf2image import convert_from_path
     except ImportError: print("⚠️ pdf2image library not found. OCR extraction will fail.")
-    try: from thefuzz import fuzz # For _verify_item_content_in_direct_text_fuzzy
+    try: from thefuzz import fuzz
     except ImportError: print("⚠️ thefuzz library not found. Fuzzy verification will fail. pip install thefuzz python-Levenshtein")
 
  
     base_dir = Path(__file__).resolve().parent
-    project_root_path = base_dir.parents[2]
+    project_root_path = base_dir.parents[2] # Adjust if handler.py moves
   
 
     print(f"Project root determined as: {project_root_path}")
 
-    # Define input PDF path
     pdf_path = project_root_path / "tests" / "assets" / "inputs" / "sample.pdf"
-    # Define output directories
     output_dir_path = project_root_path / "tests" / "assets" / "outputs" / "functions" / "output_doc_layout"
-    #image_dir_path = output_dir_path / "page_images"
-    genai_output_dir = output_dir_path / "genai_outputs"
-
-    # Define temp_pdf_page_dir_path correctly
     temp_pdf_page_dir_path = output_dir_path / "temp_pdf_pages" 
     
-    # Ensure output folders exist
     os.makedirs(output_dir_path, exist_ok=True)
-    os.makedirs(genai_output_dir, exist_ok=True)
+    os.makedirs(output_dir_path / "genai_outputs", exist_ok=True) # Ensure genai_outputs is also created if not by process_pdf
     os.makedirs(temp_pdf_page_dir_path, exist_ok=True)
 
     print(f"Input PDF path: {pdf_path}")
     print(f"Output directory: {output_dir_path}")
     print(f"Temporary PDF page directory: {temp_pdf_page_dir_path}")
 
-    # Ensure PDF exists
     if not pdf_path.exists():
         print(f"❌ ERROR: PDF file not found at {pdf_path}")
         sys.exit(1)
 
-    # Process PDF for layout extraction
     page_summary_data = process_pdf(
         pdf_path=str(pdf_path),
         output_dir=str(output_dir_path),
-        temp_page_dir=str(temp_pdf_page_dir_path) # Pass the new temp_page_dir argument
+        temp_page_dir=str(temp_pdf_page_dir_path)
     )
 
-    # Final summary
     if page_summary_data:
         print("✅ PDF processing complete. Page summary with verification generated.")
     else:
         print("⚠️ PDF processing completed, but no page summary data was returned.")
-
-
