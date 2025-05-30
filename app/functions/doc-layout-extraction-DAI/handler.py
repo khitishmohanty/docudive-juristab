@@ -1,9 +1,15 @@
 import os
 import argparse
+import sys
 import json # Added for JSON operations
 from google.cloud import documentai_v1 as documentai # For type hinting
 from google.protobuf.json_format import MessageToJson # Added to convert Document object to JSON
 from pathlib import Path
+
+# Add project root to PYTHONPATH
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, "../../"))
+sys.path.insert(0, project_root)
 
 from core.layout_documentai import process_pdf, save_document_as_json
 from services.documentai_client import process_document_sample

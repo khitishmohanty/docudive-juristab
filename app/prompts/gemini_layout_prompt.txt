@@ -1,8 +1,8 @@
-Perform layout analysis and content extraction from the attached document. I have attached current and previous page. refer the previous page to identify subheadings and headings properly.
+Perform layout analysis and content extraction from the attached document.
 
 ### Your tasks:
 1. Identify and label each structural element in the **order it appears** on the page using one of these tags:
-   - 'Enum', 'Figure', 'Footnote', 'Header', 'Heading-h1', 'Heading-h2', 'Heading-h3', 'Heading-h4','List', 'Paragraph', 'Table', 'Table of Contents', 'Title', 'Subtitle', 'Footer', 'Page number', 'Endnotes', 'Glossary', 'Clause'
+   - 'Enum', 'Figure', 'Footnote', 'Header', 'Heading-h1', 'Heading-h2', 'Heading-h3', 'Heading-h4', 'Heading-h5', 'Heading-h6', 'List', 'Paragraph', 'Table', 'Table of Contents', 'Title', 'Subtitle', 'Footer', 'Page number', 'Endnotes', 'Glossary', 'Clause'
 2. For each element:
    - Preserve styling using Markdown:
      - **bold** for bold text
@@ -20,15 +20,6 @@ Perform layout analysis and content extraction from the attached document. I hav
      - A JSON array of rows and cells
      - Or a Markdown formatted table
      - or if the content has hyperlink, return the content with the hyperlink information
-6. For each element, extract the following metadata if present:
-   - `act-name-citations`: Legal references such as cited legislation or case law (semicolon-separated)
-   - `issuance-date`, `compliance-date`, `effective-date`, `publication-date`: In YYYY-MM-DD format
-   - `judgment-date`: Date of judgment if mentioned (YYYY-MM-DD)
-   - `legislative-body`: The legislative or issuing authority
-   - `url`: The raw URL if available (can be used by the system for reference even though it's embedded in content). semicolon-separated
-   - If metadata is missing, return `null`
-7. For **each element**, add this:
-   - `"verification-flag": "Not Verified"`
 
 ### Output Format:
 Return a **valid JSON** with the following structure:
@@ -38,16 +29,7 @@ Return a **valid JSON** with the following structure:
     "correlation-id": null,
     "tag": "figure",
     "content": "AUTHENTICATED\nU.S. GOVERNMENT\n MATION\nGPO",
-    "clause-type": null,
-    "act-name-citations": null,
-    "url": null,
-    "issuance-date": null,
-    "compliance-date": null,
-    "effective-date": null,
-    "publication-date": null,
-    "judgment-date": null,
-    "legislative-body": null,
-    "verification-flag": "Not Verified"
+    "clause-type": null
   }
   ...
 ]
