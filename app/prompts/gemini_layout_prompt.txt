@@ -24,12 +24,27 @@ Perform layout analysis and content extraction from the attached document.
 ### Output Format:
 Return a **valid JSON** with the following structure:
 ```json
-[
-  {
-    "correlation-id": null,
-    "tag": "figure",
-    "content": "AUTHENTICATED\nU.S. GOVERNMENT\n MATION\nGPO",
-    "clause-type": null
-  }
-  ...
-]
+{
+  "Page1": [
+    {
+      "correlation-id": null,
+      "tag": "figure",
+      "content": "AUTHENTICATED\nU.S. GOVERNMENT\n MATION\nGPO",
+      "clause-type": null
+    },
+    {
+      "correlation-id": null,
+      "tag": "heading",
+      "content": "AUTHENTICATED\nU.S. GOVERNMENT\n MATION\nGPO",
+      "clause-type": null
+    }
+  ],
+  "Page2": [
+    {
+      "correlation-id": null,
+      "tag": "some_other_tag",
+      "content": "Content from page 2",
+      "clause-type": null
+    }
+  ]
+}
