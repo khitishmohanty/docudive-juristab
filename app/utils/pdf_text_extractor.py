@@ -70,3 +70,84 @@ def extract_text_and_links_with_fitz(pdf_path: str, page_number: int) -> tuple[s
             doc.close()
             
     return page_text_content, hyperlinks_data
+
+def extract_text_from_pdf_chunk_pypdf2(chunk_pdf_path: str) -> list[str]:
+    """Extracts machine-readable text from all pages in a given PDF chunk using PyPDF2."""
+    texts_for_pages = []
+    try:
+        with open(chunk_pdf_path, "rb") as f:
+            reader = PdfReader(f)
+            for page_num in range(len(reader.pages)):
+                page_text = reader.pages[page_num].extract_text()
+                texts_for_pages.append(page_text or "")
+    except Exception as e:
+        print(f"Error reading PDF chunk {chunk_pdf_path} with PyPDF2: {e}")
+        # If error, texts_for_pages might be empty or partially filled.
+        # Consider how to handle this based on expected number of pages, or let caller check.
+    return texts_for_pages
+
+def extract_text_from_chunk_ocr(chunk_pdf_path: str, poppler_path=None) -> list[str]:
+    """Renders all pages in a PDF chunk as images and performs OCR on each."""
+    texts_for_pages = []
+    try:
+        images = convert_from_path(
+            chunk_pdf_path,
+            dpi=300,
+            poppler_path=poppler_path,
+            thread_count=1
+        )
+        for i, image in enumerate(images):
+            try:
+                texts_for_pages.append(pytesseract.image_to_string(image) or "")
+            except Exception as ocr_e:
+                print(f"Error during OCR for page {i} in chunk {chunk_pdf_path}: {ocr_e}")
+                texts_for_pages.append("") # Add empty string for failed OCR page
+    except Exception as e:
+        print(f"Error converting PDF chunk {chunk_pdf_path} to images for OCR: {e}")
+        # If conversion fails, texts_for_pages will be empty.
+    return texts_for_pages
+
+# is_fidelity_preserved function remains the same as it's a general utility
+
+def extract_text_and_links_from_chunk_fitz(chunk_pdf_path: str) -> list[tuple[str, list[dict]]]:
+    """
+    Extracts full page text and hyperlinks from all pages in a PDF chunk using PyMuPDF.
+    Returns a list of tuples, one for each page: (page_text, list_of_hyperlinks_on_page).
+    """
+    doc = None
+    all_pages_data = [] # List of (page_text, links_for_page)
+    try:
+        doc = fitz.open(chunk_pdf_path)
+        for page_num in range(doc.page_count):
+            page = doc.load_page(page_num)
+            page_text_content = page.get_text("text") or ""
+            
+            hyperlinks_data_for_page = []
+            links = page.get_links() 
+            for link_dict in links:
+                if link_dict.get('kind') == fitz.LINK_URI:
+                    uri = link_dict.get('uri')
+                    # CRITICAL: Use 'from' for the rectangle, not 'from_rect' for fitz link dict
+                    rect = link_dict.get('from') 
+                    
+                    link_anchor_text = "N/A"
+                    if rect: # Ensure rect is not None before using it
+                        try:
+                            link_anchor_text = page.get_text("text", clip=rect).strip()
+                        except Exception as clip_e:
+                             print(f"Warning: could not extract text for link clip on page {page_num} of {chunk_pdf_path}: {clip_e}")
+                    
+                    if uri:
+                        hyperlinks_data_for_page.append({
+                            "text": link_anchor_text,
+                            "url": uri,
+                            "rect": [rect.x0, rect.y0, rect.x1, rect.y1] if rect else None
+                        })
+            all_pages_data.append((page_text_content, hyperlinks_data_for_page))
+    except Exception as e:
+        print(f"Error processing PDF chunk {chunk_pdf_path} with fitz: {e}")
+        # all_pages_data might be empty or partially filled.
+    finally:
+        if doc:
+            doc.close()
+    return all_pages_data
