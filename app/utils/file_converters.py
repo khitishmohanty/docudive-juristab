@@ -38,19 +38,35 @@ def escape_html(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;")
 
 # --- Enhanced function to convert markdown and process explicit hyperlinks ---
-def process_content_for_html(content_str: str, explicit_hyperlinks: List[Dict[str, str]] = None) -> str:
+def process_content_for_html(content_str: str, 
+                             explicit_hyperlinks: List[Dict[str, str]] = None,
+                             is_heading_content: bool = False) -> str:
     if not isinstance(content_str, str):
         content_str = str(content_str)
     
-    processed_content = escape_html(content_str)
-    # Markdown for bold and italics
-    processed_content = re.sub(r'\*\*(?=\S)(.*?)(?<=\S)\*\*|__(?=\S)(.*?)(?<=\S)__', r'<strong>\1\2</strong>', processed_content)
-    processed_content = re.sub(r'\*(?=\S)(.*?)(?<=\S)\*|_(?=\S)(.*?)(?<=\S)_', r'<em>\1\2</em>', processed_content)
-    # Markdown for links
-    processed_content = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', processed_content)
+    # Strip leading/trailing whitespace first
+    processed_content = content_str.strip()
+
+    # For headings, we only want to escape the cleaned text.
+    # For other content, we apply markdown.
+    if is_heading_content:
+        # If it's heading content, only escape it. Markdown styling (bold, italic) is not needed
+        # as the heading tag itself handles boldness and specific font styling is applied via CSS.
+        processed_content = escape_html(processed_content)
+    else:
+        # For non-heading content, first escape, then apply markdown.
+        processed_content = escape_html(processed_content)
+        # Markdown for bold and italics
+        processed_content = re.sub(r'\*\*(?=\S)(.*?)(?<=\S)\*\*|__(?=\S)(.*?)(?<=\S)__', r'<strong>\1\2</strong>', processed_content)
+        processed_content = re.sub(r'\*(?=\S)(.*?)(?<=\S)\*|_(?=\S)(.*?)(?<=\S)_', r'<em>\1\2</em>', processed_content)
+        # Markdown for links
+        processed_content = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', processed_content)
+    
+    # Handle newlines by converting them to <br> for all content types AFTER markdown processing
     processed_content = processed_content.replace('\n', '<br>\n')
 
-    if explicit_hyperlinks and isinstance(explicit_hyperlinks, list):
+    # Append explicit hyperlinks if provided (usually for paragraphs, not headings)
+    if explicit_hyperlinks and isinstance(explicit_hyperlinks, list) and not is_heading_content:
         links_html_parts = ["<div class='explicit-hyperlinks'><strong>Links:</strong><ul>"]
         for link_info in explicit_hyperlinks:
             if isinstance(link_info, dict):
@@ -88,10 +104,16 @@ def convert_book_json_to_html(
 
         tag_key = item.get("tag", "Paragraph")
         html_tag_from_map = HTML_TAG_MAP.get(tag_key, "p")
-        raw_content = item.get("content", "")
+        raw_content = item.get("content", "") # Keep as original type initially
         explicit_hyperlinks = item.get("hyperlinks")
         is_heading = html_tag_from_map.startswith("h") and len(html_tag_from_map) == 2 and html_tag_from_map[1].isdigit()
         current_heading_level = int(html_tag_from_map[1]) if is_heading else 0
+
+        # Content Clearing for "Page X" or "Page no. X" patterns, unless it's a heading
+        if not is_heading and isinstance(raw_content, str):
+            temp_check_content = raw_content.strip().lower()
+            if re.fullmatch(r'page(\s*no\.?)?(\s*\d+)?\s*', temp_check_content):
+                raw_content = "" # Clear content if it's just a page number indicator
 
         if is_heading:
             while open_details_stack and open_details_stack[-1] >= current_heading_level:
@@ -99,16 +121,22 @@ def convert_book_json_to_html(
                 html_body_parts.append("</div></details>\n") 
             
             cleaned_heading_content = str(raw_content).strip()
-            # Remove leading/trailing ** only if they are exact and form the full enclosure
             if cleaned_heading_content.startswith("**") and cleaned_heading_content.endswith("**") and len(cleaned_heading_content) >= 4:
                 cleaned_heading_content = cleaned_heading_content[2:-2]
             
-            summary_content_html = escape_html(cleaned_heading_content)
+            # For headings, pass is_heading_content=True to avoid markdown processing
+            summary_content_html = process_content_for_html(cleaned_heading_content, is_heading_content=True)
             
-            details_class = f"details-level-{current_heading_level}" # For indentation of the whole block
+            details_class = f"details-level-{current_heading_level}" 
             html_body_parts.append(f"<details open class='{details_class}'>\n  <summary><{html_tag_from_map}>{summary_content_html}</{html_tag_from_map}></summary>\n<div class='collapsible-content-wrapper'>\n")
             open_details_stack.append(current_heading_level)
         else:
+            # Skip rendering if raw_content became empty after clearing "Page no."
+            if isinstance(raw_content, str) and not raw_content.strip() and tag_key != "List" and tag_key != "Table": # Allow empty lists/tables to render their tags
+                 if not explicit_hyperlinks: # If there are explicit links, render the container for them
+                    continue
+
+
             processed_content_html = ""
             if tag_key == "Table of Contents":
                 processed_content_html += f"<{html_tag_from_map} class='table-of-contents'>\n"
@@ -119,7 +147,7 @@ def convert_book_json_to_html(
                         rendered_ul = "<ul>\n"
                         for toc_item_dict in items_list:
                             item_text = toc_item_dict.get("item_text", "Untitled")
-                            rendered_ul += f"  <li>{escape_html(item_text)}"
+                            rendered_ul += f"  <li>{escape_html(item_text)}" # ToC items are usually plain text
                             sub_items = toc_item_dict.get("sub_items")
                             if sub_items and isinstance(sub_items, list):
                                 rendered_ul += render_toc_items(sub_items)
@@ -128,37 +156,28 @@ def convert_book_json_to_html(
                         return rendered_ul
                     processed_content_html += render_toc_items(toc_data)
                 except Exception as e_toc:
-                     processed_content_html += f"<p>Error rendering Table of Contents: {escape_html(str(e_toc))}</p><pre>{escape_html(raw_content)}</pre>"
+                     processed_content_html += f"<p>Error rendering Table of Contents: {escape_html(str(e_toc))}</p><pre>{process_content_for_html(str(raw_content), is_heading_content=True)}</pre>" # Escape raw_content for pre
                 processed_content_html += f"</{html_tag_from_map}>\n"
             
             elif tag_key == "List":
                 processed_content_html += f"<{html_tag_from_map}>\n" 
+                actual_list_items_to_render = []
                 if isinstance(raw_content, str):
-                    list_items = raw_content.split('\n')
-                    for li_content in list_items:
-                        li_content_stripped = li_content.strip()
-                        # Clean common leading bullet characters/markdown for lists
-                        li_content_stripped = re.sub(r'^[\s]*[\*\-\•\.]\s*', '', li_content_stripped) # Remove *, -, •, . followed by space
-                        if li_content_stripped:
-                            li_html = process_content_for_html(li_content_stripped, None)
-                            processed_content_html += f"  <li>{li_html}</li>\n" 
+                    actual_list_items_to_render = raw_content.split('\n')
                 elif isinstance(raw_content, list): 
-                    for li_content_item_raw in raw_content:
-                        li_content_item_str = str(li_content_item_raw).strip()
-                        li_content_item_str = re.sub(r'^[\s]*[\*\-\•\.]\s*', '', li_content_item_str)
-                        if li_content_item_str:
-                            li_html = process_content_for_html(li_content_item_str, None)
-                            processed_content_html += f"  <li>{li_html}</li>\n"
-                else:
-                    # Fallback if raw_content is not string or list (should ideally not happen for "List" tag)
-                    cleaned_fallback_content = re.sub(r'^[\s]*[\*\-\•\.]\s*', '', str(raw_content).strip())
-                    if cleaned_fallback_content:
-                        processed_content_html += f"  <li>{escape_html(cleaned_fallback_content)}</li>\n"
+                    actual_list_items_to_render = [str(li) for li in raw_content]
+                
+                for li_content in actual_list_items_to_render:
+                    li_content_stripped = li_content.strip()
+                    # Clean common leading bullet characters including a literal dot
+                    li_content_stripped = re.sub(r'^[\s]*[\*\-\•\.]\s*', '', li_content_stripped) 
+                    if li_content_stripped:
+                        # Process for markdown (bold, italic, links), but not as heading content
+                        li_html = process_content_for_html(li_content_stripped, None, is_heading_content=False)
+                        processed_content_html += f"  <li>{li_html}</li>\n" 
                 processed_content_html += f"</{html_tag_from_map}>\n"
 
             elif tag_key == "Table":
-                # (Table rendering logic remains complex and largely the same as previous version)
-                # This part might need further refinement based on actual table JSON structure
                 processed_content_html += f"<{html_tag_from_map} class='data-table'>\n"
                 if isinstance(raw_content, list) and all(isinstance(row, list) for row in raw_content):
                     header_processed_in_list_table = False 
@@ -169,7 +188,7 @@ def convert_book_json_to_html(
                             is_header_row = True
                             if not header_processed_in_list_table:
                                 processed_content_html += "  <thead>\n"; header_processed_in_list_table = True
-                        elif not header_processed_in_list_table and not tbody_opened: # First row, not explicitly header
+                        elif not header_processed_in_list_table and not tbody_opened:
                              processed_content_html += "  <tbody>\n"; tbody_opened = True
                         
                         processed_content_html += "    <tr>\n"
@@ -184,7 +203,9 @@ def convert_book_json_to_html(
                             attrs = ""
                             if colspan > 1: attrs += f' colspan="{colspan}"'
                             if rowspan > 1: attrs += f' rowspan="{rowspan}"'
-                            processed_content_html += f"      <{cell_tag}{attrs}>{process_content_for_html(cell_content_str, None)}</{cell_tag}>\n"
+                            # Process cell content for markdown
+                            processed_cell_html = process_content_for_html(cell_content_str, None, is_heading_content=False)
+                            processed_content_html += f"      <{cell_tag}{attrs}>{processed_cell_html}</{cell_tag}>\n"
                         processed_content_html += "    </tr>\n"
                         if is_header_row and i_row == 0 : 
                             processed_content_html += "  </thead>\n"
@@ -206,7 +227,7 @@ def convert_book_json_to_html(
                             if is_md_header_row:
                                 if not in_tbody_str_table: processed_content_html += "  <thead>\n" 
                                 processed_content_html += "    <tr>\n"; 
-                                for cell in cells: processed_content_html += f"      <th>{process_content_for_html(cell, None)}</th>\n"
+                                for cell in cells: processed_content_html += f"      <th>{process_content_for_html(cell, None, is_heading_content=False)}</th>\n"
                                 processed_content_html += "    </tr>\n"; 
                                 if not in_tbody_str_table: processed_content_html += "  </thead>\n" 
                                 header_processed_str_table = True
@@ -219,18 +240,18 @@ def convert_book_json_to_html(
                                      processed_content_html += "  <tbody>\n"; in_tbody_str_table = True
 
                                 processed_content_html += "    <tr>\n"; 
-                                for cell in cells: processed_content_html += f"      <td>{process_content_for_html(cell, None)}</td>\n"
+                                for cell in cells: processed_content_html += f"      <td>{process_content_for_html(cell, None, is_heading_content=False)}</td>\n"
                                 processed_content_html += "    </tr>\n"
                         else: 
                             if not in_tbody_str_table: processed_content_html += "  <tbody>\n"; in_tbody_str_table = True
-                            processed_content_html += f"<tr><td colspan='99'>{process_content_for_html(line_content, explicit_hyperlinks if line_idx == 0 else None)}</td></tr>\n"
+                            processed_content_html += f"<tr><td colspan='99'>{process_content_for_html(line_content, explicit_hyperlinks if line_idx == 0 else None, is_heading_content=False)}</td></tr>\n"
                     if in_tbody_str_table: processed_content_html += "  </tbody>\n"
                 else: 
-                    processed_content_html += f"  <tbody><tr><td>{escape_html(str(raw_content))}</td></tr></tbody>\n"
+                    processed_content_html += f"  <tbody><tr><td>{process_content_for_html(str(raw_content), None, is_heading_content=False)}</td></tr></tbody>\n"
                 processed_content_html += f"</{html_tag_from_map}>\n"
             
-            else: 
-                content_to_render = process_content_for_html(raw_content, explicit_hyperlinks)
+            else: # Default for Paragraph, Figure, etc.
+                content_to_render = process_content_for_html(raw_content, explicit_hyperlinks, is_heading_content=False)
                 processed_content_html = f"<{html_tag_from_map}>{content_to_render}</{html_tag_from_map}>\n"
             
             html_body_parts.append(processed_content_html)
@@ -252,7 +273,7 @@ def convert_book_json_to_html(
             margin: 0 auto; 
             max-width: 900px; 
             padding: 20px; 
-            font-size: 16px; /* Base font size */
+            font-size: 16px; 
         }}
         details {{ 
             margin-bottom: 0.25em; 
@@ -262,38 +283,28 @@ def convert_book_json_to_html(
         summary {{ 
             padding-top: 0.3em; 
             padding-bottom: 0.3em;
-            /* Left padding is now handled by parent <details> via .details-level-X */
             cursor: pointer; 
             list-style-position: inside; 
             font-weight: bold; 
             background-color: transparent; 
             border-bottom: none; 
         }}
-        /* No specific style for details[open] > summary if borders are removed */
-
         .collapsible-content-wrapper {{ 
             padding-top: 0.5em; 
             padding-bottom: 0.5em;
-            /* Content inside wrapper will align with the indented <details> block */
         }}
-
-        /* Headings within summary: same size as body, bold */
         summary > h1, summary > h2, summary > h3, summary > h4, summary > h5, summary > h6 {{ 
             display: inline; 
             margin: 0; 
-            font-size: 1em; /* Same size as body font size */
+            font-size: 1em; 
             font-weight: bold;
         }}
-
-        /* Indentation for heading levels applied to the <details> block */
         .details-level-1 {{ padding-left: 0em; }} 
         .details-level-2 {{ padding-left: 1.5em; }}   
         .details-level-3 {{ padding-left: 3em; }} 
         .details-level-4 {{ padding-left: 4.5em; }}
         .details-level-5 {{ padding-left: 6em; }}
         .details-level-6 {{ padding-left: 7.5em; }}
-
-        /* General content styling */
         p {{ margin-top:0; margin-bottom: 0.8em; }}
         ul, ol {{ margin-top:0; margin-bottom: 0.8em; padding-left: 20px; list-style-position: outside;}} 
         li {{ margin-bottom: 0.2em; }}
