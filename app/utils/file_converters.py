@@ -106,7 +106,6 @@ def convert_book_json_to_html(
             summary_content_html = escape_html(cleaned_heading_content)
             
             details_class = f"details-level-{current_heading_level}" # For indentation of the whole block
-            # summary_class is not strictly needed for indentation if details handles it
             html_body_parts.append(f"<details open class='{details_class}'>\n  <summary><{html_tag_from_map}>{summary_content_html}</{html_tag_from_map}></summary>\n<div class='collapsible-content-wrapper'>\n")
             open_details_stack.append(current_heading_level)
         else:
@@ -133,36 +132,44 @@ def convert_book_json_to_html(
                 processed_content_html += f"</{html_tag_from_map}>\n"
             
             elif tag_key == "List":
-                processed_content_html += f"<{html_tag_from_map}>\n" # Should be <ul> or <ol>
+                processed_content_html += f"<{html_tag_from_map}>\n" 
                 if isinstance(raw_content, str):
                     list_items = raw_content.split('\n')
                     for li_content in list_items:
                         li_content_stripped = li_content.strip()
-                        if li_content_stripped.startswith(("- ", "* ")): # Basic markdown list item start
-                            li_content_stripped = li_content_stripped[2:]
+                        # Clean common leading bullet characters/markdown for lists
+                        li_content_stripped = re.sub(r'^[\s]*[\*\-\•\.]\s*', '', li_content_stripped) # Remove *, -, •, . followed by space
                         if li_content_stripped:
                             li_html = process_content_for_html(li_content_stripped, None)
-                            processed_content_html += f"  <li>{li_html}</li>\n" # Standard <li> for bullets
-                elif isinstance(raw_content, list): # If content is already a list of strings
-                    for li_content_item in raw_content:
-                        li_html = process_content_for_html(str(li_content_item), None)
-                        processed_content_html += f"  <li>{li_html}</li>\n"
+                            processed_content_html += f"  <li>{li_html}</li>\n" 
+                elif isinstance(raw_content, list): 
+                    for li_content_item_raw in raw_content:
+                        li_content_item_str = str(li_content_item_raw).strip()
+                        li_content_item_str = re.sub(r'^[\s]*[\*\-\•\.]\s*', '', li_content_item_str)
+                        if li_content_item_str:
+                            li_html = process_content_for_html(li_content_item_str, None)
+                            processed_content_html += f"  <li>{li_html}</li>\n"
                 else:
-                    processed_content_html += f"  <li>{escape_html(str(raw_content))}</li>\n"
+                    # Fallback if raw_content is not string or list (should ideally not happen for "List" tag)
+                    cleaned_fallback_content = re.sub(r'^[\s]*[\*\-\•\.]\s*', '', str(raw_content).strip())
+                    if cleaned_fallback_content:
+                        processed_content_html += f"  <li>{escape_html(cleaned_fallback_content)}</li>\n"
                 processed_content_html += f"</{html_tag_from_map}>\n"
 
             elif tag_key == "Table":
+                # (Table rendering logic remains complex and largely the same as previous version)
+                # This part might need further refinement based on actual table JSON structure
                 processed_content_html += f"<{html_tag_from_map} class='data-table'>\n"
                 if isinstance(raw_content, list) and all(isinstance(row, list) for row in raw_content):
                     header_processed_in_list_table = False 
                     tbody_opened = False
-                    for i, row_data in enumerate(raw_content):
+                    for i_row, row_data in enumerate(raw_content):
                         is_header_row = False
-                        if i == 0 and isinstance(row_data[0], dict) and row_data[0].get("isHeader"):
+                        if i_row == 0 and isinstance(row_data[0], dict) and row_data[0].get("isHeader"):
                             is_header_row = True
                             if not header_processed_in_list_table:
                                 processed_content_html += "  <thead>\n"; header_processed_in_list_table = True
-                        elif not header_processed_in_list_table and not tbody_opened:
+                        elif not header_processed_in_list_table and not tbody_opened: # First row, not explicitly header
                              processed_content_html += "  <tbody>\n"; tbody_opened = True
                         
                         processed_content_html += "    <tr>\n"
@@ -179,9 +186,9 @@ def convert_book_json_to_html(
                             if rowspan > 1: attrs += f' rowspan="{rowspan}"'
                             processed_content_html += f"      <{cell_tag}{attrs}>{process_content_for_html(cell_content_str, None)}</{cell_tag}>\n"
                         processed_content_html += "    </tr>\n"
-                        if is_header_row and i == 0 : 
+                        if is_header_row and i_row == 0 : 
                             processed_content_html += "  </thead>\n"
-                            if not tbody_opened and i + 1 < len(raw_content): # Check if more rows exist for tbody
+                            if not tbody_opened and i_row + 1 < len(raw_content): 
                                 processed_content_html += "  <tbody>\n"; tbody_opened = True
                     if tbody_opened : processed_content_html += "  </tbody>\n"
                 
@@ -193,11 +200,11 @@ def convert_book_json_to_html(
                         if not line_content: continue
                         if '|' in line_content: 
                             cells = [cell.strip() for cell in line_content.split('|')]
-                            is_md_header_row = not header_processed_str_table and (line_idx == 0 or (line_idx > 0 and "---" not in lines[line_idx-1])) and \
-                                               (line_idx + 1 < len(lines) and "---" in lines[line_idx+1].replace(" ", "").replace("-","")) # Check for separator line
+                            is_md_header_row = not header_processed_str_table and \
+                                               (line_idx + 1 < len(lines) and "---" in lines[line_idx+1].replace(" ", "").replace("-",""))
                             
                             if is_md_header_row:
-                                if not in_tbody_str_table: processed_content_html += "  <thead>\n" # Should be thead
+                                if not in_tbody_str_table: processed_content_html += "  <thead>\n" 
                                 processed_content_html += "    <tr>\n"; 
                                 for cell in cells: processed_content_html += f"      <th>{process_content_for_html(cell, None)}</th>\n"
                                 processed_content_html += "    </tr>\n"; 
@@ -249,24 +256,25 @@ def convert_book_json_to_html(
         }}
         details {{ 
             margin-bottom: 0.25em; 
-            border: none; /* Removed border */
-            background-color: transparent; /* Removed background */
+            border: none; 
+            background-color: transparent; 
         }}
         summary {{ 
-            padding: 0.3em 0; /* Adjusted padding, left padding handled by details-level-X */
+            padding-top: 0.3em; 
+            padding-bottom: 0.3em;
+            /* Left padding is now handled by parent <details> via .details-level-X */
             cursor: pointer; 
             list-style-position: inside; 
             font-weight: bold; 
-            background-color: transparent; /* Removed background */
-            border-bottom: none; /* Removed border */
+            background-color: transparent; 
+            border-bottom: none; 
         }}
-        details[open] > summary {{ 
-            /* No specific open style needed if borders are removed */
-        }}
+        /* No specific style for details[open] > summary if borders are removed */
+
         .collapsible-content-wrapper {{ 
-            padding-top: 0.5em; /* Space between summary and content */
+            padding-top: 0.5em; 
             padding-bottom: 0.5em;
-            /* Left padding will be inherited from details-level-X or set explicitly if needed */
+            /* Content inside wrapper will align with the indented <details> block */
         }}
 
         /* Headings within summary: same size as body, bold */
@@ -285,14 +293,9 @@ def convert_book_json_to_html(
         .details-level-5 {{ padding-left: 6em; }}
         .details-level-6 {{ padding-left: 7.5em; }}
 
-        /* Ensure content inside wrapper aligns with the (now indented) details block */
-        .collapsible-content-wrapper > * {{
-             /* If further specific alignment needed for first child, could target here */
-        }}
-
         /* General content styling */
         p {{ margin-top:0; margin-bottom: 0.8em; }}
-        ul, ol {{ margin-top:0; margin-bottom: 0.8em; padding-left: 20px; list-style-position: outside;}} /* Ensure bullets are standard */
+        ul, ol {{ margin-top:0; margin-bottom: 0.8em; padding-left: 20px; list-style-position: outside;}} 
         li {{ margin-bottom: 0.2em; }}
         table.data-table {{ width: 100%; border-collapse: collapse; margin-bottom: 1em; }}
         table.data-table th, table.data-table td {{ border: 1px solid #ccc; padding: 8px; text-align: left; }}
