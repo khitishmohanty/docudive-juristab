@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 
-DEFAULT_OLLAMA_MODEL = 'deepseek-r1:14b'
+DEFAULT_OLLAMA_MODEL = 'deepseek-r1:671b'
 OLLAMA_MODEL_NAME = os.getenv('DEEPSEEK_MODEL', DEFAULT_OLLAMA_MODEL)
 
 PROMPT_FILE_PATH = 'prompt.txt'

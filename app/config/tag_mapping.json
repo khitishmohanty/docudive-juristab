@@ -13,6 +13,7 @@
   "Footer": "footer",
   "Page number": "span",
   "Enum": "span",
+  "line number": "span",  
   "Figure": "figure",
   "Footnote": "aside",
   "List": "ul",
