@@ -1,99 +1,169 @@
 [
   {
     "correlation-id": null,
-    "tag": "Header",
-    "content": "First print",
-    "clause-type": null,
-    "page_number": 1
-  },
-  {
-    "correlation-id": null,
     "tag": "Figure",
-    "content": "ORTA RECENS QUAM PURA NITES",
+    "content": "✔ Fannie Mae",
     "clause-type": null,
     "page_number": 1
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "New South Wales",
-    "clause-type": null,
-    "page_number": 1
-  },
-  {
-    "correlation-id": null,
-    "tag": "Title",
-    "content": "Road Transport Legislation Amendment\n(Post-Crash Drug and Alcohol Testing) Bill\n2025",
-    "clause-type": null,
-    "page_number": 1
-  },
-  {
-    "correlation-id": null,
-    "tag": "Heading-h2",
-    "content": "Explanatory note",
-    "clause-type": null,
-    "page_number": 1
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "This explanatory note relates to this Bill as introduced into Parliament.",
-    "clause-type": null,
-    "page_number": 1
-  },
-  {
-    "correlation-id": null,
-    "tag": "Heading-h2",
-    "content": "Overview of Bill",
-    "clause-type": null,
-    "page_number": 1
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "The objects of this Bill are to—",
+    "content": "Fannie Mae notifies servicers of changes and updates to servicing policies and procedures through *Servicing Guide* announcements, lender letters, and notices as described below:",
     "clause-type": null,
     "page_number": 1
   },
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(a) to amend the Road Transport Act 2013 (the Act) to—",
+    "content": "• *Servicing Guide* announcements describe changes to policies and requirements within the *Servicing Guide* content. *Servicing Guide* announcements are numbered in chronological order as: SVC-202X-XX.",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "• Lender letters communicate",
     "clause-type": null,
     "page_number": 1
   },
   {
     "correlation-id": null,
     "tag": "List-l2",
-    "content": "(i)\nupdate terminology to refer to crashes rather than accidents to align with terminology\nused by Transport for NSW and NSW Police and to reflect that crashes may have\ncausal factors, and",
+    "content": "Ο\nnew or modified policies and requirements that may be temporary in nature,",
     "clause-type": null,
     "page_number": 1
   },
   {
     "correlation-id": null,
     "tag": "List-l2",
-    "content": "(ii) allow blood samples taken from a driver, supervising driver or a bicycle rider who\nattends or is admitted to hospital because of a crash (a *crash participant*) to be\nanalysed for drugs, in addition to alcohol, if a police officer reasonably believes the\ncrash has resulted in grievous bodily harm to a person, and",
+    "content": "Ο\nreminders of existing policies, and",
     "clause-type": null,
     "page_number": 1
   },
   {
     "correlation-id": null,
     "tag": "List-l2",
-    "content": "(iii) extend the existing power of police officers to arrest an uninjured driver or\nsupervising driver involved in a fatal, or likely fatal, crash for the purpose of taking\nblood and urine samples from the driver to enable a police officer to arrest an\nuninjured driver or supervising driver involved in a crash that the police officer\nreasonably suspects has resulted in grievous bodily harm to a person and allow those\nsamples to be analysed for alcohol and drugs, and",
+    "content": "Ο\nadvance notice of policy changes with future effective dates to be included in future *Servicing Guide* updates. Lender Letters are numbered in chronological order as: LL-202X-XX.",
     "clause-type": null,
     "page_number": 1
   },
   {
     "correlation-id": null,
-    "tag": "List-l2",
-    "content": "(iv) give police officers the power to arrest an uninjured bicycle rider involved in a crash\nfor the purpose of taking blood and urine samples from the rider if the police officer\nreasonably suspects the crash has resulted in a fatality or grievous bodily harm to a\nperson and allow those samples to be analysed for alcohol and drugs, and",
+    "tag": "List-l1",
+    "content": "• *Servicing Notices* provide notification of information not impacting the *Servicing Guide* content, such as updates to an Exhibit on Fannie Mae's website. Notices are identified by the date published (and are not numbered).",
     "clause-type": null,
     "page_number": 1
   },
   {
     "correlation-id": null,
-    "tag": "Footnote",
-    "content": "b2024-093.d20",
+    "tag": "Paragraph",
+    "content": "Fannie Mae does not mail printed copies of Guide updates, announcements, lender letters, or notices. Fannie Mae notifies servicers of changes and updates to its *Servicing Guide* policies and procedures in two ways:",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "• posting the documents on Fannie Mae's website and the AllRegs® subscription website, and",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "• email notification to servicers that subscribe to Fannie Mae's email subscription service and select the option \"Servicing News.\"",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "For a list of *Servicing Guide* policy changes and updates, see In Case You Missed It.",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "• 2021 In Case You Missed It",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "• 2020 In Case You Missed It",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h2",
+    "content": "Exhibits, Forms, and Content Incorporated by Reference",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Information about specific forms the servicer must use to fulfill the policies and requirements contained in the *Servicing Guide* is provided within the Guide. Servicers can access the actual forms in two ways:",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "• on Fannie Mae's website via the Guide Forms and Legal Documents pages, which provide a complete list of all forms and legal documents, or",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "• on the AllRegs subscription website for users with a full subscription to AllRegs.",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "Clause",
+    "content": "Some exhibits that relate to Fannie Mae policies and requirements are only referenced in the *Servicing Guide* and are posted in their entirety on Fannie Mae's website. All materials referenced by hyperlink, such as forms, exhibits and reference materials that are posted to Fannie Mae's website are incorporated by reference into the *Servicing Guide* and are fully enforceable.",
+    "clause-type": "Definition/Interpretation",
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "Clause",
+    "content": "In addition, from time to time, Fannie Mae issues product-specific guides or directives, which are incorporated into the *Servicing Guide* by reference. All forms, exhibits, and product-specific information — whether it currently exists or is subsequently created — referenced in the *Servicing Guide* now or later are legally a part of the *Servicing Guide* and Fannie Mae's contract with its servicers.",
+    "clause-type": "Definition/Interpretation",
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h2",
+    "content": "Guide Maintenance",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Periodically non-policy related maintenance is needed to ensure the integrity of the *Servicing Guide*. Examples",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "Footer",
+    "content": "Published July 10, 2024",
+    "clause-type": null,
+    "page_number": 1
+  },
+  {
+    "correlation-id": null,
+    "tag": "Page number",
+    "content": "XIII",
     "clause-type": null,
     "page_number": 1
   }

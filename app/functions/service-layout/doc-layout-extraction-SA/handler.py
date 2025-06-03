@@ -9,7 +9,7 @@ import copy # For deep copying
 # Add project root to PYTHONPATH
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # Adjust this path if handler1.py is not two levels deep from project root
-project_root = os.path.abspath(os.path.join(current_dir, "../../"))
+project_root = os.path.abspath(os.path.join(current_dir, "../../../"))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
@@ -688,7 +688,7 @@ if __name__ == "__main__":
     except ImportError: print("⚠️ thefuzz library not found. Fuzzy verification will fail. pip install thefuzz python-Levenshtein")
  
     base_dir = Path(__file__).resolve().parent
-    project_root_path = base_dir.parents[2]
+    project_root_path = base_dir.parents[3]
   
     print(f"Project root for __main__ determined as: {project_root_path}")
 
