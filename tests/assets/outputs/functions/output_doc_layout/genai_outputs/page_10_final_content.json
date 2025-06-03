@@ -1,0 +1,506 @@
+[
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nSchedule 1 Amendment of Road Transport Act 2013 No 18",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "[22]",
+    "tag": "Clause",
+    "content": "[22] **Section 114, heading**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 1",
+    "tag": "Line number",
+    "content": "1",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"other\".",
+    "tag": "Paragraph",
+    "content": "Omit \"other\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 90%)"
+  },
+  {
+    "correlation-id": "Line number 2",
+    "tag": "Line number",
+    "content": "2",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[23]",
+    "tag": "Clause",
+    "content": "[23] **Section 114**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 3",
+    "tag": "Line number",
+    "content": "3",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"other\". (Section 114)",
+    "tag": "Paragraph",
+    "content": "Omit \"other\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 90%)"
+  },
+  {
+    "correlation-id": "Line number 4",
+    "tag": "Line number",
+    "content": "4",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[24]",
+    "tag": "Clause",
+    "content": "[24] **Section 117 Negligent, furious or reckless driving**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 5",
+    "tag": "Line number",
+    "content": "5",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit section 117(3)(c). Insert instead-",
+    "tag": "Paragraph",
+    "content": "Omit section 117(3)(c). Insert instead—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 6",
+    "tag": "Line number",
+    "content": "6",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "List-l1 (c) obstructions or hazards on the road, including-",
+    "tag": "List-l1",
+    "content": "(c) obstructions or hazards on the road, including—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 7",
+    "tag": "Line number",
+    "content": "7",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "List-l2 (i) broken down vehicles, and",
+    "tag": "List-l2",
+    "content": "(i) broken down vehicles, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 8",
+    "tag": "Line number",
+    "content": "8",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "List-l2 (ii) fallen loads, and",
+    "tag": "List-l2",
+    "content": "(ii) fallen loads, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 9",
+    "tag": "Line number",
+    "content": "9",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "List-l2 (iii) crash or emergency scenes.",
+    "tag": "List-l2",
+    "content": "(iii) crash or emergency scenes.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 10",
+    "tag": "Line number",
+    "content": "10",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[25]",
+    "tag": "Clause",
+    "content": "[25] **Section 142 Removal of dangers and obstructions to traffic**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 11",
+    "tag": "Line number",
+    "content": "11",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"accident” from section 142(5), definition of relevant person, paragraph (a).",
+    "tag": "Paragraph",
+    "content": "Omit \"accident” from section 142(5), definition of **relevant person**, paragraph (a).",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 99%)"
+  },
+  {
+    "correlation-id": "Line number 12",
+    "tag": "Line number",
+    "content": "12",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Insert instead \"crash\".",
+    "tag": "Paragraph",
+    "content": "Insert instead \"crash\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 95%)"
+  },
+  {
+    "correlation-id": "Line number 13",
+    "tag": "Line number",
+    "content": "13",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[26]",
+    "tag": "Clause",
+    "content": "[26] **Section 148D Power of entry for tracing stolen motor vehicles or trailers or their parts**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 14",
+    "tag": "Line number",
+    "content": "14",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"accidents\" from section 148D(1)(a). Insert instead “crashes\".",
+    "tag": "Paragraph",
+    "content": "Omit \"accidents\" from section 148D(1)(a). Insert instead “crashes\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 97%)"
+  },
+  {
+    "correlation-id": "Line number 15",
+    "tag": "Line number",
+    "content": "15",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[27]",
+    "tag": "Clause",
+    "content": "[27] **Section 148E, heading**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 16",
+    "tag": "Line number",
+    "content": "16",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"other\". (Section 148E, heading)",
+    "tag": "Paragraph",
+    "content": "Omit \"other\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 90%)"
+  },
+  {
+    "correlation-id": "Line number 17",
+    "tag": "Line number",
+    "content": "17",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[28]",
+    "tag": "Clause",
+    "content": "[28] **Section 148E(1)**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 18",
+    "tag": "Line number",
+    "content": "18",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit “any other drug, or a combination of drugs\".",
+    "tag": "Paragraph",
+    "content": "Omit “any other drug, or a combination of drugs\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 19",
+    "tag": "Line number",
+    "content": "19",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Insert instead \"a drug or combination of drugs\".",
+    "tag": "Paragraph",
+    "content": "Insert instead \"a drug or combination of drugs\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": "Line number 20",
+    "tag": "Line number",
+    "content": "20",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[29]",
+    "tag": "Clause",
+    "content": "[29] **Section 148E(1)(a)**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 21",
+    "tag": "Line number",
+    "content": "21",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"that other drug or a combination of drugs\".",
+    "tag": "Paragraph",
+    "content": "Omit \"that other drug or a combination of drugs\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": "Line number 22",
+    "tag": "Line number",
+    "content": "22",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Insert instead \"the drug or combination of drugs\".",
+    "tag": "Paragraph",
+    "content": "Insert instead \"the drug or combination of drugs\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": "Line number 23",
+    "tag": "Line number",
+    "content": "23",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[30]",
+    "tag": "Clause",
+    "content": "[30] **Section 148EA, heading**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 24",
+    "tag": "Line number",
+    "content": "24",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"other\". (Section 148EA, heading)",
+    "tag": "Paragraph",
+    "content": "Omit \"other\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 90%)"
+  },
+  {
+    "correlation-id": "Line number 25",
+    "tag": "Line number",
+    "content": "25",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[31]",
+    "tag": "Clause",
+    "content": "[31] **Section 148F, heading**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 26",
+    "tag": "Line number",
+    "content": "26",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"other\". (Section 148F, heading)",
+    "tag": "Paragraph",
+    "content": "Omit \"other\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 90%)"
+  },
+  {
+    "correlation-id": "Line number 27",
+    "tag": "Line number",
+    "content": "27",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[32]",
+    "tag": "Clause",
+    "content": "[32] **Section 148F(1)**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 28",
+    "tag": "Line number",
+    "content": "28",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"any other drug, or a combination of drugs\". (Section 148F(1))",
+    "tag": "Paragraph",
+    "content": "Omit \"any other drug, or a combination of drugs\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": "Line number 29",
+    "tag": "Line number",
+    "content": "29",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Insert instead “a drug or combination of drugs\".",
+    "tag": "Paragraph",
+    "content": "Insert instead “a drug or combination of drugs\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 30",
+    "tag": "Line number",
+    "content": "30",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[33]",
+    "tag": "Clause",
+    "content": "[33] **Section 148F(1)**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "Line number 31",
+    "tag": "Line number",
+    "content": "31",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"that other drug or a combination of drugs\". (Section 148F(1))",
+    "tag": "Paragraph",
+    "content": "Omit \"that other drug or a combination of drugs\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": "Line number 32",
+    "tag": "Line number",
+    "content": "32",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Insert instead \"the drug or combination of drugs\". (Section 148F(1))",
+    "tag": "Paragraph",
+    "content": "Insert instead \"the drug or combination of drugs\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": "Line number 33",
+    "tag": "Line number",
+    "content": "33",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "[34]",
+    "tag": "Clause",
+    "content": "[34] **Section 1481 Detention of keys or vehicles may be continued**",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": "Line number 34",
+    "tag": "Line number",
+    "content": "34",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Omit \"any other drug\" from section 1481(1)(b)(ii). Insert instead “a drug”.",
+    "tag": "Paragraph",
+    "content": "Omit \"any other drug\" from section 1481(1)(b)(ii). Insert instead “a drug”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 95%)"
+  },
+  {
+    "correlation-id": "Line number 35",
+    "tag": "Line number",
+    "content": "35",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "Page 5",
+    "tag": "Footer",
+    "content": "Page 5",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  }
+]

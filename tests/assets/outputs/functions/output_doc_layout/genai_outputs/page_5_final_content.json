@@ -1,0 +1,51 @@
+[
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "First print",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Figure",
+    "content": "ORT RECENS QUAM PURA NITES",
+    "clause-type": null,
+    "verification-flag": "Failed (Match 46%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Subtitle",
+    "content": "New South Wales",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Title",
+    "content": "Road Transport Legislation Amendment\n(Post-Crash Drug and Alcohol Testing) Bill\n2025",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h1",
+    "content": "Contents",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Table of Contents",
+    "content": "[{\"item_text\": \"1 Name of Act\", \"page_number\": \"2\"}, {\"item_text\": \"2 Commencement\", \"page_number\": \"2\"}, {\"item_text\": \"Schedule 1 Amendment of Road Transport Act 2013 No 18\", \"page_number\": \"3\"}, {\"item_text\": \"Schedule 2 Consequential amendments of other legislation\", \"page_number\": \"16\"}]",
+    "clause-type": null,
+    "verification-flag": "Failed (Match 80%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Footer",
+    "content": "b2024-093.d20",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  }
+]

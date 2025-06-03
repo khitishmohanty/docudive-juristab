@@ -1,0 +1,527 @@
+[
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nSchedule 1 Amendment of Road Transport Act 2013 No 18",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h2",
+    "content": "Division 4 Crashes",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "1",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h3",
+    "content": "10 Definitions",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "2",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "In this division—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "3",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "*crash hospital patient* means a person who—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "4",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(a) attends at, or is admitted to, a hospital for examination or treatment\nbecause of a crash, whether occurring in this jurisdiction or elsewhere,\nand",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "5",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "6",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "7",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(b) is at least 15 years of age.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "8",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "*hospital* includes premises, including an institution or establishment,\nprescribed by the statutory rules as being included for this definition.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "9",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "10",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h3",
+    "content": "11 Blood samples must be taken in hospitals from certain crash hospital patients",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "11",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(1) An authorised sample taker attending to a crash hospital patient at a hospital\nmust take a sample of the patient’s blood for analysis if, at the time of the\ncrash, the patient was—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "12",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "13",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "14",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) a crash participant, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "15",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) a pedestrian involved in the crash, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "16",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(c) driving or riding a vehicle, other than a motor vehicle or bicycle,\ninvolved in the crash, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "17",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "18",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(d) driving or riding a horse involved in the crash.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "19",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(2) The sample must be taken—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "20",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) as soon as practicable, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "21",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) whether or not the patient consents.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "22",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(3) The authorised sample taker is not required to take the sample if—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "23",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) a sample of the patient’s blood has already been taken in accordance\nwith this clause, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "24",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "25",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) the authorised sample taker has been informed by a police officer, or has\nreasonable grounds to believe, that the sample is required to be taken for\nthe purposes of clause 12.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "26",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "27",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "28",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(4) A sample taken under this clause may be used for the purpose of conducting\nan alcohol analysis of the blood.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "29",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "30",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(5) A sample taken from a patient under this clause in relation to a crash may be\nused for the purpose of conducting a drug analysis of the blood if—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "31",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "32",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) the patient was a crash participant, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "33",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) a police officer has reasonable grounds to believe the crash resulted\nin—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "34",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "35",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(i) the death of a person, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "36",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(ii) grievous bodily harm to a person.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "37",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Note 1—Part 4 provides for the procedures in relation to the taking and analysis of\nsamples taken under this clause.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 99%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "38",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "39",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Note 2—Part 5 provides for the admissibility of evidence of the presence and\nconcentration of alcohol and drugs in blood samples taken under this clause and\nanalysed in accordance with Part 4.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 99%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "40",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "41",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "42",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h3",
+    "content": "12 Power to arrest persons involved in certain crashes",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "43",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(1) A police officer may arrest a crash participant without warrant if—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "44",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Footer",
+    "content": "Page 9",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  }
+]

@@ -1,0 +1,275 @@
+[
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nSchedule 1 Amendment of Road Transport Act 2013 No 18",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(c) the mandatory interlock order is revoked.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(7) Transport for NSW may, by written notice given to the offender—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) nominate a drink driving education program, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) require the offender to undertake the program within the period specified in the notice.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "[37]",
+    "tag": "Clause",
+    "content": "[37] Schedule 1 Examples of statutory rule-making powers",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "Omit “accidents” from clause 10, heading. Insert instead “**crashes**”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "[38]",
+    "tag": "Clause",
+    "content": "[38] Schedule 1, clause 10",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "Omit “an accident”. Insert instead “a crash”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "[39]",
+    "tag": "Clause",
+    "content": "[39] Schedule 1, clause 10(a) and (b)",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "Omit “the accident” wherever occurring. Insert instead “the crash”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "[40]",
+    "tag": "Clause",
+    "content": "[40] Schedule 3 Testing for alcohol and drug use",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "Omit clause 1(1), definition of **accident**. Insert in alphabetical order—\n**alcohol analysis**, of a person’s blood or urine, means an analysis to determine the concentration of alcohol in the person’s blood or urine.\n**applicable driver licence** has the same meaning as in Part 5.1.\n**attempting to drive a motor vehicle** means occupying the driving seat of a motor vehicle and attempting to put the motor vehicle in motion.\n**crash**—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) means a crash that—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(i) involves a motor vehicle or other vehicle or a horse, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(ii) is on a road, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) for clause 12—includes a crash that—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(i) involves a motor vehicle, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(ii) is not on a road.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "**crash hospital patient**, for Schedule 3, Part 2, Division 4—see clause 10.\n**crash participant** means a person who—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) at the time of a crash, was—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(i) driving a motor vehicle involved in the crash, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(ii) attempting to drive a motor vehicle involved in the crash, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(iii) supervising a learner driver who was driving a motor vehicle involved in the crash, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(iv) riding a bicycle involved in the crash, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) is at least 15 years of age.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "**drug** does not include alcohol.\n**drug analysis**, of a person’s blood or urine, means an analysis to determine the presence or concentration of a drug in the person’s blood or urine.\n**grievous bodily harm** has the same meaning as in the *Crimes Act 1900*.\n**hospital**, for Schedule 3, Part 2, Division 4—see clause 10.\n**prescribed laboratory**, for Schedule 3, Part 4—see clause 23.\n**secondary participant** in a crash means a person involved in the crash who was—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Footer",
+    "content": "Page 7",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "1",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "2",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "3",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "4\n5",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "6\n7",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "8\n9",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "10\n11",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "12\n13\n14\n15\n16\n17\n18\n19",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "20\n21\n22",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "23\n24\n25",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n41\n42",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  }
+]

@@ -1,0 +1,485 @@
+[
+  {
+    "correlation-id": "h3",
+    "tag": "Header",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nSchedule 1 Amendment of Road Transport Act 2013 No 18",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_1",
+    "tag": "Line number",
+    "content": "1",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c10",
+    "tag": "Clause",
+    "content": "[54] Schedule 3, clause 17(5), definition of “secondary participant”",
+    "clause-type": "Definition/Interpretation",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_2",
+    "tag": "Line number",
+    "content": "2",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_1",
+    "tag": "Paragraph",
+    "content": "Omit the definition.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_3",
+    "tag": "Line number",
+    "content": "3",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c11",
+    "tag": "Clause",
+    "content": "[55] Schedule 3, clause 18, heading",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_4",
+    "tag": "Line number",
+    "content": "4",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_2",
+    "tag": "Paragraph",
+    "content": "Omit “other”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_5",
+    "tag": "Line number",
+    "content": "5",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c12",
+    "tag": "Clause",
+    "content": "[56] Schedule 3, clause 18(1)(e) and (2)",
+    "clause-type": "Definition/Interpretation",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_6",
+    "tag": "Line number",
+    "content": "6",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_3",
+    "tag": "Paragraph",
+    "content": "Omit “an accident” wherever occurring. Insert instead “a crash”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_7",
+    "tag": "Line number",
+    "content": "7",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c13",
+    "tag": "Clause",
+    "content": "[57] Schedule 3, clause 18(1)(e), (2) and (3)(d) and (e)",
+    "clause-type": "Definition/Interpretation",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_8",
+    "tag": "Line number",
+    "content": "8",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_4",
+    "tag": "Paragraph",
+    "content": "Omit “accident” wherever occurring. Insert instead “crash”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_9",
+    "tag": "Line number",
+    "content": "9",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c14",
+    "tag": "Clause",
+    "content": "[58] Schedule 3, clause 18(1)(f) and (g)",
+    "clause-type": "Definition/Interpretation",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_10",
+    "tag": "Line number",
+    "content": "10",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_5",
+    "tag": "Paragraph",
+    "content": "Omit “a drug” wherever occurring. Insert instead “alcohol or a drug”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_11",
+    "tag": "Line number",
+    "content": "11",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c15",
+    "tag": "Clause",
+    "content": "[59] Schedule 3, clause 18(3)",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_12",
+    "tag": "Line number",
+    "content": "12",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_6",
+    "tag": "Paragraph",
+    "content": "Omit “in the case of the prosecution of a person” wherever occurring.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_13",
+    "tag": "Line number",
+    "content": "13",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c16",
+    "tag": "Clause",
+    "content": "[60] Schedule 3, clause 18(4), definition of “secondary participant”",
+    "clause-type": "Definition/Interpretation",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_14",
+    "tag": "Line number",
+    "content": "14",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_7",
+    "tag": "Paragraph",
+    "content": "Omit the definition.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_15",
+    "tag": "Line number",
+    "content": "15",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c17",
+    "tag": "Clause",
+    "content": "[61] Schedule 3, clause 20(3)",
+    "clause-type": "Definition/Interpretation",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_16",
+    "tag": "Line number",
+    "content": "16",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_8",
+    "tag": "Paragraph",
+    "content": "Omit “an accident” wherever occurring. Insert instead “a crash”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_17",
+    "tag": "Line number",
+    "content": "17",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c18",
+    "tag": "Clause",
+    "content": "[62] Schedule 3, clause 20(3)(c)",
+    "clause-type": "Definition/Interpretation",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_18",
+    "tag": "Line number",
+    "content": "18",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_9",
+    "tag": "Paragraph",
+    "content": "Omit “accident”. Insert instead “crash”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_19",
+    "tag": "Line number",
+    "content": "19",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c19",
+    "tag": "Clause",
+    "content": "[63] Schedule 3, clause 24(6)",
+    "clause-type": "Definition/Interpretation",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_20",
+    "tag": "Line number",
+    "content": "20",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_10",
+    "tag": "Paragraph",
+    "content": "Omit “an accident”. Insert instead “a crash”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_21",
+    "tag": "Line number",
+    "content": "21",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "c20",
+    "tag": "Clause",
+    "content": "[64] Schedule 3, clause 24(8)",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_22",
+    "tag": "Line number",
+    "content": "22",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "p3_11",
+    "tag": "Paragraph",
+    "content": "Omit the subclause. Insert instead—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_23",
+    "tag": "Line number",
+    "content": "23",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "li1_14",
+    "tag": "List-l1",
+    "content": "(8) Subject to subclause (9), a police officer may arrange for a blood sample taken\nfrom a person under clause 11 to be submitted to a prescribed laboratory for\neither or both of the following—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_24",
+    "tag": "Line number",
+    "content": "24",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "ln3_25",
+    "tag": "Line number",
+    "content": "25",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "ln3_26",
+    "tag": "Line number",
+    "content": "26",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "li2_16",
+    "tag": "List-l2",
+    "content": "(a) alcohol analysis,",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_27",
+    "tag": "Line number",
+    "content": "27",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "li2_17",
+    "tag": "List-l2",
+    "content": "(b) drug analysis.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_28",
+    "tag": "Line number",
+    "content": "28",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "li1_15",
+    "tag": "List-l1",
+    "content": "(9) A police officer must not arrange for a blood sample taken from a person under\nclause 11 to be submitted to a prescribed laboratory for drug analysis under\nsubclause (8) unless the officer has reasonable grounds to believe that—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_29",
+    "tag": "Line number",
+    "content": "29",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "ln3_30",
+    "tag": "Line number",
+    "content": "30",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "ln3_31",
+    "tag": "Line number",
+    "content": "31",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "li2_18",
+    "tag": "List-l2",
+    "content": "(a) the person was a crash participant and the crash resulted in—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_32",
+    "tag": "Line number",
+    "content": "32",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "li3_5",
+    "tag": "List-l3",
+    "content": "(i) the death of a person, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_33",
+    "tag": "Line number",
+    "content": "33",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "li3_6",
+    "tag": "List-l3",
+    "content": "(ii) grievous bodily harm to a person, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_34",
+    "tag": "Line number",
+    "content": "34",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "li2_19",
+    "tag": "List-l2",
+    "content": "(b) at the time of the crash, the person was under the influence of a drug and\neither—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "ln3_35",
+    "tag": "Line number",
+    "content": "35",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "ln3_36",
+    "tag": "Line number",
+    "content": "36",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "li3_7",
+    "tag": "List-l3",
+    "content": "(i) police officers did not attend the scene of the crash, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "pn3",
+    "tag": "Page number",
+    "content": "Page 11",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  }
+]

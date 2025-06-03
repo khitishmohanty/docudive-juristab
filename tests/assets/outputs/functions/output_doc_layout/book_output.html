@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Output</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            margin: 0 auto; 
+            max-width: 900px; 
+            padding: 20px; 
+            font-size: 16px; 
+        }
+        details { 
+            margin-bottom: 0.25em; 
+            border: none; 
+            background-color: transparent; 
+        }
+        summary { 
+            padding-top: 0.3em; 
+            padding-bottom: 0.3em;
+            cursor: pointer; 
+            list-style-position: inside; /* Adjust if needed */
+            font-weight: bold; 
+            background-color: transparent; 
+            border-bottom: none; 
+        }
+        .collapsible-content-wrapper { 
+            padding-top: 0.5em; 
+            padding-bottom: 0.5em;
+        }
+        /* Ensure headings within summary are displayed inline and adopt summary's font size */
+        summary > h1, summary > h2, summary > h3, summary > h4, summary > h5, summary > h6 { 
+            display: inline; 
+            margin: 0; 
+            font-size: 1em; /* Inherit font size from summary or set as needed */
+            font-weight: bold; /* Summary is already bold, this ensures heading part is too */
+        }
+        /* Standalone H1, H2 for Title/Subtitle */
+        h1, h2 { margin-top: 0.8em; margin-bottom: 0.4em; }
+
+        .details-level-1 { padding-left: 0em; } 
+        .details-level-2 { padding-left: 1.5em; }   
+        .details-level-3 { padding-left: 3em; } 
+        .details-level-4 { padding-left: 4.5em; }
+        .details-level-5 { padding-left: 6em; }
+        .details-level-6 { padding-left: 7.5em; }
+
+        p { margin-top:0; margin-bottom: 0.8em; }
+        
+        ul.content-list, ol.content-list {
+            margin-top:0; margin-bottom: 0.8em; 
+            padding-left: 0; /* Reset padding */
+            list-style-type: none; /* Markers are handled by li-level classes or content */
+        }
+        ul.content-list li, ol.content-list li {
+            list-style-type: none; 
+            margin-bottom: 0.2em; 
+        }
+        /* Indentation for different list levels */
+        li.li-level-1 { padding-left: 1em; } 
+        li.li-level-2 { padding-left: 2.5em; } 
+        li.li-level-3 { padding-left: 4em; }   
+        li.li-level-4 { padding-left: 5.5em; }
+
+        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+        table.data-table th, table.data-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        table.data-table th { background-color: #f2f2f2; font-weight: bold; }
+        figure { margin: 1em 0; text-align: center; }
+        figure img { max-width: 100%; height: auto; border: 1px solid #ddd; }
+        figcaption { font-style: italic; font-size: 0.9em; color: #555; margin-top: 0.5em; }
+        /* .table-of-contents styling (though ToC items are now skipped by default) */
+        .table-of-contents ul { list-style-type: none; padding-left: 0; }
+        .table-of-contents ul ul { padding-left: 20px; }
+        .explicit-hyperlinks { font-size: 0.9em; color: #333; background-color: #f0f7fd; border: 1px dashed #add8e6; padding: 8px; margin-top: 8px; border-radius: 3px;}
+        .explicit-hyperlinks ul {padding-left: 15px; margin-top: 5px;}
+        .explicit-hyperlinks strong {color: #0056b3;}
+    </style>
+</head>
+<body>
+    <h1>Road Transport Legislation Amendment<br>
+(Post-Crash Drug and Alcohol Testing) Bill<br>
+2025</h1>
+<details open class='details-level-2'>
+  <summary><h2>Explanatory note</h2></summary>
+<div class='collapsible-content-wrapper'>
+<p>This explanatory note relates to this Bill as introduced into Parliament.</p>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>Overview of Bill</h2></summary>
+<div class='collapsible-content-wrapper'>
+<p>The objects of this Bill are to—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) to amend the <em>Road Transport Act 2013</em> (the <strong>Act</strong>) to—</li>
+  <li class='li-level-2'>(i)</li>
+  <li class='li-level-2'>update terminology to refer to crashes rather than accidents to align with terminology</li>
+  <li class='li-level-2'>used by Transport for NSW and NSW Police and to reflect that crashes may have</li>
+  <li class='li-level-2'>causal factors, and</li>
+  <li class='li-level-2'>(ii) allow blood samples taken from a driver, supervising driver or a bicycle rider who</li>
+  <li class='li-level-2'>attends or is admitted to hospital because of a crash (a <strong>crash participant</strong>) to be</li>
+  <li class='li-level-2'>analysed for drugs, in addition to alcohol, if a police officer reasonably believes the</li>
+  <li class='li-level-2'>crash has resulted in grievous bodily harm to a person, and</li>
+  <li class='li-level-2'>(iii) extend the existing power of police officers to arrest an uninjured driver or</li>
+  <li class='li-level-2'>supervising driver involved in a fatal, or likely fatal, crash for the purpose of taking</li>
+  <li class='li-level-2'>blood and urine samples from the driver to enable a police officer to arrest an</li>
+  <li class='li-level-2'>uninjured driver or supervising driver involved in a crash that the police officer</li>
+  <li class='li-level-2'>reasonably suspects has resulted in grievous bodily harm to a person and allow those</li>
+  <li class='li-level-2'>samples to be analysed for alcohol and drugs, and</li>
+  <li class='li-level-2'>(iv) give police officers the power to arrest an uninjured bicycle rider involved in a crash</li>
+  <li class='li-level-2'>for the purpose of taking blood and urine samples from the rider if the police officer</li>
+  <li class='li-level-2'>reasonably suspects the crash has resulted in a fatality or grievous bodily harm to a</li>
+  <li class='li-level-2'>person and allow those samples to be analysed for alcohol and drugs, and</li>
+</ul>
+<aside>b2024-093.d20</aside>
+<ul class='content-list'>
+  <li class='li-level-2'>(v) require authorised sample takers to take samples from a person who attends or is</li>
+  <li class='li-level-2'>admitted to hospital because of a crash (a <strong>crash hospital patient</strong>) rather than the</li>
+  <li class='li-level-2'>medical practitioner attending the patient, and</li>
+  <li class='li-level-2'>(vi) allow a blood sample taken from an arrested person who is not physically capable of</li>
+  <li class='li-level-2'>providing a breath analysis or oral fluid sample to be analysed for alcohol, in addition</li>
+  <li class='li-level-2'>to any prescribed illicit drugs, to support enforcement of combined drink and drug</li>
+  <li class='li-level-2'>driving offences, and</li>
+  <li class='li-level-2'>(vii) enable a drink-driving offender who has been issued with a mandatory interlock</li>
+  <li class='li-level-2'>order to apply for an exemption order if the offender has been diagnosed with a</li>
+  <li class='li-level-2'>serious medical condition that prevents the offender from using the interlock, and</li>
+  <li class='li-level-2'>(viii) include the offences under the <em>Crimes Act 1900</em>, section 52A of dangerous driving</li>
+  <li class='li-level-2'>occasioning death or grievous bodily harm as major offences for the purposes of the</li>
+  <li class='li-level-2'>Act,</li>
+  <li class='li-level-2'>(ix) make consequential amendments and other minor statute law revision amendments,</li>
+  <li class='li-level-2'>and</li>
+  <li class='li-level-1'>(b)</li>
+  <li class='li-level-1'>amend the <em>Crimes (Sentencing Procedure) Act 1999</em> to prescribe combined drink and drug</li>
+  <li class='li-level-1'>driving offences under the Act as offences in relation to which the court must take into</li>
+  <li class='li-level-1'>account particular aggravating, mitigating and other objective or subjective factors that</li>
+  <li class='li-level-1'>affect the relative seriousness of the offence when determining the appropriate sentence for</li>
+  <li class='li-level-1'>that offence, and</li>
+  <li class='li-level-1'>(c)</li>
+  <li class='li-level-1'>make consequential amendments to other Acts and regulations.</li>
+</ul>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>Outline of provisions</h2></summary>
+<div class='collapsible-content-wrapper'>
+<p><strong>Clause 1</strong> sets out the name of the proposed Act.</p>
+<p><strong>Clause 2</strong> provides for the commencement of the proposed Act.</p>
+<details open class='details-level-3'>
+  <summary><h3>Schedule 1<br>
+Amendment of Road Transport Act 2013 No 18</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p><strong>Schedule 1[1], [8], [49], [50], [59], [65] and [71]</strong> make statute law revision amendments to update<br>
+terminology and remove redundant cross-reference notes from headings.</p>
+<p><strong>Schedule 1[2]</strong> amends section 4 to replace definitions or insert new definitions for the Act<br>
+consequent on other amendments in Schedule 1.</p>
+<p><strong>Schedule 1[3], [4], [6]–[9], [13]–[23], [27]–[34], [48], [55], [58], [72]–[82], [84] and [85]</strong> amend<br>
+provisions to update references to alcohol and drugs as a consequence of other amendments in<br>
+Schedule 1.</p>
+<p><strong>Schedule 1[5]</strong> amends section 4(1), definition of <em>major offence</em>, to include offences of dangerous<br>
+driving occasioning death or grievous bodily harm under the <em>Crimes Act 1900</em> as major offences<br>
+for the purposes of the Act.</p>
+<p><em></em>Schedule 1[10]–[12], [25], [26], [37]–[39], [41], [42], [52], [53], [56], [57], [61]–[63], [67], [69],<br>
+[83], [86]-[88]<em></em> amend provisions to replace references to accidents with references to crashes.</p>
+<p><strong>Schedule 1[36]</strong> inserts section 212A to allow a court that makes a mandatory interlock order<br>
+against an offender to make an interlock exemption order if satisfied the offender has a diagnosed<br>
+medical condition that prevents the offender from providing a sufficient breath sample to operate<br>
+an approved interlock device. <strong>Schedule 1[35]</strong> makes a related amendment to clarify the matters<br>
+about which the court must be satisfied in making interlock exemption orders on or after<br>
+conviction.</p>
+<p><strong>Schedule 1[40]</strong> amends the Act, Schedule 3, clause 1(1) to omit redundant definitions and insert<br>
+new definitions for Schedule 3 consequent on other amendments in Schedule 1.</p>
+<p><strong>Schedule 1[43]</strong> amends the Act, Schedule 3, clause 5A(3) to allow a blood sample taken from a<br>
+person who has been arrested and is not physically capable of providing a breath analysis to be<br>
+analysed for any prescribed illicit drugs.</p>
+<p><strong>Schedule 1[24], [44], [45] and [51]</strong> make amendments to update terminology consequent on other<br>
+amendments in Schedule 1.</p>
+<p><strong>Schedule 1[46]</strong> amends Schedule 3, clause 9(3) to allow a blood sample taken from an arrested<br>
+person who cannot physically supply an oral fluid sample to be analysed for alcohol, in addition<br>
+to any prescribed illicit drugs.</p>
+<p><strong>Schedule 1[47]</strong> replaces Schedule 3, Part 2, Division 4, to make the following changes to the<br>
+existing provisions—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a)</li>
+  <li class='li-level-1'>replace references to accidents with references to crashes,</li>
+  <li class='li-level-1'>(b)</li>
+  <li class='li-level-1'>extend the existing power of police officers to arrest an uninjured driver or supervising</li>
+  <li class='li-level-1'>driver involved in a crash that has resulted in a fatality and take the person to hospital to</li>
+  <li class='li-level-1'>have blood and urine samples taken for alcohol and drug analysis to uninjured drivers or</li>
+  <li class='li-level-1'>supervising drivers involved in a crash that a police officer reasonably suspects has resulted</li>
+  <li class='li-level-1'>in grievous bodily harm to a person,</li>
+  <li class='li-level-1'>(c) require blood samples from a crash hospital patient to be taken by an authorised sample</li>
+  <li class='li-level-1'>taker to ensure consistency in the Act,</li>
+  <li class='li-level-1'>(d)</li>
+  <li class='li-level-1'>extend the existing power of police officers to arrest an uninjured driver or supervising</li>
+  <li class='li-level-1'>driver involved in a crash that has resulted in a fatality and to arrange for the taking of blood</li>
+  <li class='li-level-1'>and urine samples from the person for alcohol and drug analysis to enable police officers</li>
+  <li class='li-level-1'>to—</li>
+  <li class='li-level-2'>(i) arrest a person riding a bicycle involved in the crash if—</li>
+  <li class='li-level-3'>(A) the crash resulted in a fatality, or</li>
+  <li class='li-level-3'>(B) the police officer reasonably suspects the crash has resulted in grievous bodily</li>
+  <li class='li-level-3'>harm to a person, and</li>
+  <li class='li-level-2'>(ii)</li>
+  <li class='li-level-2'>arrange for the taking of blood and urine samples from the person for alcohol and</li>
+  <li class='li-level-2'>drug analysis.</li>
+</ul>
+<p><strong>Schedule 1[54]</strong> amends the Act, Schedule 3, clause 17(5) to omit a redundant definition.</p>
+<p><strong>Schedule 1[60]</strong> amends the Act, Schedule 3, clause 18(4) to omit a redundant definition.</p>
+<p><strong>Schedule 1[64]</strong> replaces the Act, Schedule 3, clause 24(8). The proposed new subclause—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a)</li>
+  <li class='li-level-1'>extends the existing power of police officers to arrange for a blood sample taken from an</li>
+  <li class='li-level-1'>injured driver or supervising driver to be analysed for alcohol and drugs if the crash has</li>
+  <li class='li-level-1'>resulted in a fatality or likely fatality to circumstances in which the police officer reasonably</li>
+  <li class='li-level-1'>believes the crash resulted in grievous bodily harm to a person, and</li>
+  <li class='li-level-1'>(b)</li>
+  <li class='li-level-1'>extends the power to also apply in relation to bicycle riders.</li>
+</ul>
+<p><strong>Schedule 1[66]</strong> replaces the Act, Schedule 3, clause 27(1) and (2). The proposed new subclauses<br>
+extend the authority of a laboratory analyst to test a blood or urine sample from a person involved<br>
+in a crash for the presence of alcohol or drugs if a police officer has given the laboratory written<br>
+notice that the crash resulted in a fatality, to include circumstances where the laboratory has been<br>
+given written notice that a police officer reasonably believes a person suffered grievous bodily<br>
+harm as a result of the crash within 12 months after the crash. <strong>Schedules 1[68] and [70]</strong> make<br>
+consequential amendments.</p>
+<p><strong>Schedule 1[89]</strong> inserts transitional provisions to provide that—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) the amended provisions do not apply in relation to samples taken before the commencement</li>
+  <li class='li-level-1'>of the amendments and that samples taken before the commencement of the amendments</li>
+  <li class='li-level-1'>will be dealt with in accordance with the provisions as in force before the amendments, and</li>
+  <li class='li-level-1'>(b) during a transitional period of 2 years, certificates relating to the conduct of analysis of</li>
+  <li class='li-level-1'>samples are not to be considered invalid if the certificate complies with the requirements of</li>
+  <li class='li-level-1'>the relevant provisions in force before the commencement of the amendments.</li>
+</ul>
+</div></details>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>Schedule 2</h2></summary>
+<div class='collapsible-content-wrapper'>
+<details open class='details-level-3'>
+  <summary><h3>Consequential amendments of other legislation</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>Schedule 2.1 amends the <em>Crimes Act 1900</em> to update the definition of <em>drug</em> as a consequence of<br>
+amendments in Schedule 1.</p>
+<p>Schedule 2.2 amends the <em>Crimes (Sentencing Procedure) Act 1999</em>, section 21A to prescribe<br>
+offences under the <em>Road Transport Act 2013</em>, section 111A(1)–(3), being combined drink and<br>
+drug driving offences, as <em>prescribed traffic offences</em> in relation to which the court must take into<br>
+account prescribed aggravating, mitigating factors and other objective or subjective factors that<br>
+affect the relative seriousness of the offence when determining the appropriate sentence for that<br>
+offence.</p>
+<p>Schedule 2.3 amends the <em>Marine Safety Act 1998</em> to update the definition of <em>drug</em> as a<br>
+consequence of amendments in Schedule 1.</p>
+<p>Schedules 2.4, 2.5, 2.6 and 2.7 make consequential amendments to various instruments under the<br>
+<em>Road Transport Act 2013</em> to—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) replace references to accidents with references to crashes, and</li>
+  <li class='li-level-1'>(b) replace references to alcohol or other drug related driving offences with references to</li>
+  <li class='li-level-1'>alcohol or drug related driving offences.</li>
+</ul>
+</div></details>
+</div></details>
+<h2>New South Wales</h2>
+<h1>Road Transport Legislation Amendment<br>
+(Post-Crash Drug and Alcohol Testing) Bill<br>
+2025</h1>
+<details open class='details-level-1'>
+  <summary><h1>Contents</h1></summary>
+<div class='collapsible-content-wrapper'>
+<p>This PUBLIC BILL, originated in the <em>LEGISLATIVE COUNCIL</em> and, having this day passed,<br>
+is now ready for presentation to the <em>LEGISLATIVE ASSEMBLY</em> for its concurrence.</p>
+</div></details>
+<h1>Road Transport Legislation Amendment<br>
+(Post-Crash Drug and Alcohol Testing) Bill<br>
+2025</h1>
+<p>No<br>
+, 2025</p>
+<details open class='details-level-3'>
+  <summary><h3>A Bill for</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>An Act to amend the <em>Road Transport Act 2013</em> in relation to post-crash drug and alcohol testing;<br>
+to make consequential amendments to other Acts and regulations; and for other purposes.</p>
+<p>The <em>LEGISLATIVE ASSEMBLY</em> has this day agreed to this Bill with/without amendment.</p>
+<p>The Legislature of New South Wales enacts—</p>
+</div></details>
+<details open class='details-level-3'>
+  <summary><h3>1 Name of Act</h3></summary>
+<div class='collapsible-content-wrapper'>
+</div></details>
+<details open class='details-level-3'>
+  <summary><h3>2 Commencement</h3></summary>
+<div class='collapsible-content-wrapper'>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>Schedule 1 Amendment of Road Transport Act 2013 No 18</h2></summary>
+<div class='collapsible-content-wrapper'>
+<p>Omit all bracketed notes wherever occurring in headings that draw attention (“cf”) to<br>
+provisions of other Acts and statutory rules.</p>
+<p>Omit the definitions of <strong>alcohol or other drug related driving offence</strong> and <strong>fatal accident</strong><br>
+from section 4(1).</p>
+<p>Insert in alphabetical order—</p>
+<ul class='content-list'>
+  <li class='li-level-1'><em>alcohol or drug related driving offence</em>* means an offence—</li>
+  <li class='li-level-2'>(a) involving the presence of—</li>
+  <li class='li-level-3'>(i) alcohol in a person’s breath or blood, or</li>
+  <li class='li-level-3'>(ii) a drug in a person’s oral fluid, blood or urine, and</li>
+  <li class='li-level-2'>(b) prescribed by the statutory rules.</li>
+  <li class='li-level-1'><em>bicycle</em>* has the same meaning as in the <em>Road Rules 2014</em>.</li>
+  <li class='li-level-1'><em>crash</em>* means—</li>
+  <li class='li-level-2'>(a) a collision between 2 or more vehicles, or</li>
+  <li class='li-level-2'>(b) a collision or incident involving a vehicle in which—</li>
+  <li class='li-level-3'>(i) a person is killed or injured, or</li>
+  <li class='li-level-3'>(ii) the vehicle or other property is damaged, or</li>
+  <li class='li-level-3'>(iii) an animal in a person’s charge is killed or injured.</li>
+  <li class='li-level-1'><em>fatal crash</em>* means a crash on a road or road related area involving a motor</li>
+  <li class='li-level-1'>vehicle or bicycle that results in the death of 1 or more persons.</li>
+</ul>
+<p>Omit the paragraph.</p>
+<p>Insert “, other than alcohol,” after “any other substance”.</p>
+<p>Insert “, 52A” after “51B”.</p>
+<p>Omit “other” from section 9(2A)(a).</p>
+<p>Omit the note.</p>
+<p>Omit the heading. Insert instead—</p>
+<details open class='details-level-3'>
+  <summary><h3>59 Cancellation or suspension—speeding, drug or alcohol offences</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>Omit “other drug” wherever occurring. Insert instead “drug”.</p>
+<p>Omit &quot;an accident&quot; wherever occurring. Insert instead “a crash&quot;.</p>
+<p>Omit &quot;the accident&quot; from section 78(2)(a). Insert instead &quot;the crash&quot;.</p>
+<p>Omit &quot;accidents&quot; from section 80(1)(a). Insert instead “crashes”.</p>
+<p>Omit &quot;other&quot;.</p>
+<p>Omit &quot;other&quot;.</p>
+<p>Omit &quot;(other than alcohol)&quot;.</p>
+<p>Omit &quot;any prescribed”. Insert instead “a prescribed&quot;.</p>
+<p>Omit &quot;any other drugs&quot;. Insert instead “another drug or alcohol&quot;.</p>
+<p>Omit “any other drug”. Insert instead “a drug&quot;.</p>
+<p>Omit &quot;any other drug”. Insert instead “drugs&quot;.</p>
+<p>Omit “any other drug”. Insert instead “a drug&quot;.</p>
+<p>Omit the paragraphs. Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) the court attendance notice—</li>
+  <li class='li-level-2'>(i) may allege the person was under the influence of—</li>
+  <li class='li-level-3'>(A) alcohol and 1 or more drugs, or</li>
+  <li class='li-level-3'>(B) 1 or more drugs, and</li>
+  <li class='li-level-2'>(ii) is not liable to be dismissed on the ground of uncertainty or duplicity if more than one of the substances in (A) or (B) (a relevant substance) is described in the court attendance notice, and</li>
+  <li class='li-level-1'>(b) the offence is proved if the court is satisfied beyond reasonable doubt that the defendant was under the influence of—</li>
+  <li class='li-level-2'>(i) a relevant substance described in the court attendance notice, or</li>
+  <li class='li-level-2'>(ii) a combination of relevant substances if 1 or more of the relevant substances was described in the court attendance notice.</li>
+</ul>
+<p>Omit &quot;other&quot;.</p>
+<p>Omit &quot;other&quot;.</p>
+<p>Omit section 117(3)(c). Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(c) obstructions or hazards on the road, including—</li>
+  <li class='li-level-2'>(i) broken down vehicles, and</li>
+  <li class='li-level-2'>(ii) fallen loads, and</li>
+  <li class='li-level-2'>(iii) crash or emergency scenes.</li>
+</ul>
+<p>Omit &quot;accident” from section 142(5), definition of <strong>relevant person</strong>, paragraph (a).</p>
+<p>Insert instead &quot;crash&quot;.</p>
+<p>Omit &quot;accidents&quot; from section 148D(1)(a). Insert instead “crashes&quot;.</p>
+<p>Omit &quot;other&quot;.</p>
+<p>Omit “any other drug, or a combination of drugs&quot;.</p>
+<p>Insert instead &quot;a drug or combination of drugs&quot;.</p>
+<p>Omit &quot;that other drug or a combination of drugs&quot;.</p>
+<p>Insert instead &quot;the drug or combination of drugs&quot;.</p>
+<p>Omit &quot;other&quot;.</p>
+<p>Omit &quot;other&quot;.</p>
+<p>Omit &quot;any other drug, or a combination of drugs&quot;.</p>
+<p>Insert instead “a drug or combination of drugs&quot;.</p>
+<p>Omit &quot;that other drug or a combination of drugs&quot;.</p>
+<p>Insert instead &quot;the drug or combination of drugs&quot;.</p>
+<p>Omit &quot;any other drug&quot; from section 1481(1)(b)(ii). Insert instead “a drug”.</p>
+<p>Insert “under this section” before “only if” in section 212(3).</p>
+<p>Insert after section 212—</p>
+</div></details>
+<details open class='details-level-3'>
+  <summary><h3>212A Application for interlock exemption orders after conviction</h3></summary>
+<div class='collapsible-content-wrapper'>
+<ul class='content-list'>
+  <li class='li-level-1'>(1) The court that made a mandatory interlock order against an offender may, on the application of the offender, make an interlock exemption order under this section if the court is satisfied—</li>
+  <li class='li-level-2'>(a) the offender has a medical condition that—</li>
+  <li class='li-level-3'>(i) has been diagnosed by a registered medical practitioner, and</li>
+  <li class='li-level-3'>(ii) prevents the offender from providing a sufficient breath sample to operate an approved interlock device, and</li>
+  <li class='li-level-2'>(b) it is not reasonably practicable for an interlock device to be modified to enable the offender to operate the device, and</li>
+  <li class='li-level-2'>(c) the offender—</li>
+  <li class='li-level-3'>(i) did not satisfy section 212(3)(b) at the time of conviction, or</li>
+  <li class='li-level-3'>(ii) did satisfy that paragraph at the time of conviction, but did not apply for an interlock exemption order under section 212.</li>
+  <li class='li-level-1'>(2) The application must be accompanied by a current statement of the offender’s driving record issued by Transport for NSW.</li>
+  <li class='li-level-1'>(3) The court may at any time require the following—</li>
+  <li class='li-level-2'>(a) an updated statement of the offender’s driving record to be given by the offender,</li>
+  <li class='li-level-2'>(b) a report about the driving record of the offender,</li>
+  <li class='li-level-2'>(c) any other report in relation to the offender that the court considers necessary for this section.</li>
+  <li class='li-level-1'>(4) The offender must not make the application if the offender is eligible, under the <em>Crimes (Appeal and Review) Act 2001</em>, to—</li>
+  <li class='li-level-2'>(a) appeal against the conviction in relation to which the mandatory interlock order was made, or</li>
+  <li class='li-level-2'>(b) apply for an annulment of the conviction, other than under section 5 of that Act.</li>
+  <li class='li-level-1'>(5) The relevant registrar of the court must notify Transport for NSW of the court’s decision on the application.</li>
+  <li class='li-level-1'>(6) If the interlock exemption order is made—</li>
+  <li class='li-level-2'>(a) the court must determine a disqualification period for the interlock exemption order—</li>
+  <li class='li-level-3'>(i) in accordance with section 205 as if determining the period for which the person is disqualified under that section from holding a driver licence, and</li>
+  <li class='li-level-3'>(ii) taking into account relevant disqualification periods or interlock periods already served, and</li>
+  <li class='li-level-2'>(b) the disqualification period for the interlock exemption order is taken to have started on the day the mandatory interlock order was issued to the offender, and</li>
+  <li class='li-level-2'>(c) the mandatory interlock order is revoked.</li>
+  <li class='li-level-1'>(7) Transport for NSW may, by written notice given to the offender—</li>
+  <li class='li-level-2'>(a) nominate a drink driving education program, and</li>
+  <li class='li-level-2'>(b) require the offender to undertake the program within the period specified in the notice.</li>
+  <li class='li-level-1'>Omit “accidents” from clause 10, heading. Insert instead “<strong>crashes</strong>”.</li>
+  <li class='li-level-1'>Omit “an accident”. Insert instead “a crash”.</li>
+  <li class='li-level-1'>Omit “the accident” wherever occurring. Insert instead “the crash”.</li>
+  <li class='li-level-1'>Omit clause 1(1), definition of <strong>accident</strong>. Insert in alphabetical order—</li>
+  <li class='li-level-1'><em>alcohol analysis</em>*, of a person’s blood or urine, means an analysis to determine the concentration of alcohol in the person’s blood or urine.</li>
+  <li class='li-level-1'><em>applicable driver licence</em>* has the same meaning as in Part 5.1.</li>
+  <li class='li-level-1'><em>attempting to drive a motor vehicle</em>* means occupying the driving seat of a motor vehicle and attempting to put the motor vehicle in motion.</li>
+  <li class='li-level-1'><em>crash</em>*—</li>
+  <li class='li-level-2'>(a) means a crash that—</li>
+  <li class='li-level-3'>(i) involves a motor vehicle or other vehicle or a horse, and</li>
+  <li class='li-level-3'>(ii) is on a road, and</li>
+  <li class='li-level-2'>(b) for clause 12—includes a crash that—</li>
+  <li class='li-level-3'>(i) involves a motor vehicle, and</li>
+  <li class='li-level-3'>(ii) is not on a road.</li>
+  <li class='li-level-1'><em>crash hospital patient</em>*, for Schedule 3, Part 2, Division 4—see clause 10.</li>
+  <li class='li-level-1'><em>crash participant</em>* means a person who—</li>
+  <li class='li-level-2'>(a) at the time of a crash, was—</li>
+  <li class='li-level-3'>(i) driving a motor vehicle involved in the crash, or</li>
+  <li class='li-level-3'>(ii) attempting to drive a motor vehicle involved in the crash, or</li>
+  <li class='li-level-3'>(iii) supervising a learner driver who was driving a motor vehicle involved in the crash, or</li>
+  <li class='li-level-3'>(iv) riding a bicycle involved in the crash, and</li>
+  <li class='li-level-2'>(b) is at least 15 years of age.</li>
+  <li class='li-level-1'><em>drug</em>* does not include alcohol.</li>
+  <li class='li-level-1'><em>drug analysis</em>*, of a person’s blood or urine, means an analysis to determine the presence or concentration of a drug in the person’s blood or urine.</li>
+  <li class='li-level-1'><em>grievous bodily harm</em>* has the same meaning as in the <em>Crimes Act 1900</em>.</li>
+  <li class='li-level-1'><em>hospital</em>*, for Schedule 3, Part 2, Division 4—see clause 10.</li>
+  <li class='li-level-1'><em>prescribed laboratory</em>*, for Schedule 3, Part 4—see clause 23.</li>
+  <li class='li-level-1'><em>secondary participant</em>* in a crash means a person involved in the crash who was—</li>
+  <li class='li-level-1'>(a) a pedestrian, or</li>
+  <li class='li-level-1'>(b) driving or riding a vehicle, other than a bicycle, a motor vehicle or a</li>
+  <li class='li-level-1'>horse.</li>
+</ul>
+<p>Omit “accident”. Insert instead “<strong>crash</strong>”.</p>
+<p>Omit “an accident”. Insert instead “a <strong>crash</strong>”.</p>
+<p>Omit “conducting an analysis to determine the concentration of alcohol in the blood.”.</p>
+<p>Insert instead—</p>
+<p>conducting—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) an alcohol analysis of the blood, and</li>
+  <li class='li-level-1'>(b) a drug analysis to determine whether the blood contains a prescribed</li>
+  <li class='li-level-1'>illicit drug.</li>
+</ul>
+<p>Omit the heading. Insert instead—</p>
+</div></details>
+<details open class='details-level-3'>
+  <summary><h3>Division 3 Random oral fluid testing</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>Omit the subclause. Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) driving a motor vehicle on a road, or</li>
+  <li class='li-level-1'>(b) attempting to drive a motor vehicle on a road, or</li>
+  <li class='li-level-1'>(c) supervising a learner driver driving a motor vehicle on a road.</li>
+</ul>
+<p>Omit “conducting an analysis to determine whether the blood contains any prescribed illicit<br>
+drugs.”</p>
+<p>Insert instead—</p>
+<p>conducting—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) an alcohol analysis of the blood, and</li>
+  <li class='li-level-1'>(b) a drug analysis to determine whether the blood contains a prescribed</li>
+  <li class='li-level-1'>illicit drug.</li>
+</ul>
+<p>Omit the division. Insert instead—</p>
+</div></details>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>Division 4 Crashes</h2></summary>
+<div class='collapsible-content-wrapper'>
+<details open class='details-level-3'>
+  <summary><h3>10 Definitions</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>In this division—</p>
+<p><em>crash hospital patient</em> means a person who—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) attends at, or is admitted to, a hospital for examination or treatment</li>
+  <li class='li-level-1'>because of a crash, whether occurring in this jurisdiction or elsewhere,</li>
+  <li class='li-level-1'>and</li>
+  <li class='li-level-1'>(b) is at least 15 years of age.</li>
+</ul>
+<p><em>hospital</em> includes premises, including an institution or establishment,<br>
+prescribed by the statutory rules as being included for this definition.</p>
+</div></details>
+<details open class='details-level-3'>
+  <summary><h3>11 Blood samples must be taken in hospitals from certain crash hospital patients</h3></summary>
+<div class='collapsible-content-wrapper'>
+<ul class='content-list'>
+  <li class='li-level-1'>(1) An authorised sample taker attending to a crash hospital patient at a hospital</li>
+  <li class='li-level-1'>must take a sample of the patient’s blood for analysis if, at the time of the</li>
+  <li class='li-level-1'>crash, the patient was—</li>
+  <li class='li-level-2'>(a) a crash participant, or</li>
+  <li class='li-level-2'>(b) a pedestrian involved in the crash, or</li>
+  <li class='li-level-2'>(c) driving or riding a vehicle, other than a motor vehicle or bicycle,</li>
+  <li class='li-level-2'>involved in the crash, or</li>
+  <li class='li-level-2'>(d) driving or riding a horse involved in the crash.</li>
+  <li class='li-level-1'>(2) The sample must be taken—</li>
+  <li class='li-level-2'>(a) as soon as practicable, and</li>
+  <li class='li-level-2'>(b) whether or not the patient consents.</li>
+  <li class='li-level-1'>(3) The authorised sample taker is not required to take the sample if—</li>
+  <li class='li-level-2'>(a) a sample of the patient’s blood has already been taken in accordance</li>
+  <li class='li-level-2'>with this clause, or</li>
+  <li class='li-level-2'>(b) the authorised sample taker has been informed by a police officer, or has</li>
+  <li class='li-level-2'>reasonable grounds to believe, that the sample is required to be taken for</li>
+  <li class='li-level-2'>the purposes of clause 12.</li>
+  <li class='li-level-1'>(4) A sample taken under this clause may be used for the purpose of conducting</li>
+  <li class='li-level-1'>an alcohol analysis of the blood.</li>
+  <li class='li-level-1'>(5) A sample taken from a patient under this clause in relation to a crash may be</li>
+  <li class='li-level-1'>used for the purpose of conducting a drug analysis of the blood if—</li>
+  <li class='li-level-2'>(a) the patient was a crash participant, and</li>
+  <li class='li-level-2'>(b) a police officer has reasonable grounds to believe the crash resulted</li>
+  <li class='li-level-2'>in—</li>
+  <li class='li-level-3'>(i) the death of a person, or</li>
+  <li class='li-level-3'>(ii) grievous bodily harm to a person.</li>
+</ul>
+<p>Note 1—Part 4 provides for the procedures in relation to the taking and analysis of<br>
+samples taken under this clause.</p>
+<p>Note 2—Part 5 provides for the admissibility of evidence of the presence and<br>
+concentration of alcohol and drugs in blood samples taken under this clause and<br>
+analysed in accordance with Part 4.</p>
+</div></details>
+<details open class='details-level-3'>
+  <summary><h3>12 Power to arrest persons involved in certain crashes</h3></summary>
+<div class='collapsible-content-wrapper'>
+<ul class='content-list'>
+  <li class='li-level-1'>(1) A police officer may arrest a crash participant without warrant if—</li>
+  <li class='li-level-2'>(a) the crash participant is not a crash hospital patient, and</li>
+  <li class='li-level-2'>(b) the police officer reasonably suspects that—</li>
+  <li class='li-level-3'>(i) a person has died as a result of the crash, or</li>
+  <li class='li-level-3'>(ii) the crash resulted in grievous bodily harm to a person.</li>
+  <li class='li-level-1'>(2) A police officer may cause the arrested crash participant, using the force necessary—</li>
+  <li class='li-level-2'>(a) to be taken to a hospital or prescribed place, and</li>
+  <li class='li-level-2'>(b) to be detained at the hospital or place for the taking of blood and urine samples, and</li>
+  <li class='li-level-2'>(c) to have the samples taken.</li>
+  <li class='li-level-1'>(3) A police officer may require an authorised sample taker to take samples of the arrested crash participant’s blood and urine.</li>
+  <li class='li-level-1'>(4) The authorised sample taker must take the samples whether or not the arrested crash participant consents.</li>
+</ul>
+<p><em>Note— A refusal or failure by the authorised sample taker to take a sample that the authorised sample taker is required to take under this schedule may constitute an offence under clause 20.</em></p>
+<ul class='content-list'>
+  <li class='li-level-1'>(5) A sample taken under this clause may be used for the purpose of conducting an alcohol analysis or drug analysis of the blood or urine.</li>
+</ul>
+<p><em>Note 1— Part 4 provides for the procedures in relation to the taking and analysis of samples taken under this clause.</em></p>
+<p><em>Note 2— Part 5 provides for the admissibility of evidence of the presence and concentration of alcohol or drugs in blood and urine samples taken under this clause and analysed in accordance with Part 4.</em></p>
+<p>Omit “influence of a drug” wherever occurring.</p>
+<p>Insert instead “influence of alcohol or a drug”.</p>
+<p>Omit the subsubparagraph. Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-4'>(B) is or was attempting to drive a motor vehicle on a road, or</li>
+</ul>
+<p>Omit “is under a duty to”. Insert instead “must”.</p>
+<p>Omit “an analysis to determine whether the blood or urine contains a drug”.</p>
+<p>Insert instead “an alcohol analysis or drug analysis of the blood or urine”.</p>
+<p>Omit “(other than a secondary participant in an accident)” wherever occurring.</p>
+<p>Insert instead “, other than a secondary participant in a crash,”.</p>
+<p>Omit “an accident”. Insert instead “a crash”.</p>
+<p>Omit the definition.</p>
+<p>Omit “other”.</p>
+<p>Omit “an accident” wherever occurring. Insert instead “a crash”.</p>
+<p>Omit “accident” wherever occurring. Insert instead “crash”.</p>
+<p>Omit “a drug” wherever occurring. Insert instead “alcohol or a drug”.</p>
+<p>Omit “in the case of the prosecution of a person” wherever occurring.</p>
+<p>Omit the definition.</p>
+<p>Omit “an accident” wherever occurring. Insert instead “a crash”.</p>
+<p>Omit “accident”. Insert instead “crash”.</p>
+<p>Omit “an accident”. Insert instead “a crash”.</p>
+<p>Omit the subclause. Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(8) Subject to subclause (9), a police officer may arrange for a blood sample taken</li>
+  <li class='li-level-1'>from a person under clause 11 to be submitted to a prescribed laboratory for</li>
+  <li class='li-level-1'>either or both of the following—</li>
+  <li class='li-level-2'>(a) alcohol analysis,</li>
+  <li class='li-level-2'>(b) drug analysis.</li>
+  <li class='li-level-1'>(9) A police officer must not arrange for a blood sample taken from a person under</li>
+  <li class='li-level-1'>clause 11 to be submitted to a prescribed laboratory for drug analysis under</li>
+  <li class='li-level-1'>subclause (8) unless the officer has reasonable grounds to believe that—</li>
+  <li class='li-level-2'>(a) the person was a crash participant and the crash resulted in—</li>
+  <li class='li-level-3'>(i) the death of a person, or</li>
+  <li class='li-level-3'>(ii) grievous bodily harm to a person, or</li>
+  <li class='li-level-2'>(b) at the time of the crash, the person was under the influence of a drug and</li>
+  <li class='li-level-2'>either—</li>
+  <li class='li-level-3'>(i) police officers did not attend the scene of the crash, or</li>
+  <li class='li-level-2'>(ii) police officers did attend the scene but did not have a reasonable</li>
+  <li class='li-level-2'>opportunity to require the person to submit to a sobriety</li>
+  <li class='li-level-2'>assessment under Part 2, Division 5.</li>
+</ul>
+<p>Omit the subclause, excluding the note. Insert instead—</p>
+<p>Omit the subclauses. Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) the concentration of alcohol in the sample, or</li>
+  <li class='li-level-1'>(b) the presence or concentration of a prescribed illicit drug or other drug in</li>
+  <li class='li-level-1'>the sample.</li>
+  <li class='li-level-1'>(a) a person involved in the crash died within 12 months after the crash and,</li>
+  <li class='li-level-1'>if the death occurred more than 30 days after the crash, a medical</li>
+  <li class='li-level-1'>practitioner has advised that the death was a result of the crash, or</li>
+  <li class='li-level-1'>(b) the police officer has reasonable grounds to believe that a person</li>
+  <li class='li-level-1'>involved in the crash suffered grievous bodily harm as a result of the</li>
+  <li class='li-level-1'>crash within 12 months after the crash.</li>
+</ul>
+<p>Omit “accident”. Insert instead “crash”.</p>
+<p>Omit “relating to a death”.</p>
+<p>Omit “accident”. Insert instead “crash”.</p>
+<p>Omit “made a notification relating to a death”.</p>
+<p>Insert instead “given notice under clause 27(2)”.</p>
+<p>Omit the clause. Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) supply a sample of oral fluid or blood taken under Part 2, Division 3 to</li>
+  <li class='li-level-1'>a person for analysis for an unrelated testing purpose, or</li>
+  <li class='li-level-1'>(b) carry out an analysis of the sample for an unrelated testing purpose, or</li>
+  <li class='li-level-1'>(c) include information on a DNA database if that information is derived</li>
+  <li class='li-level-1'>from an analysis of the sample for an unrelated testing purpose.</li>
+</ul>
+<p>Maximum penalty—30 penalty units.</p>
+<p><strong>DNA database</strong> means a database containing DNA data kept under a law of this<br>
+jurisdiction or another jurisdiction and includes a DNA database system<br>
+within the meaning of the <em>Crimes (Forensic Procedures) Act 2000</em>.</p>
+<p><strong>unrelated testing purpose</strong>, for a sample, means a purpose other than<br>
+determining whether alcohol or prescribed illicit drugs are present in the<br>
+sample.</p>
+<p><strong>[72] Schedule 3, Part 5, Division 1, heading</strong></p>
+<p>Omit “other”.</p>
+<p><strong>[73] Schedule 3, clauses 32(1) and 36(1)(b)</strong></p>
+<p>Omit “(other than alcohol)”, wherever occurring.</p>
+<p><strong>[74] Schedule 3, clause 33, heading</strong></p>
+<p>Insert “alcohol or” before “drugs”.</p>
+<p><strong>[75] Schedule 3, clause 33(1)</strong></p>
+<p>Omit “any other drug”. Insert instead “a drug”.</p>
+<p><strong>[76] Schedule 3, clause 33(2)</strong></p>
+<p>Omit the subclause. Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) evidence may be given of the presence of alcohol or a drug, or the</li>
+  <li class='li-level-1'>presence of a particular concentration of alcohol or a drug, in the blood</li>
+  <li class='li-level-1'>or urine of the person charged, as determined by an analysis under this</li>
+  <li class='li-level-1'>schedule of a sample of the person’s blood or urine, and</li>
+  <li class='li-level-1'>(b) if the sample was taken within 4 hours after the event referred to in</li>
+  <li class='li-level-1'>section 112(1)(a) or (b) occurred—the alcohol or drug, or the particular</li>
+  <li class='li-level-1'>concentration of alcohol or drug, determined by the analysis to be</li>
+  <li class='li-level-1'>present in the blood or urine of the person, must be taken to have been</li>
+  <li class='li-level-1'>present in the blood or urine of the person when the event occurred</li>
+  <li class='li-level-1'>unless the defendant proves the absence of the alcohol or drug, or the</li>
+  <li class='li-level-1'>presence of the alcohol or drug in a different concentration, when the</li>
+  <li class='li-level-1'>event occurred.</li>
+</ul>
+<p><strong>[77] Schedule 3, clause 34(2)</strong></p>
+<p>Omit “any other drug”. Insert instead “a drug”.</p>
+<p><strong>[78] Schedule 3, clause 36(1)(b)</strong></p>
+<p>Omit “(other than alcohol)”.</p>
+<p><strong>[79] Schedule 3, clause 36(1)(c)</strong></p>
+<p>Omit “any other drug”. Insert instead “a drug”.</p>
+<span>[80]</span>
+<p>Schedule 3, clause 36(8)(b)(i) and (ii)</p>
+<p>Omit &quot;other than alcohol&quot; wherever occurring.</p>
+<span>[81]</span>
+<p>Schedule 3, clause 37(1)(b)</p>
+<p>Omit &quot;another specified drug&quot;. Insert instead &quot;a specified drug&quot;.</p>
+<span>[82]</span>
+<p>Schedule 3, clause 37(2)</p>
+<p>Omit &quot;the other drug&quot;. Insert instead &quot;the drug&quot;.</p>
+<span>[83]</span>
+<p>Schedule 3, clause 39, heading</p>
+<p>Omit &quot;accident&quot;. Insert instead &quot;crash&quot;.</p>
+<span>[84]</span>
+<p>Schedule 3, clause 39(2)</p>
+<p>Omit &quot;any drug&quot;. Insert instead &quot;alcohol or a drug&quot;.</p>
+<span>[85]</span>
+<p>Schedule 3, clause 40, heading</p>
+<p>Omit &quot;other&quot;.</p>
+<span>[86]</span>
+<p>Schedule 3, clause 40(3)</p>
+<p>Omit &quot;an accident&quot;. Insert instead &quot;a crash&quot;.</p>
+<span>[87]</span>
+<p>Schedule 3, clause 40(3)</p>
+<p>Omit &quot;same accident&quot;. Insert instead &quot;same crash&quot;.</p>
+<span>[88]</span>
+<p>Schedule 3, clause 41(1)(b)</p>
+<p>Omit &quot;an accident (whether in this jurisdiction or elsewhere)&quot;.</p>
+<p>Insert instead “a crash, whether in this jurisdiction or elsewhere,”.</p>
+<span>[89]</span>
+<p>Schedule 4 Savings, transitional and other provisions</p>
+<p>Insert at the end of the schedule, with appropriate part and clause numbering—</p>
+</div></details>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>Part Provisions consequent on enactment of Road<br>
+Transport Legislation Amendment (Post-Crash<br>
+Drug and Alcohol Testing) Act 2025</h2></summary>
+<div class='collapsible-content-wrapper'>
+<details open class='details-level-3'>
+  <summary><h3>Definition</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>In this part—</p>
+<ul class='content-list'>
+  <li class='li-level-1'><em>amending Act</em>* means the *Road Transport Legislation Amendment</li>
+  <li class='li-level-1'>(Post-Crash Drug and Alcohol Testing) Act 2025*.</li>
+</ul>
+</div></details>
+<details open class='details-level-3'>
+  <summary><h3>Testing for alcohol and drug use</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>For a sample taken before the commencement of the amendments made to<br>
+Schedule 3 by the amending Act—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(a) the schedule as amended does not apply, and</li>
+  <li class='li-level-1'>(b) the schedule as in force immediately before the commencement of the</li>
+  <li class='li-level-1'>amendments continues to apply.</li>
+</ul>
+</div></details>
+<details open class='details-level-3'>
+  <summary><h3>Validity of certificates</h3></summary>
+<div class='collapsible-content-wrapper'>
+</div></details>
+</div></details>
+<details open class='details-level-1'>
+  <summary><h1>Schedule 2 Consequential amendments of other legislation</h1></summary>
+<div class='collapsible-content-wrapper'>
+<details open class='details-level-2'>
+  <summary><h2>2.1 Crimes Act 1900 No 40</h2></summary>
+<div class='collapsible-content-wrapper'>
+<details open class='details-level-3'>
+  <summary><h3>Section 52A Dangerous driving: substantive matters</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>Omit section 52A(9), definition of <strong>drug</strong>. Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>{&#39;correlation-id&#39;: None, &#39;tag&#39;: &#39;List-l2&#39;, &#39;content&#39;: &#39;(a) alcohol, and&#39;, &#39;clause-type&#39;: None}</li>
+  <li class='li-level-1'>{&#39;correlation-id&#39;: None, &#39;tag&#39;: &#39;List-l2&#39;, &#39;content&#39;: &#39;(b) a drug within the meaning of the <em>Road Transport Act 2013</em>.&#39;, &#39;clause-type&#39;: None}</li>
+</ul>
+</div></details>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>2.2 Crimes (Sentencing Procedure) Act 1999 No 92</h2></summary>
+<div class='collapsible-content-wrapper'>
+<details open class='details-level-3'>
+  <summary><h3>Section 21A Aggravating, mitigating and other factors in sentencing</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>Insert &quot;, 111A(1), (2) and (3)&quot; after &quot;111 (1) and (3)&quot; in section 21A(6), definition of<br>
+<strong>prescribed traffic offence</strong>, paragraph (a1).</p>
+</div></details>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>2.3 Marine Safety Act 1998 No 121</h2></summary>
+<div class='collapsible-content-wrapper'>
+<details open class='details-level-3'>
+  <summary><h3>Schedule 5 Dictionary</h3></summary>
+<div class='collapsible-content-wrapper'>
+<p>Omit Schedule 5, definition of <strong>drug</strong>. Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>{&#39;correlation-id&#39;: None, &#39;tag&#39;: &#39;List-l2&#39;, &#39;content&#39;: &#39;(a) alcohol, and&#39;, &#39;clause-type&#39;: None}</li>
+  <li class='li-level-1'>{&#39;correlation-id&#39;: None, &#39;tag&#39;: &#39;List-l2&#39;, &#39;content&#39;: &#39;(b) a drug within the meaning of the <em>Road Transport Act 2013</em>.&#39;, &#39;clause-type&#39;: None}</li>
+</ul>
+</div></details>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>2.4 Road Rules 2014</h2></summary>
+<div class='collapsible-content-wrapper'>
+<p>Omit &quot;an accident&quot; from rule 79–2(3), note. Insert instead &quot;a crash&quot;.</p>
+<p>Omit &quot;an accident&quot; from rule 155A(4–1), definition of <em>special purpose vehicle</em>.</p>
+<p>Insert instead &quot;a crash&quot;.</p>
+<p>Omit &quot;an accident&quot; from rule 158(2)(c)(v). Insert instead “a crash&quot;.</p>
+<p>Omit &quot;an accident&quot;. Insert instead &quot;a crash&quot;.</p>
+<p>Omit &quot;an accident&quot; from rule 218–1(e)(ii). Insert instead “a crash&quot;.</p>
+<p>Omit &quot;an accident&quot; from rule 293(2), example, item 3. Insert instead &quot;a crash&quot;.</p>
+<p>Omit &quot;an accident&quot; from rule 294–1(2)(a)(ii). Insert instead &quot;a crash&quot;.</p>
+<ul class='content-list'>
+  <li class='li-level-1'>[8] Rule 294-1(2)(a)(ii)</li>
+</ul>
+<p>Omit &quot;that accident&quot;. Insert instead &quot;that crash&quot;.</p>
+<ul class='content-list'>
+  <li class='li-level-1'>[9] Rule 294-3 NSW rule: towing restrictions generally</li>
+</ul>
+<p>Omit &quot;prevent accident to any person on the road&quot; from rule 294–3(1)(b)(i).</p>
+<p>Insert instead &quot;prevent a crash&quot;.</p>
+<ul class='content-list'>
+  <li class='li-level-1'>[10] Dictionary</li>
+</ul>
+<p>Omit the definition of <strong>crash</strong>, paragraph (b). Insert instead—</p>
+<ul class='content-list'>
+  <li class='li-level-1'>(b) a collision or incident involving a vehicle in which—</li>
+  <li class='li-level-2'>(i) a person is killed or injured, or</li>
+  <li class='li-level-2'>(ii) the vehicle or other property is damaged, or</li>
+  <li class='li-level-2'>(iii) an animal in a person&#39;s charge is killed or injured.</li>
+  <li class='li-level-1'>[11] Dictionary, definition of “crash”, note</li>
+</ul>
+<p>Omit the note. Insert instead—</p>
+<p>Note 1. <strong>Vehicle</strong> is defined in rule 15.</p>
+<p>Note 2. This definition is not uniform with the corresponding definition in the Dictionary<br>
+of the Australian Road Rules.</p>
+<details open class='details-level-3'>
+  <summary><h3>2.5 Road Transport (Driver Licensing) Regulation 2017</h3></summary>
+<div class='collapsible-content-wrapper'>
+<ul class='content-list'>
+  <li class='li-level-1'>[1] Clauses 25, 31 and 67A, headings</li>
+</ul>
+<p>Omit “<em>other</em>” wherever occurring.</p>
+<ul class='content-list'>
+  <li class='li-level-1'>[2] Clauses 25(a)(ii), 31(a)(ii), 96(4)(o) and 96AA(1)(b)(i)</li>
+</ul>
+<p>Omit “alcohol or other drug related driving offence” wherever occurring.</p>
+<p>Insert instead “alcohol or drug related driving offence”.</p>
+<ul class='content-list'>
+  <li class='li-level-1'>[3] Clause 66 Variation, suspension or cancellation for heavy vehicle dimension</li>
+  <li class='li-level-1'>requirement offence</li>
+</ul>
+<p>Omit “an accident” from clause 66(1)(d)(ii). Insert instead “a crash”.</p>
+<ul class='content-list'>
+  <li class='li-level-1'>[4] Clause 67A</li>
+</ul>
+<p>Omit “<em>alcohol or other drug related driving offence</em>”.</p>
+<p>Insert instead “<em>alcohol or drug related driving offence</em>”.</p>
+</div></details>
+<details open class='details-level-3'>
+  <summary><h3>2.6 Road Transport (General) Regulation 2021</h3></summary>
+<div class='collapsible-content-wrapper'>
+<ul class='content-list'>
+  <li class='li-level-1'>[1] Section 148 Certain decisions stayed only in exceptional circumstances</li>
+</ul>
+<p>Omit “an accident” from section 148(5), definition of <strong>circumstances of aggravation</strong>,<br>
+paragraph (b).</p>
+<p>Insert instead “a crash”.</p>
+<ul class='content-list'>
+  <li class='li-level-1'>[2] Schedule 5 Penalty notice offences</li>
+</ul>
+<p>Omit “alcohol or other drug related driving offence” from the matter relating to the *Road<br>
+Transport Act 2013* wherever occurring.</p>
+<p>Insert instead “alcohol or drug related driving offence”.</p>
+</div></details>
+</div></details>
+<details open class='details-level-2'>
+  <summary><h2>2.7 Road Transport (Vehicle Registration) Regulation 2017</h2></summary>
+<div class='collapsible-content-wrapper'>
+<details open class='details-level-4'>
+  <summary><h4>[1] **Clause 46 Suspension of registration for dimension requirement offence**</h4></summary>
+<div class='collapsible-content-wrapper'>
+</div></details>
+<details open class='details-level-4'>
+  <summary><h4>[2] **Schedule 2 Light Vehicle Standards Rules**</h4></summary>
+<div class='collapsible-content-wrapper'>
+</div></details>
+</div></details>
+</div></details>
+
+</body>
+</html>

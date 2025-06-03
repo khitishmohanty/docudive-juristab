@@ -1,0 +1,534 @@
+[
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "Schedule 1 Amendment of Road Transport Act 2013 No 18",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[80]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 3, clause 36(8)(b)(i) and (ii)",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "1",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"other than alcohol\" wherever occurring.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 95%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "2",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[81]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 3, clause 37(1)(b)",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "3",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"another specified drug\". Insert instead \"a specified drug\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 95%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "4",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[82]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 3, clause 37(2)",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "5",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"the other drug\". Insert instead \"the drug\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 93%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "6",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[83]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 3, clause 39, heading",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "7",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"accident\". Insert instead \"crash\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 91%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "8",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[84]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 3, clause 39(2)",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "9",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"any drug\". Insert instead \"alcohol or a drug\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 93%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "10",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[85]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 3, clause 40, heading",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "11",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"other\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 90%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "12",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[86]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 3, clause 40(3)",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "13",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"an accident\". Insert instead \"a crash\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 92%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "14",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[87]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 3, clause 40(3)",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "15",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"same accident\". Insert instead \"same crash\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 93%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "16",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[88]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 3, clause 41(1)(b)",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "17",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"an accident (whether in this jurisdiction or elsewhere)\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "18",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert instead “a crash, whether in this jurisdiction or elsewhere,”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "19",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Enum",
+    "content": "[89]",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Schedule 4 Savings, transitional and other provisions",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "20",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert at the end of the schedule, with appropriate part and clause numbering—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "21",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h2",
+    "content": "**Part Provisions consequent on enactment of Road\nTransport Legislation Amendment (Post-Crash\nDrug and Alcohol Testing) Act 2025**",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "22",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "23",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "24",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h3",
+    "content": "**Definition**",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "25",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "In this part—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "26",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "**amending Act** means the *Road Transport Legislation Amendment\n(Post-Crash Drug and Alcohol Testing) Act 2025*.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "27",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "28",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h3",
+    "content": "**Testing for alcohol and drug use**",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "29",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "For a sample taken before the commencement of the amendments made to\nSchedule 3 by the amending Act—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "30",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "31",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(a) the schedule as amended does not apply, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "32",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(b) the schedule as in force immediately before the commencement of the\namendments continues to apply.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "33",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "34",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Footer",
+    "content": "Page 14",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  }
+]

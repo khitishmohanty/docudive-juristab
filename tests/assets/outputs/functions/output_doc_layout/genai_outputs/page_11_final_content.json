@@ -1,0 +1,520 @@
+[
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nSchedule 1 Amendment of Road Transport Act 2013 No 18",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": "35",
+    "tag": "Clause",
+    "content": "[35] Section 212 Interlock exemption orders",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "1",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert “under this section” before “only if” in section 212(3).",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "2",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": "36",
+    "tag": "Clause",
+    "content": "[36] Section 212A",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "3",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert after section 212—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "4",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h3",
+    "content": "212A Application for interlock exemption orders after conviction",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "5",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(1) The court that made a mandatory interlock order against an offender may, on the application of the offender, make an interlock exemption order under this section if the court is satisfied—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "6",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "7",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "8",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) the offender has a medical condition that—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "9",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(i) has been diagnosed by a registered medical practitioner, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "10",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(ii) prevents the offender from providing a sufficient breath sample to operate an approved interlock device, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "11",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "12",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) it is not reasonably practicable for an interlock device to be modified to enable the offender to operate the device, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "13",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "14",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(c) the offender—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "15",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(i) did not satisfy section 212(3)(b) at the time of conviction, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "16",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(ii) did satisfy that paragraph at the time of conviction, but did not apply for an interlock exemption order under section 212.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "17",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "18",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(2) The application must be accompanied by a current statement of the offender’s driving record issued by Transport for NSW.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "19",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "20",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(3) The court may at any time require the following—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "21",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) an updated statement of the offender’s driving record to be given by the offender,",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "22",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "23",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) a report about the driving record of the offender,",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "24",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(c) any other report in relation to the offender that the court considers necessary for this section.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "25",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "26",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(4) The offender must not make the application if the offender is eligible, under the *Crimes (Appeal and Review) Act 2001*, to—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "27",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "28",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) appeal against the conviction in relation to which the mandatory interlock order was made, or",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "29",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "30",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) apply for an annulment of the conviction, other than under section 5 of that Act.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "31",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "32",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(5) The relevant registrar of the court must notify Transport for NSW of the court’s decision on the application.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "33",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "34",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "(6) If the interlock exemption order is made—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "35",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(a) the court must determine a disqualification period for the interlock exemption order—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "36",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "37",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(i) in accordance with section 205 as if determining the period for which the person is disqualified under that section from holding a driver licence, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "38",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "39",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "40",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l3",
+    "content": "(ii) taking into account relevant disqualification periods or interlock periods already served, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "41",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "42",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(b) the disqualification period for the interlock exemption order is taken to have started on the day the mandatory interlock order was issued to the offender, and",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "43",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "44",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "45",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Footer",
+    "content": "Page 6",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  }
+]
