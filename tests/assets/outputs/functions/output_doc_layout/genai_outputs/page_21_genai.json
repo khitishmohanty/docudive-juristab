@@ -9,7 +9,7 @@
   {
     "correlation-id": null,
     "tag": "Heading-h1",
-    "content": "Schedule 2 Consequential amendments of other legislation",
+    "content": "**Schedule 2 Consequential amendments of other legislation**",
     "clause-type": null,
     "page_number": 21
   },
@@ -23,7 +23,7 @@
   {
     "correlation-id": null,
     "tag": "Heading-h2",
-    "content": "2.1 Crimes Act 1900 No 40",
+    "content": "**2.1 Crimes Act 1900 No 40**",
     "clause-type": null,
     "page_number": 21
   },
@@ -37,7 +37,7 @@
   {
     "correlation-id": null,
     "tag": "Heading-h3",
-    "content": "Section 52A Dangerous driving: substantive matters",
+    "content": "**Section 52A Dangerous driving: substantive matters**",
     "clause-type": null,
     "page_number": 21
   },
@@ -65,7 +65,7 @@
   {
     "correlation-id": null,
     "tag": "Clause",
-    "content": "**drug** means—",
+    "content": "**drug** means—\n(a) alcohol, and\n(b) a drug within the meaning of the *Road Transport Act 2013*.",
     "clause-type": "Definition/Interpretation",
     "page_number": 21
   },
@@ -78,36 +78,8 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
-    "content": [
-      {
-        "correlation-id": null,
-        "tag": "List-l2",
-        "content": "(a) alcohol, and",
-        "clause-type": null
-      }
-    ],
-    "clause-type": null,
-    "page_number": 21
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "6",
-    "clause-type": null,
-    "page_number": 21
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": [
-      {
-        "correlation-id": null,
-        "tag": "List-l2",
-        "content": "(b) a drug within the meaning of the *Road Transport Act 2013*.",
-        "clause-type": null
-      }
-    ],
     "clause-type": null,
     "page_number": 21
   },
@@ -121,7 +93,7 @@
   {
     "correlation-id": null,
     "tag": "Heading-h2",
-    "content": "2.2 Crimes (Sentencing Procedure) Act 1999 No 92",
+    "content": "**2.2 Crimes (Sentencing Procedure) Act 1999 No 92**",
     "clause-type": null,
     "page_number": 21
   },
@@ -135,7 +107,7 @@
   {
     "correlation-id": null,
     "tag": "Heading-h3",
-    "content": "Section 21A Aggravating, mitigating and other factors in sentencing",
+    "content": "**Section 21A Aggravating, mitigating and other factors in sentencing**",
     "clause-type": null,
     "page_number": 21
   },
@@ -149,7 +121,7 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Insert \", 111A(1), (2) and (3)\" after \"111 (1) and (3)\" in section 21A(6), definition of\n**prescribed traffic offence**, paragraph (a1).",
+    "content": "Insert “, 111A(1), (2) and (3)” after “111 (1) and (3)” in section 21A(6), definition of\n**prescribed traffic offence**, paragraph (a1).",
     "clause-type": null,
     "page_number": 21
   },
@@ -170,7 +142,7 @@
   {
     "correlation-id": null,
     "tag": "Heading-h2",
-    "content": "2.3 Marine Safety Act 1998 No 121",
+    "content": "**2.3 Marine Safety Act 1998 No 121**",
     "clause-type": null,
     "page_number": 21
   },
@@ -184,7 +156,7 @@
   {
     "correlation-id": null,
     "tag": "Heading-h3",
-    "content": "Schedule 5 Dictionary",
+    "content": "**Schedule 5 Dictionary**",
     "clause-type": null,
     "page_number": 21
   },
@@ -212,7 +184,7 @@
   {
     "correlation-id": null,
     "tag": "Clause",
-    "content": "**drug** means—",
+    "content": "**drug** means—\n(a) alcohol, and\n(b) a drug within the meaning of the *Road Transport Act 2013*.",
     "clause-type": "Definition/Interpretation",
     "page_number": 21
   },
@@ -225,36 +197,8 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
-    "content": [
-      {
-        "correlation-id": null,
-        "tag": "List-l2",
-        "content": "(a) alcohol, and",
-        "clause-type": null
-      }
-    ],
-    "clause-type": null,
-    "page_number": 21
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "16",
-    "clause-type": null,
-    "page_number": 21
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": [
-      {
-        "correlation-id": null,
-        "tag": "List-l2",
-        "content": "(b) a drug within the meaning of the *Road Transport Act 2013*.",
-        "clause-type": null
-      }
-    ],
     "clause-type": null,
     "page_number": 21
   },
@@ -268,7 +212,7 @@
   {
     "correlation-id": null,
     "tag": "Heading-h2",
-    "content": "2.4 Road Rules 2014",
+    "content": "**2.4 Road Rules 2014**",
     "clause-type": null,
     "page_number": 21
   },
@@ -281,9 +225,16 @@
   },
   {
     "correlation-id": null,
-    "tag": "Clause",
-    "content": "[1] Rule 79-2 NSW rule: precedence at ferries, punts, bridges or railway crossings",
-    "clause-type": "Obligation/Requirement",
+    "tag": "Paragraph",
+    "content": "**[1]**",
+    "clause-type": null,
+    "page_number": 21
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "**Rule 79-2 NSW rule: precedence at ferries, punts, bridges or railway crossings**",
+    "clause-type": null,
     "page_number": 21
   },
   {
@@ -295,9 +246,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"an accident\" from rule 79–2(3), note. Insert instead \"a crash\".",
-    "clause-type": null,
+    "tag": "Clause",
+    "content": "Omit “an accident” from rule 79–2(3), note. Insert instead “a crash”.",
+    "clause-type": "Obligation/Requirement",
     "page_number": 21
   },
   {
@@ -309,9 +260,16 @@
   },
   {
     "correlation-id": null,
-    "tag": "Clause",
-    "content": "[2] Rule 155A Tramways",
-    "clause-type": "Obligation/Requirement",
+    "tag": "Paragraph",
+    "content": "**[2]**",
+    "clause-type": null,
+    "page_number": 21
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "**Rule 155A Tramways**",
+    "clause-type": null,
     "page_number": 21
   },
   {
@@ -323,9 +281,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"an accident\" from rule 155A(4–1), definition of *special purpose vehicle*.",
-    "clause-type": null,
+    "tag": "Clause",
+    "content": "Omit “an accident” from rule 155A(4–1), definition of *special purpose vehicle*.",
+    "clause-type": "Obligation/Requirement",
     "page_number": 21
   },
   {
@@ -337,9 +295,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Insert instead \"a crash\".",
-    "clause-type": null,
+    "tag": "Clause",
+    "content": "Insert instead “a crash”.",
+    "clause-type": "Obligation/Requirement",
     "page_number": 21
   },
   {
@@ -351,9 +309,16 @@
   },
   {
     "correlation-id": null,
-    "tag": "Clause",
-    "content": "[3] Rule 158 Exceptions to driving in special purpose lanes etc",
-    "clause-type": "Obligation/Requirement",
+    "tag": "Paragraph",
+    "content": "**[3]**",
+    "clause-type": null,
+    "page_number": 21
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "**Rule 158 Exceptions to driving in special purpose lanes etc**",
+    "clause-type": null,
     "page_number": 21
   },
   {
@@ -365,9 +330,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"an accident\" from rule 158(2)(c)(v). Insert instead “a crash\".",
-    "clause-type": null,
+    "tag": "Clause",
+    "content": "Omit “an accident” from rule 158(2)(c)(v). Insert instead “a crash”.",
+    "clause-type": "Obligation/Requirement",
     "page_number": 21
   },
   {
@@ -379,9 +344,16 @@
   },
   {
     "correlation-id": null,
-    "tag": "Clause",
-    "content": "[4] Rule 158(4), definition of \"special purpose vehicle\"",
-    "clause-type": "Obligation/Requirement",
+    "tag": "Paragraph",
+    "content": "**[4]**",
+    "clause-type": null,
+    "page_number": 21
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "**Rule 158(4), definition of “special purpose vehicle”**",
+    "clause-type": null,
     "page_number": 21
   },
   {
@@ -393,9 +365,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"an accident\". Insert instead \"a crash\".",
-    "clause-type": null,
+    "tag": "Clause",
+    "content": "Omit “an accident”. Insert instead “a crash”.",
+    "clause-type": "Obligation/Requirement",
     "page_number": 21
   },
   {
@@ -407,9 +379,16 @@
   },
   {
     "correlation-id": null,
-    "tag": "Clause",
-    "content": "[5] Rule 218-1 NSW rule: using lights on vehicles generally",
-    "clause-type": "Obligation/Requirement",
+    "tag": "Paragraph",
+    "content": "**[5]**",
+    "clause-type": null,
+    "page_number": 21
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "**Rule 218-1 NSW rule: using lights on vehicles generally**",
+    "clause-type": null,
     "page_number": 21
   },
   {
@@ -421,9 +400,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"an accident\" from rule 218–1(e)(ii). Insert instead “a crash\".",
-    "clause-type": null,
+    "tag": "Clause",
+    "content": "Omit “an accident” from rule 218–1(e)(ii). Insert instead “a crash”.",
+    "clause-type": "Obligation/Requirement",
     "page_number": 21
   },
   {
@@ -435,9 +414,16 @@
   },
   {
     "correlation-id": null,
-    "tag": "Clause",
-    "content": "[6] Rule 293 Removing fallen etc things from the road",
-    "clause-type": "Obligation/Requirement",
+    "tag": "Paragraph",
+    "content": "**[6]**",
+    "clause-type": null,
+    "page_number": 21
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "**Rule 293 Removing fallen etc things from the road**",
+    "clause-type": null,
     "page_number": 21
   },
   {
@@ -449,9 +435,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"an accident\" from rule 293(2), example, item 3. Insert instead \"a crash\".",
-    "clause-type": null,
+    "tag": "Clause",
+    "content": "Omit “an accident” from rule 293(2), example, item 3. Insert instead “a crash”.",
+    "clause-type": "Obligation/Requirement",
     "page_number": 21
   },
   {
@@ -463,9 +449,16 @@
   },
   {
     "correlation-id": null,
-    "tag": "Clause",
-    "content": "[7] Rule 294-1 NSW rule: number of vehicles that may be towed together",
-    "clause-type": "Obligation/Requirement",
+    "tag": "Paragraph",
+    "content": "**[7]**",
+    "clause-type": null,
+    "page_number": 21
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "**Rule 294-1 NSW rule: number of vehicles that may be towed together**",
+    "clause-type": null,
     "page_number": 21
   },
   {
@@ -477,9 +470,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"an accident\" from rule 294–1(2)(a)(ii). Insert instead \"a crash\".",
-    "clause-type": null,
+    "tag": "Clause",
+    "content": "Omit “an accident” from rule 294–1(2)(a)(ii). Insert instead “a crash”.",
+    "clause-type": "Obligation/Requirement",
     "page_number": 21
   },
   {
@@ -493,6 +486,13 @@
     "correlation-id": null,
     "tag": "Footer",
     "content": "Page 16",
+    "clause-type": null,
+    "page_number": 21
+  },
+  {
+    "correlation-id": null,
+    "tag": "Page number",
+    "content": "16",
     "clause-type": null,
     "page_number": 21
   }

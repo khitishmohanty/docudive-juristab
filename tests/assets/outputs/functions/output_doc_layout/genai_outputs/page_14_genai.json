@@ -8,7 +8,7 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h2",
+    "tag": "Heading-h3",
     "content": "Division 4 Crashes",
     "clause-type": null,
     "page_number": 14
@@ -22,9 +22,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h3",
+    "tag": "Clause",
     "content": "10 Definitions",
-    "clause-type": null,
+    "clause-type": "Definition/Interpretation",
     "page_number": 14
   },
   {
@@ -64,7 +64,7 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
+    "tag": "List-l2",
     "content": "(a) attends at, or is admitted to, a hospital for examination or treatment\nbecause of a crash, whether occurring in this jurisdiction or elsewhere,\nand",
     "clause-type": null,
     "page_number": 14
@@ -92,7 +92,7 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
+    "tag": "List-l2",
     "content": "(b) is at least 15 years of age.",
     "clause-type": null,
     "page_number": 14
@@ -127,9 +127,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h3",
+    "tag": "Clause",
     "content": "11 Blood samples must be taken in hospitals from certain crash hospital patients",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "page_number": 14
   },
   {
@@ -491,9 +491,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h3",
+    "tag": "Clause",
     "content": "12 Power to arrest persons involved in certain crashes",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "page_number": 14
   },
   {

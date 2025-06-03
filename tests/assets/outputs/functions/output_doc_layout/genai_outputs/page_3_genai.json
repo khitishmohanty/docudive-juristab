@@ -2,7 +2,14 @@
   {
     "correlation-id": null,
     "tag": "Header",
-    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nExplanatory note",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]",
+    "clause-type": null,
+    "page_number": 3
+  },
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "Explanatory note",
     "clause-type": null,
     "page_number": 3
   },
@@ -37,14 +44,14 @@
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(a)\nreplace references to accidents with references to crashes,",
+    "content": "(a) replace references to accidents with references to crashes,",
     "clause-type": null,
     "page_number": 3
   },
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(b)\nextend the existing power of police officers to arrest an uninjured driver or supervising\ndriver involved in a crash that has resulted in a fatality and take the person to hospital to\nhave blood and urine samples taken for alcohol and drug analysis to uninjured drivers or\nsupervising drivers involved in a crash that a police officer reasonably suspects has resulted\nin grievous bodily harm to a person,",
+    "content": "(b) extend the existing power of police officers to arrest an uninjured driver or supervising\ndriver involved in a crash that has resulted in a fatality and take the person to hospital to\nhave blood and urine samples taken for alcohol and drug analysis to uninjured drivers or\nsupervising drivers involved in a crash that a police officer reasonably suspects has resulted\nin grievous bodily harm to a person,",
     "clause-type": null,
     "page_number": 3
   },
@@ -58,7 +65,7 @@
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(d)\nextend the existing power of police officers to arrest an uninjured driver or supervising\ndriver involved in a crash that has resulted in a fatality and to arrange for the taking of blood\nand urine samples from the person for alcohol and drug analysis to enable police officers\nto—",
+    "content": "(d) extend the existing power of police officers to arrest an uninjured driver or supervising\ndriver involved in a crash that has resulted in a fatality and to arrange for the taking of blood\nand urine samples from the person for alcohol and drug analysis to enable police officers\nto—",
     "clause-type": null,
     "page_number": 3
   },
@@ -86,7 +93,7 @@
   {
     "correlation-id": null,
     "tag": "List-l2",
-    "content": "(ii)\narrange for the taking of blood and urine samples from the person for alcohol and\ndrug analysis.",
+    "content": "(ii) arrange for the taking of blood and urine samples from the person for alcohol and\ndrug analysis.",
     "clause-type": null,
     "page_number": 3
   },
@@ -114,14 +121,14 @@
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(a)\nextends the existing power of police officers to arrange for a blood sample taken from an\ninjured driver or supervising driver to be analysed for alcohol and drugs if the crash has\nresulted in a fatality or likely fatality to circumstances in which the police officer reasonably\nbelieves the crash resulted in grievous bodily harm to a person, and",
+    "content": "(a) extends the existing power of police officers to arrange for a blood sample taken from an\ninjured driver or supervising driver to be analysed for alcohol and drugs if the crash has\nresulted in a fatality or likely fatality to circumstances in which the police officer reasonably\nbelieves the crash resulted in grievous bodily harm to a person, and",
     "clause-type": null,
     "page_number": 3
   },
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(b)\nextends the power to also apply in relation to bicycle riders.",
+    "content": "(b) extends the power to also apply in relation to bicycle riders.",
     "clause-type": null,
     "page_number": 3
   },

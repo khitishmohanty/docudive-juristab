@@ -9,13 +9,13 @@
   {
     "correlation-id": null,
     "tag": "Figure",
-    "content": "ORT RECENS QUAM PURA NITES",
+    "content": "ORTA RECENS QUAM PURA NITES",
     "clause-type": null,
     "page_number": 1
   },
   {
     "correlation-id": null,
-    "tag": "Header",
+    "tag": "Paragraph",
     "content": "New South Wales",
     "clause-type": null,
     "page_number": 1
@@ -58,7 +58,7 @@
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(a) to amend the *Road Transport Act 2013* (the **Act**) to—",
+    "content": "(a) to amend the Road Transport Act 2013 (the Act) to—",
     "clause-type": null,
     "page_number": 1
   },
@@ -72,7 +72,7 @@
   {
     "correlation-id": null,
     "tag": "List-l2",
-    "content": "(ii) allow blood samples taken from a driver, supervising driver or a bicycle rider who\nattends or is admitted to hospital because of a crash (a **crash participant**) to be\nanalysed for drugs, in addition to alcohol, if a police officer reasonably believes the\ncrash has resulted in grievous bodily harm to a person, and",
+    "content": "(ii) allow blood samples taken from a driver, supervising driver or a bicycle rider who\nattends or is admitted to hospital because of a crash (a *crash participant*) to be\nanalysed for drugs, in addition to alcohol, if a police officer reasonably believes the\ncrash has resulted in grievous bodily harm to a person, and",
     "clause-type": null,
     "page_number": 1
   },

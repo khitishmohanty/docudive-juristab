@@ -64,24 +64,22 @@ def process_content_for_html(content_str: str,
     processed_content = content_str.strip()
 
     if is_heading_content:
-        # For headings, only clean and escape. No markdown styling.
-        # Remove leading/trailing **
+        # For headings, clean, escape, and ensure single line.
         if processed_content.startswith("**") and processed_content.endswith("**") and len(processed_content) >= 4:
             processed_content = processed_content[2:-2]
-        # Remove leading/trailing *
         elif processed_content.startswith("*") and processed_content.endswith("*") and len(processed_content) >= 2:
             processed_content = processed_content[1:-1]
-        processed_content = escape_html(processed_content.strip()) # Strip again after potential cleaning
+        processed_content = escape_html(processed_content.strip())
+        # MODIFICATION: Replace newlines in headings with a space for single-line output
+        processed_content = processed_content.replace('\n', ' ')
     else:
-        # For other content, escape first, then apply markdown.
+        # For other content, escape first, then apply markdown, then handle newlines.
         processed_content = escape_html(processed_content)
-        # Markdown for bold and italics
         processed_content = re.sub(r'\*\*(?=\S)(.*?)(?<=\S)\*\*|__(?=\S)(.*?)(?<=\S)__', r'<strong>\1\2</strong>', processed_content)
         processed_content = re.sub(r'\*(?=\S)(.*?)(?<=\S)\*|_(?=\S)(.*?)(?<=\S)_', r'<em>\1\2</em>', processed_content)
-        # Markdown for links
         processed_content = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', processed_content)
-
-    processed_content = processed_content.replace('\n', '<br>\n')
+        # For non-headings, newlines become <br>
+        processed_content = processed_content.replace('\n', '<br>\n')
 
     if explicit_hyperlinks and isinstance(explicit_hyperlinks, list) and not is_heading_content:
         links_html_parts = ["<div class='explicit-hyperlinks'><strong>Links:</strong><ul>"]
@@ -104,14 +102,15 @@ def convert_book_json_to_html(
 ) -> None:
     html_body_parts = []
     all_items = []
-    # Ensure pages are processed in order
+    # MODIFICATION: Initialize list to collect footnotes
+    collected_footnotes_html = []
+
     sorted_page_numbers = sorted(book_data.keys(), key=lambda p: int(p) if p.isdigit() else float('inf'))
     for page_num_str in sorted_page_numbers:
         page_items = book_data.get(page_num_str, [])
         if isinstance(page_items, list):
             all_items.extend(page_items)
         else:
-            # Handle malformed page data gracefully
             all_items.append({"tag": "Error", "content": f"Invalid content structure for page {page_num_str}: {page_items}"})
 
     open_details_stack = []
@@ -123,89 +122,95 @@ def convert_book_json_to_html(
             continue
 
         tag_key = item.get("tag", "Paragraph")
-        raw_content = item.get("content", "") # Get raw_content early for various checks
+        raw_content = item.get("content", "")
         explicit_hyperlinks = item.get("hyperlinks")
+
+        # MODIFICATION: Handle Footnotes - Collect and skip inline rendering
+        if tag_key == "Footnote":
+            if currently_in_list_block: # Close list if footnote interrupts it
+                html_body_parts.append("</ul>\n")
+                currently_in_list_block = False
+            
+            footnote_html_tag = HTML_TAG_MAP.get("Footnote", "aside")
+            # Process footnote content (typically not as a heading)
+            processed_footnote_content = process_content_for_html(str(raw_content), explicit_hyperlinks, is_heading_content=False)
+            collected_footnotes_html.append(f"<{footnote_html_tag} class='footnote-item'>{processed_footnote_content}</{footnote_html_tag}>\n")
+            continue # Skip normal rendering flow for footnotes
 
         # Rule: Always skip items tagged as "Table of Contents"
         if tag_key == "Table of Contents":
-            if currently_in_list_block: # Close list if ToC would have interrupted it
+            if currently_in_list_block:
                 html_body_parts.append("</ul>\n")
                 currently_in_list_block = False
             continue
 
-        # Rule: Filter items based on HTML_INCLUDE_TAGS (if the list is populated)
+        # Rule: Filter items based on HTML_INCLUDE_TAGS
         if HTML_INCLUDE_TAGS and (tag_key not in HTML_INCLUDE_TAGS):
             continue
 
         html_tag_from_map = HTML_TAG_MAP.get(tag_key, "p")
         
-        # Rule: Special handling for "Title" and "Subtitle"
         is_title_tag = (tag_key == "Title")
         is_subtitle_tag = (tag_key == "Subtitle")
 
         if is_title_tag or is_subtitle_tag:
-            if currently_in_list_block: # Close any open list block
+            if currently_in_list_block:
                 html_body_parts.append("</ul>\n")
                 currently_in_list_block = False
-            while open_details_stack: # Close ALL open <details> sections
+            while open_details_stack:
                 open_details_stack.pop()
                 html_body_parts.append("</div></details>\n")
             
-            # Render Title/Subtitle directly.
-            # Use is_heading_content=True for cleaning (removes surrounding *, ** but not internal markdown)
             processed_content_html = process_content_for_html(str(raw_content), is_heading_content=True) 
             html_body_parts.append(f"<{html_tag_from_map}>{processed_content_html}</{html_tag_from_map}>\n")
-            continue # Move to the next item
+            continue
 
-        # --- Regular processing for other tags ---
-        # Determine if the current item is a regular heading (excluding Title/Subtitle)
         is_regular_heading = html_tag_from_map.startswith("h") and \
                              len(html_tag_from_map) == 2 and \
                              html_tag_from_map[1].isdigit()
         
         current_heading_level = int(html_tag_from_map[1]) if is_regular_heading else 0
-        is_list_item_tag = tag_key.startswith("List") # Catches "List", "List-l1", etc.
+        is_list_item_tag = tag_key.startswith("List")
 
-        # Remove "Page X" or "Page no X" content if it's not a heading
         if not is_regular_heading and isinstance(raw_content, str):
             temp_check_content = raw_content.strip().lower()
             if re.fullmatch(r'page(\s*no\.?)?(\s*\d+)?\s*', temp_check_content):
-                raw_content = "" # Content will be empty, potentially skipped later
+                raw_content = ""
 
-        # Manage list blocks: Close current list if new item is not a list item
         if not is_list_item_tag and currently_in_list_block:
             html_body_parts.append("</ul>\n")
             currently_in_list_block = False
         
-        # Manage list blocks: Start new list if current item is a list item and not already in one
         if is_list_item_tag and not currently_in_list_block:
-            list_block_tag = HTML_TAG_MAP.get(tag_key, "ul") # Default to 'ul'
+            list_block_tag = HTML_TAG_MAP.get(tag_key, "ul")
             html_body_parts.append(f"<{list_block_tag} class='content-list'>\n")
             currently_in_list_block = True
 
         if is_regular_heading:
-            if currently_in_list_block: # Close list if a heading interrupts it
+            if currently_in_list_block:
                 html_body_parts.append("</ul>\n")
                 currently_in_list_block = False
             
-            # Close appropriate levels of <details> before opening a new one
             while open_details_stack and open_details_stack[-1] >= current_heading_level:
                 open_details_stack.pop()
                 html_body_parts.append("</div></details>\n")
 
-            # Rule: Skip rendering heading if its content is "heading", "content", or "table of contents"
+            # MODIFICATION: Expanded word list for skipping headings based on content
             content_to_check = str(raw_content).strip().lower()
-            if content_to_check in ["heading", "content", "table of contents"]:
-                continue # Skip this heading. Parent <details> are already closed appropriately.
+            skippable_heading_contents = [
+                "heading", "headings",
+                "content", "contents",
+                "table of contents", "tables of contents"
+            ]
+            if content_to_check in skippable_heading_contents:
+                continue
 
-            # Render the regular heading as a collapsible <details> section
             summary_content_html = process_content_for_html(str(raw_content), is_heading_content=True)
             details_class = f"details-level-{current_heading_level}"
             html_body_parts.append(f"<details open class='{details_class}'>\n  <summary><{html_tag_from_map}>{summary_content_html}</{html_tag_from_map}></summary>\n<div class='collapsible-content-wrapper'>\n")
             open_details_stack.append(current_heading_level)
         
         elif is_list_item_tag:
-            # Logic for handling list items (copied from your provided script)
             list_item_level = 1 
             if "-" in tag_key: 
                 try: list_item_level = int(tag_key.split('-l')[-1])
@@ -214,118 +219,108 @@ def convert_book_json_to_html(
             li_class = f"li-level-{list_item_level}"
             processed_list_items_html = ""
             actual_list_items_to_render = []
-            if isinstance(raw_content, str): # Content might be a multi-line string for multiple <li>
+            if isinstance(raw_content, str):
                 actual_list_items_to_render = raw_content.split('\n')
-            elif isinstance(raw_content, list): # Content might already be a list of items
+            elif isinstance(raw_content, list):
                 actual_list_items_to_render = [str(li) for li in raw_content]
             
             for li_content in actual_list_items_to_render:
                 li_content_stripped = li_content.strip()
-                # Remove common list markers if present at the beginning
                 li_content_stripped = re.sub(r'^[\s]*[\*\-\•\.]\s*', '', li_content_stripped) 
-                if li_content_stripped: # Only add if there's actual content after stripping marker
+                if li_content_stripped:
                     li_html = process_content_for_html(li_content_stripped, None, is_heading_content=False)
                     processed_list_items_html += f"  <li class='{li_class}'>{li_html}</li>\n" 
             
-            if processed_list_items_html: # Only append if actual <li> tags were generated
+            if processed_list_items_html:
                  html_body_parts.append(processed_list_items_html)
 
-        else: # Default content (Paragraphs, Tables, Figures, etc.)
-            # Skip rendering if content is empty (and not a table or has no explicit hyperlinks)
-            # "Table of Contents" tag is already handled by an earlier `continue`
+        else: 
             if isinstance(raw_content, str) and not raw_content.strip() and \
-               tag_key != "Table" and not explicit_hyperlinks:
+               tag_key != "Table" and not explicit_hyperlinks: # ToC already handled
                 continue
 
             processed_content_html = ""
             if tag_key == "Table":
-                # Table rendering logic (copied from your provided script)
                 processed_content_html += f"<{html_tag_from_map} class='data-table'>\n"
-                if isinstance(raw_content, list) and all(isinstance(row, list) for row in raw_content): # List of lists format
+                if isinstance(raw_content, list) and all(isinstance(row, list) for row in raw_content):
                     header_processed_in_list_table = False; tbody_opened = False
                     for i_row, row_data in enumerate(raw_content):
-                        # Check if the first cell of the first row dictates header
                         is_header_row_struct = (i_row == 0 and isinstance(row_data[0], dict) and row_data[0].get("isHeader"))
-                        
                         if is_header_row_struct and not header_processed_in_list_table:
                             processed_content_html += "  <thead>\n"; header_processed_in_list_table = True
-                        elif not header_processed_in_list_table and not tbody_opened : # No structural header, start tbody
+                        elif not header_processed_in_list_table and not tbody_opened :
                             processed_content_html += "  <tbody>\n"; tbody_opened = True
-                        
                         processed_content_html += "    <tr>\n"
                         default_cell_tag = "th" if is_header_row_struct else "td"
                         for cell_item in row_data:
                             cell_content_str = str(cell_item.get("content", "")) if isinstance(cell_item, dict) else str(cell_item)
                             colspan = cell_item.get("colspan", 1) if isinstance(cell_item, dict) else 1
                             rowspan = cell_item.get("rowspan", 1) if isinstance(cell_item, dict) else 1
-                            # Allow individual cells to specify if they are headers
                             cell_tag_override = "th" if isinstance(cell_item, dict) and cell_item.get("isHeader") else default_cell_tag
-                            
                             attrs = (f' colspan="{colspan}"' if colspan > 1 else "") + (f' rowspan="{rowspan}"' if rowspan > 1 else "")
                             processed_content_html += f"      <{cell_tag_override}{attrs}>{process_content_for_html(cell_content_str, None, False)}</{cell_tag_override}>\n"
                         processed_content_html += "    </tr>\n"
-
-                        if is_header_row_struct and i_row == 0 : # Close thead after the first row if it was a structural header
+                        if is_header_row_struct and i_row == 0 :
                             processed_content_html += "  </thead>\n"
-                            if not tbody_opened and i_row + 1 < len(raw_content): # Open tbody for subsequent rows
+                            if not tbody_opened and i_row + 1 < len(raw_content):
                                 processed_content_html += "  <tbody>\n"; tbody_opened = True
                     if tbody_opened: processed_content_html += "  </tbody>\n"
-                elif isinstance(raw_content, str): # Markdown-like string table
+                elif isinstance(raw_content, str):
                     lines = raw_content.strip().split('\n')
                     header_processed_str_table = False; in_tbody_str_table = False
                     for line_idx, line_content in enumerate(lines):
                         line_content = line_content.strip()
                         if not line_content: continue
-
                         if '|' in line_content: 
-                            cells = [cell.strip() for cell in line_content.split('|') if cell.strip()] # Handle empty cells from "||"
+                            cells = [cell.strip() for cell in line_content.split('|') if cell.strip()]
                             if not cells: continue
-
                             is_md_header_separator = "---" in line_content.replace(" ", "").replace("|","") and \
                                                     all("-" in c or not c for c in cells)
-
-
                             if not header_processed_str_table and \
                                (line_idx + 1 < len(lines) and "---" in lines[line_idx+1].replace(" ", "").replace("|","")):
-                                # This is a header row based on next line being a separator
                                 if not in_tbody_str_table: processed_content_html += "  <thead>\n"
                                 processed_content_html += "    <tr>\n"
                                 for cell in cells: processed_content_html += f"      <th>{process_content_for_html(cell, None, False)}</th>\n"
                                 processed_content_html += "    </tr>\n"
                                 if not in_tbody_str_table: processed_content_html += "  </thead>\n"
                                 header_processed_str_table = True
-                            elif is_md_header_separator: # This is the "--- | ---" separator line
-                                if not in_tbody_str_table: # Ensure tbody is opened after header or if no header
+                            elif is_md_header_separator:
+                                if not in_tbody_str_table:
                                     processed_content_html += "  <tbody>\n"; in_tbody_str_table = True
-                                continue # Skip rendering the separator line itself
-                            else: # Regular data row
+                                continue
+                            else:
                                 if not in_tbody_str_table:
                                      processed_content_html += "  <tbody>\n"; in_tbody_str_table = True
                                 processed_content_html += "    <tr>\n"
                                 for cell in cells: processed_content_html += f"      <td>{process_content_for_html(cell, None, False)}</td>\n"
                                 processed_content_html += "    </tr>\n"
-                        else: # Line not containing '|', treat as a single cell row spanning available columns
+                        else:
                             if not in_tbody_str_table: processed_content_html += "  <tbody>\n"; in_tbody_str_table = True
-                            #colspan_val = len(all_items[i-1].get("content",[[""]])[0]) if i > 0 and all_items[i-1].get("tag") == "Table" else 1 # Heuristic for colspan
-                            processed_content_html += f"<tr><td colspan='100'>{process_content_for_html(line_content, explicit_hyperlinks if line_idx == 0 else None, False)}</td></tr>\n" # Using a large colspan
+                            processed_content_html += f"<tr><td colspan='100'>{process_content_for_html(line_content, explicit_hyperlinks if line_idx == 0 else None, False)}</td></tr>\n"
                     if in_tbody_str_table: processed_content_html += "  </tbody>\n"
-                else: # Fallback for unknown table content structure
+                else:
                     processed_content_html += f"  <tbody><tr><td>{process_content_for_html(str(raw_content), None, False)}</td></tr></tbody>\n"
                 processed_content_html += f"</{html_tag_from_map}>\n"
-            else: # All other non-heading, non-list, non-table tags (Paragraph, Figure, Enum, etc.)
+            else:
                 content_to_render = process_content_for_html(str(raw_content), explicit_hyperlinks, is_heading_content=False)
                 processed_content_html = f"<{html_tag_from_map}>{content_to_render}</{html_tag_from_map}>\n"
             
             html_body_parts.append(processed_content_html)
 
-    # Final cleanup of any open list or details blocks
     if currently_in_list_block:
         html_body_parts.append("</ul>\n")
     while open_details_stack:
         open_details_stack.pop()
         html_body_parts.append("</div></details>\n")
 
-    # Assemble the full HTML document (styles and structure from your script)
+    # MODIFICATION: Append collected footnotes at the end of the body
+    if collected_footnotes_html:
+        html_body_parts.append("<hr class='footnotes-separator'>\n") # Optional separator
+        html_body_parts.append("<section class='footnotes-section'>\n")
+        html_body_parts.append("<h2>Footnotes</h2>\n") # Heading for the footnotes section
+        html_body_parts.extend(collected_footnotes_html)
+        html_body_parts.append("</section>\n")
+
     full_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -350,7 +345,7 @@ def convert_book_json_to_html(
             padding-top: 0.3em; 
             padding-bottom: 0.3em;
             cursor: pointer; 
-            list-style-position: inside; /* Adjust if needed */
+            list-style-position: inside;
             font-weight: bold; 
             background-color: transparent; 
             border-bottom: none; 
@@ -359,14 +354,12 @@ def convert_book_json_to_html(
             padding-top: 0.5em; 
             padding-bottom: 0.5em;
         }}
-        /* Ensure headings within summary are displayed inline and adopt summary's font size */
         summary > h1, summary > h2, summary > h3, summary > h4, summary > h5, summary > h6 {{ 
             display: inline; 
             margin: 0; 
-            font-size: 1em; /* Inherit font size from summary or set as needed */
-            font-weight: bold; /* Summary is already bold, this ensures heading part is too */
+            font-size: 1em; 
+            font-weight: bold;
         }}
-        /* Standalone H1, H2 for Title/Subtitle */
         h1, h2 {{ margin-top: 0.8em; margin-bottom: 0.4em; }}
 
         .details-level-1 {{ padding-left: 0em; }} 
@@ -380,14 +373,13 @@ def convert_book_json_to_html(
         
         ul.content-list, ol.content-list {{
             margin-top:0; margin-bottom: 0.8em; 
-            padding-left: 0; /* Reset padding */
-            list-style-type: none; /* Markers are handled by li-level classes or content */
+            padding-left: 0; 
+            list-style-type: none;
         }}
         ul.content-list li, ol.content-list li {{
             list-style-type: none; 
             margin-bottom: 0.2em; 
         }}
-        /* Indentation for different list levels */
         li.li-level-1 {{ padding-left: 1em; }} 
         li.li-level-2 {{ padding-left: 2.5em; }} 
         li.li-level-3 {{ padding-left: 4em; }}   
@@ -399,12 +391,21 @@ def convert_book_json_to_html(
         figure {{ margin: 1em 0; text-align: center; }}
         figure img {{ max-width: 100%; height: auto; border: 1px solid #ddd; }}
         figcaption {{ font-style: italic; font-size: 0.9em; color: #555; margin-top: 0.5em; }}
-        /* .table-of-contents styling (though ToC items are now skipped by default) */
-        .table-of-contents ul {{ list-style-type: none; padding-left: 0; }}
-        .table-of-contents ul ul {{ padding-left: 20px; }}
+        
         .explicit-hyperlinks {{ font-size: 0.9em; color: #333; background-color: #f0f7fd; border: 1px dashed #add8e6; padding: 8px; margin-top: 8px; border-radius: 3px;}}
         .explicit-hyperlinks ul {{padding-left: 15px; margin-top: 5px;}}
         .explicit-hyperlinks strong {{color: #0056b3;}}
+
+        /* Styles for Footnotes Section */
+        .footnotes-separator {{ margin-top: 2em; margin-bottom: 1em; }}
+        .footnotes-section {{ margin-top: 1em; padding-top: 1em; border-top: 1px solid #eee; }}
+        .footnotes-section h2 {{ font-size: 1.2em; margin-bottom: 0.5em; }}
+        .footnote-item {{ 
+            font-size: 0.9em; 
+            margin-bottom: 0.5em; 
+            padding-left: 1em; /* Optional indentation for footnote items */
+            background-color: transparent; /* Ensure it doesn't inherit strange backgrounds */
+        }}
     </style>
 </head>
 <body>
@@ -421,7 +422,10 @@ def convert_book_json_to_html(
         print(f"❌ Error writing HTML file {output_path}: {e}")
 
 
-# --- Existing functions (ensure convert_json_to_csv_and_excel is defined only once) ---
+# --- Existing functions (convert_json_to_csv_and_excel, convert_pdf_to_images, convert_json_to_html_simple) ---
+# These functions remain unchanged from your provided script.
+# For brevity, I am not re-listing them here but they should be part of the final file_converters.py
+
 def convert_json_to_csv_and_excel(
     json_input: Union[str, List[Dict]],
     output_dir: str,
@@ -479,15 +483,11 @@ def convert_json_to_html_simple(
         for node in data:
             if isinstance(node, dict):
                 tag_key = node.get("tag", "Paragraph"); content = node.get("content", "")
-                # MODIFICATION: Apply include filter here as well if this function were to be the primary one.
-                # For now, the request is specific to convert_book_json_to_html.
-                # If HTML_INCLUDE_TAGS and (tag_key not in HTML_INCLUDE_TAGS):
-                #     continue
                 html_tag = HTML_TAG_MAP.get(tag_key, "p")
                 html_elements.append(f"<{html_tag}>{escape_html(content)}</{html_tag}>")
             else: html_elements.append(f"<p>Error: Non-dictionary item found: {escape_html(str(node))}</p>")
     elif isinstance(data, dict):
-         html_elements.append(f"<p>Error: Input is a dictionary, simple converter expects a list of items. Try convert_book_json_to_html.</p>")
+        html_elements.append(f"<p>Error: Input is a dictionary, simple converter expects a list of items. Try convert_book_json_to_html.</p>")
     else: html_elements.append(f"<p>Error: Invalid JSON input type for simple HTML conversion.</p>")
     full_html = ("<!DOCTYPE html>\n<html lang='en'>\n<head>\n<meta charset=\"UTF-8\">\n" "<title>Generated Simple Document</title>\n</head>\n<body>\n    " + "\n    ".join(html_elements) + "\n</body>\n</html>")
     output_path = os.path.join(output_dir, output_filename);

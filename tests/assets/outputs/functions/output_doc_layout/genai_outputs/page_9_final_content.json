@@ -2,22 +2,15 @@
   {
     "correlation-id": null,
     "tag": "Header",
-    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nSchedule 1 Amendment of Road Transport Act 2013 No 18",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": null,
-    "tag": "Header",
-    "content": "Schedule 1 Amendment of Road Transport Act 2013 No 18",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.10",
+    "tag": "Heading-h3",
     "content": "[10] Sections 76(3)(c), 78(2)(a), 142(1)(a), 148R(1)(b) and (c) and 155(1)(a)",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -28,11 +21,11 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"an accident\" wherever occurring. Insert instead “a crash\".",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 97%)"
+    "correlation-id": "S1.10.1",
+    "tag": "Clause",
+    "content": "Omit “an accident” wherever occurring. Insert instead “a crash”.",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -42,10 +35,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.11",
+    "tag": "Heading-h3",
     "content": "[11] Section 78 Use of dangerously defective motor vehicles",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -56,11 +49,11 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"the accident\" from section 78(2)(a). Insert instead \"the crash\".",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 95%)"
+    "correlation-id": "S1.11.1",
+    "tag": "Clause",
+    "content": "Omit “the accident” from section 78(2)(a). Insert instead “the crash”.",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -70,10 +63,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.12",
+    "tag": "Heading-h3",
     "content": "[12] Section 80 Power of entry to inspect damaged vehicles",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -84,11 +77,11 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"accidents\" from section 80(1)(a). Insert instead “crashes”.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 96%)"
+    "correlation-id": "S1.12.1",
+    "tag": "Clause",
+    "content": "Omit “accidents” from section 80(1)(a). Insert instead “crashes”.",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -98,10 +91,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.13",
+    "tag": "Heading-h3",
     "content": "[13] Part 5.1, heading",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -112,11 +105,11 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"other\".",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 90%)"
+    "correlation-id": "S1.13.1",
+    "tag": "Clause",
+    "content": "Omit “other”.",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -126,10 +119,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.14",
+    "tag": "Heading-h3",
     "content": "[14] Part 5.1, Division 2, heading",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -140,11 +133,11 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"other\".",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 90%)"
+    "correlation-id": "S1.14.1",
+    "tag": "Clause",
+    "content": "Omit “other”.",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -154,10 +147,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.15",
+    "tag": "Heading-h3",
     "content": "[15] Section 111, heading",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -168,11 +161,11 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"(other than alcohol)\".",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 96%)"
+    "correlation-id": "S1.15.1",
+    "tag": "Clause",
+    "content": "Omit “(other than alcohol)”.",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -182,10 +175,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.16",
+    "tag": "Heading-h3",
     "content": "[16] Section 111(1)",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -196,11 +189,11 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"any prescribed”. Insert instead “a prescribed\".",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 98%)"
+    "correlation-id": "S1.16.1",
+    "tag": "Clause",
+    "content": "Omit “any prescribed”. Insert instead “a prescribed”.",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -210,10 +203,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.17",
+    "tag": "Heading-h3",
     "content": "[17] Section 111(4)",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -224,11 +217,11 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"any other drugs\". Insert instead “another drug or alcohol\".",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 97%)"
+    "correlation-id": "S1.17.1",
+    "tag": "Clause",
+    "content": "Omit “any other drugs”. Insert instead “another drug or alcohol”.",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -238,10 +231,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.18",
+    "tag": "Heading-h3",
     "content": "[18] Section 111(6), note",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -252,10 +245,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit “any other drug”. Insert instead “a drug\".",
-    "clause-type": null,
+    "correlation-id": "S1.18.1",
+    "tag": "Clause",
+    "content": "Omit “any other drug”. Insert instead “a drug”.",
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -266,10 +259,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.19",
+    "tag": "Heading-h3",
     "content": "[19] Section 112, heading",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -280,11 +273,11 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit \"any other drug”. Insert instead “drugs\".",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 98%)"
+    "correlation-id": "S1.19.1",
+    "tag": "Clause",
+    "content": "Omit “any other drug”. Insert instead “drugs”.",
+    "clause-type": "Obligation/Requirement",
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -294,10 +287,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.20",
+    "tag": "Heading-h3",
     "content": "[20] Section 112(1)",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -308,10 +301,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit “any other drug”. Insert instead “a drug\".",
-    "clause-type": null,
+    "correlation-id": "S1.20.1",
+    "tag": "Clause",
+    "content": "Omit “any other drug”. Insert instead “a drug”.",
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -322,10 +315,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Clause",
+    "correlation-id": "S1.21",
+    "tag": "Heading-h3",
     "content": "[21] Section 112(2)(a) and (b)",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -336,10 +329,10 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
-    "tag": "Paragraph",
+    "correlation-id": "S1.21.1",
+    "tag": "Clause",
     "content": "Omit the paragraphs. Insert instead—",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
@@ -350,7 +343,7 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
+    "correlation-id": "S1.21.1.a",
     "tag": "List-l1",
     "content": "(a) the court attendance notice—",
     "clause-type": null,
@@ -364,7 +357,7 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
+    "correlation-id": "S1.21.1.a.i",
     "tag": "List-l2",
     "content": "(i) may allege the person was under the influence of—",
     "clause-type": null,
@@ -378,7 +371,7 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
+    "correlation-id": "S1.21.1.a.i.A",
     "tag": "List-l3",
     "content": "(A) alcohol and 1 or more drugs, or",
     "clause-type": null,
@@ -392,7 +385,7 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
+    "correlation-id": "S1.21.1.a.i.B",
     "tag": "List-l3",
     "content": "(B) 1 or more drugs, and",
     "clause-type": null,
@@ -406,9 +399,9 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
+    "correlation-id": "S1.21.1.a.ii",
     "tag": "List-l2",
-    "content": "(ii) is not liable to be dismissed on the ground of uncertainty or duplicity if more than one of the substances in (A) or (B) (a relevant substance) is described in the court attendance notice, and",
+    "content": "(ii) is not liable to be dismissed on the ground of uncertainty or\nduplicity if more than one of the substances in (A) or (B) (**a\nrelevant substance**) is described in the court attendance notice,\nand",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
@@ -441,9 +434,9 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
+    "correlation-id": "S1.21.1.b",
     "tag": "List-l1",
-    "content": "(b) the offence is proved if the court is satisfied beyond reasonable doubt that the defendant was under the influence of—",
+    "content": "(b) the offence is proved if the court is satisfied beyond reasonable doubt\nthat the defendant was under the influence of—",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
@@ -462,7 +455,7 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
+    "correlation-id": "S1.21.1.b.i",
     "tag": "List-l2",
     "content": "(i) a relevant substance described in the court attendance notice, or",
     "clause-type": null,
@@ -476,9 +469,9 @@
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": null,
+    "correlation-id": "S1.21.1.b.ii",
     "tag": "List-l2",
-    "content": "(ii) a combination of relevant substances if 1 or more of the relevant substances was described in the court attendance notice.",
+    "content": "(ii) a combination of relevant substances if 1 or more of the relevant\nsubstances was described in the court attendance notice.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
@@ -502,12 +495,5 @@
     "content": "Page 4",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Page number",
-    "content": "4",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
   }
 ]

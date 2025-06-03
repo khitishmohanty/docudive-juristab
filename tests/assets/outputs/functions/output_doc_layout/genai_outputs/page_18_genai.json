@@ -8,9 +8,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
+    "tag": "Clause",
     "content": "(a) supply a sample of oral fluid or blood taken under Part 2, Division 3 to\na person for analysis for an unrelated testing purpose, or",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "page_number": 18
   },
   {
@@ -29,9 +29,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
+    "tag": "Clause",
     "content": "(b) carry out an analysis of the sample for an unrelated testing purpose, or",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "page_number": 18
   },
   {
@@ -43,9 +43,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
+    "tag": "Clause",
     "content": "(c) include information on a DNA database if that information is derived\nfrom an analysis of the sample for an unrelated testing purpose.",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "page_number": 18
   },
   {
@@ -92,9 +92,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
+    "tag": "Clause",
     "content": "**DNA database** means a database containing DNA data kept under a law of this\njurisdiction or another jurisdiction and includes a DNA database system\nwithin the meaning of the *Crimes (Forensic Procedures) Act 2000*.",
-    "clause-type": null,
+    "clause-type": "Definition/Interpretation",
     "page_number": 18
   },
   {
@@ -120,9 +120,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
+    "tag": "Clause",
     "content": "**unrelated testing purpose**, for a sample, means a purpose other than\ndetermining whether alcohol or prescribed illicit drugs are present in the\nsample.",
-    "clause-type": null,
+    "clause-type": "Definition/Interpretation",
     "page_number": 18
   },
   {
@@ -149,14 +149,14 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**[72] Schedule 3, Part 5, Division 1, heading**",
+    "content": "[72]",
     "clause-type": null,
     "page_number": 18
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Omit “other”.",
+    "content": "Schedule 3, Part 5, Division 1, heading",
     "clause-type": null,
     "page_number": 18
   },
@@ -164,6 +164,13 @@
     "correlation-id": null,
     "tag": "Line number",
     "content": "14",
+    "clause-type": null,
+    "page_number": 18
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"other\".",
     "clause-type": null,
     "page_number": 18
   },
@@ -177,14 +184,14 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**[73] Schedule 3, clauses 32(1) and 36(1)(b)**",
+    "content": "[73]",
     "clause-type": null,
     "page_number": 18
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Omit “(other than alcohol)”, wherever occurring.",
+    "content": "Schedule 3, clauses 32(1) and 36(1)(b)",
     "clause-type": null,
     "page_number": 18
   },
@@ -192,6 +199,13 @@
     "correlation-id": null,
     "tag": "Line number",
     "content": "16",
+    "clause-type": null,
+    "page_number": 18
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"(other than alcohol)\", wherever occurring.",
     "clause-type": null,
     "page_number": 18
   },
@@ -205,14 +219,14 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**[74] Schedule 3, clause 33, heading**",
+    "content": "[74]",
     "clause-type": null,
     "page_number": 18
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Insert “alcohol or” before “drugs”.",
+    "content": "Schedule 3, clause 33, heading",
     "clause-type": null,
     "page_number": 18
   },
@@ -220,6 +234,13 @@
     "correlation-id": null,
     "tag": "Line number",
     "content": "18",
+    "clause-type": null,
+    "page_number": 18
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert \"alcohol or” before “drugs”.",
     "clause-type": null,
     "page_number": 18
   },
@@ -233,14 +254,14 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**[75] Schedule 3, clause 33(1)**",
+    "content": "[75]",
     "clause-type": null,
     "page_number": 18
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Omit “any other drug”. Insert instead “a drug”.",
+    "content": "Schedule 3, clause 33(1)",
     "clause-type": null,
     "page_number": 18
   },
@@ -248,6 +269,13 @@
     "correlation-id": null,
     "tag": "Line number",
     "content": "20",
+    "clause-type": null,
+    "page_number": 18
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"any other drug\". Insert instead “a drug\".",
     "clause-type": null,
     "page_number": 18
   },
@@ -261,14 +289,14 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**[76] Schedule 3, clause 33(2)**",
+    "content": "[76]",
     "clause-type": null,
     "page_number": 18
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Omit the subclause. Insert instead—",
+    "content": "Schedule 3, clause 33(2)",
     "clause-type": null,
     "page_number": 18
   },
@@ -276,6 +304,13 @@
     "correlation-id": null,
     "tag": "Line number",
     "content": "22",
+    "clause-type": null,
+    "page_number": 18
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit the subclause. Insert instead—",
     "clause-type": null,
     "page_number": 18
   },
@@ -302,9 +337,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
-    "content": "(a) evidence may be given of the presence of alcohol or a drug, or the\npresence of a particular concentration of alcohol or a drug, in the blood\nor urine of the person charged, as determined by an analysis under this\nschedule of a sample of the person’s blood or urine, and",
-    "clause-type": null,
+    "tag": "Clause",
+    "content": "(a) evidence may be given of the presence of alcohol or a drug, or the\npresence of a particular concentration of alcohol or a drug, in the blood\nor urine of the person charged, as determined by an analysis under this\nschedule of a sample of the person's blood or urine, and",
+    "clause-type": "Obligation/Requirement",
     "page_number": 18
   },
   {
@@ -337,9 +372,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
+    "tag": "Clause",
     "content": "(b) if the sample was taken within 4 hours after the event referred to in\nsection 112(1)(a) or (b) occurred—the alcohol or drug, or the particular\nconcentration of alcohol or drug, determined by the analysis to be\npresent in the blood or urine of the person, must be taken to have been\npresent in the blood or urine of the person when the event occurred\nunless the defendant proves the absence of the alcohol or drug, or the\npresence of the alcohol or drug in a different concentration, when the\nevent occurred.",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "page_number": 18
   },
   {
@@ -401,14 +436,14 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**[77] Schedule 3, clause 34(2)**",
+    "content": "[77]",
     "clause-type": null,
     "page_number": 18
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Omit “any other drug”. Insert instead “a drug”.",
+    "content": "Schedule 3, clause 34(2)",
     "clause-type": null,
     "page_number": 18
   },
@@ -416,6 +451,13 @@
     "correlation-id": null,
     "tag": "Line number",
     "content": "37",
+    "clause-type": null,
+    "page_number": 18
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"any other drug\". Insert instead \"a drug\".",
     "clause-type": null,
     "page_number": 18
   },
@@ -429,14 +471,14 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**[78] Schedule 3, clause 36(1)(b)**",
+    "content": "[78]",
     "clause-type": null,
     "page_number": 18
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Omit “(other than alcohol)”.",
+    "content": "Schedule 3, clause 36(1)(b)",
     "clause-type": null,
     "page_number": 18
   },
@@ -444,6 +486,13 @@
     "correlation-id": null,
     "tag": "Line number",
     "content": "39",
+    "clause-type": null,
+    "page_number": 18
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"(other than alcohol)\".",
     "clause-type": null,
     "page_number": 18
   },
@@ -457,14 +506,14 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**[79] Schedule 3, clause 36(1)(c)**",
+    "content": "[79]",
     "clause-type": null,
     "page_number": 18
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Omit “any other drug”. Insert instead “a drug”.",
+    "content": "Schedule 3, clause 36(1)(c)",
     "clause-type": null,
     "page_number": 18
   },
@@ -472,6 +521,13 @@
     "correlation-id": null,
     "tag": "Line number",
     "content": "41",
+    "clause-type": null,
+    "page_number": 18
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"any other drug\". Insert instead \"a drug\".",
     "clause-type": null,
     "page_number": 18
   },

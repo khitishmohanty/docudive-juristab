@@ -8,7 +8,7 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h2",
+    "tag": "Heading-h3",
     "content": "2.7 Road Transport (Vehicle Registration) Regulation 2017",
     "clause-type": null,
     "page_number": 23
@@ -22,8 +22,8 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h4",
-    "content": "[1] **Clause 46 Suspension of registration for dimension requirement offence**",
+    "tag": "List-l1",
+    "content": "[1] Clause 46 Suspension of registration for dimension requirement offence",
     "clause-type": null,
     "page_number": 23
   },
@@ -50,9 +50,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Clause",
+    "tag": "Paragraph",
     "content": "Insert instead “a crash”.",
-    "clause-type": "Obligation/Requirement",
+    "clause-type": null,
     "page_number": 23
   },
   {
@@ -64,8 +64,8 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h4",
-    "content": "[2] **Schedule 2 Light Vehicle Standards Rules**",
+    "tag": "List-l1",
+    "content": "[2] Schedule 2 Light Vehicle Standards Rules",
     "clause-type": null,
     "page_number": 23
   },
@@ -92,7 +92,7 @@
   },
   {
     "correlation-id": null,
-    "tag": "Page number",
+    "tag": "Footer",
     "content": "Page 18",
     "clause-type": null,
     "page_number": 23

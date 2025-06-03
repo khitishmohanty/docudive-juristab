@@ -2,7 +2,14 @@
   {
     "correlation-id": null,
     "tag": "Header",
-    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nSchedule 2 Consequential amendments of other legislation",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "Schedule 2 Consequential amendments of other legislation",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
@@ -15,24 +22,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "Line number",
-    "content": "1",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Omit \"that accident\". Insert instead \"that crash\".",
     "clause-type": null,
     "verification-flag": "Verified (Match 93%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Line number",
-    "content": "2",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
   },
   {
     "correlation-id": null,
@@ -43,38 +36,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "Line number",
-    "content": "3",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Omit \"prevent accident to any person on the road\" from rule 294–3(1)(b)(i).",
+    "content": "Omit \"prevent accident to any person on the road\" from rule 294–3(1)(b)(i). Insert instead \"prevent a crash\".",
     "clause-type": null,
     "verification-flag": "Verified (Match 97%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Line number",
-    "content": "4",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Insert instead \"prevent a crash\".",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 97%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Line number",
-    "content": "5",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
   },
   {
     "correlation-id": null,
@@ -85,13 +50,6 @@
   },
   {
     "correlation-id": null,
-    "tag": "Line number",
-    "content": "6",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Omit the definition of **crash**, paragraph (b). Insert instead—",
     "clause-type": null,
@@ -99,66 +57,31 @@
   },
   {
     "correlation-id": null,
-    "tag": "Line number",
-    "content": "7",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
     "tag": "List-l1",
     "content": "(b) a collision or incident involving a vehicle in which—",
-    "clause-type": "Definition/Interpretation",
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Line number",
-    "content": "8",
     "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
     "tag": "List-l2",
     "content": "(i) a person is killed or injured, or",
-    "clause-type": "Definition/Interpretation",
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Line number",
-    "content": "9",
     "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
     "tag": "List-l2",
     "content": "(ii) the vehicle or other property is damaged, or",
-    "clause-type": "Definition/Interpretation",
+    "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
-    "tag": "Line number",
-    "content": "10",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
     "tag": "List-l2",
-    "content": "(iii) an animal in a person's charge is killed or injured.",
-    "clause-type": "Definition/Interpretation",
-    "verification-flag": "Verified (Match 98%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Line number",
-    "content": "11",
+    "content": "(iii) an animal in a person’s charge is killed or injured.",
     "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -169,17 +92,241 @@
   },
   {
     "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit the note. Insert instead—",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "**Note 1**. *Vehicle* is defined in rule 15.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "**Note 2**. This definition is not uniform with the corresponding definition in the Dictionary of the Australian Road Rules.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h2",
+    "content": "2.5 Road Transport (Driver Licensing) Regulation 2017",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "[1] Clauses 25, 31 and 67A, headings",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"other\" wherever occurring.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 93%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "[2] Clauses 25(a)(ii), 31(a)(ii), 96(4)(o) and 96AA(1)(b)(i)",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"alcohol or other drug related driving offence\" wherever occurring.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 97%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert instead \"alcohol or drug related driving offence\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "[3] Clause 66 Variation, suspension or cancellation for heavy vehicle dimension requirement offence",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"an accident\" from clause 66(1)(d)(ii). Insert instead “a crash”.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 97%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "[4] Clause 67A",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"alcohol or other drug related driving offence\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert instead \"*alcohol or drug related driving offence*\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Heading-h2",
+    "content": "2.6 Road Transport (General) Regulation 2021",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "[1] Section 148 Certain decisions stayed only in exceptional circumstances",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"an accident\" from section 148(5), definition of *circumstances of aggravation*, paragraph (b).",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert instead \"a crash\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 95%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "List-l1",
+    "content": "[2] Schedule 5 Penalty notice offences",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Omit \"alcohol or other drug related driving offence\" from the matter relating to the *Road Transport Act 2013* wherever occurring.",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert instead \"alcohol or drug related driving offence\".",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 98%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Footer",
+    "content": "Page 17",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
     "tag": "Line number",
-    "content": "12",
+    "content": "1",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit the note. Insert instead—",
+    "tag": "Line number",
+    "content": "2",
     "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "3",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "4",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "5",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "6",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "7",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "8",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "9",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "10",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "11",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "12",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
   },
   {
     "correlation-id": null,
@@ -190,24 +337,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Note 1. **Vehicle** is defined in rule 15.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "14",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Note 2. This definition is not uniform with the corresponding definition in the Dictionary\nof the Australian Road Rules.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -225,24 +358,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h3",
-    "content": "2.5 Road Transport (Driver Licensing) Regulation 2017",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "17",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "[1] Clauses 25, 31 and 67A, headings",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -253,24 +372,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit “*other*” wherever occurring.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "19",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "[2] Clauses 25(a)(ii), 31(a)(ii), 96(4)(o) and 96AA(1)(b)(i)",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -281,13 +386,6 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit “alcohol or other drug related driving offence” wherever occurring.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "21",
     "clause-type": null,
@@ -295,24 +393,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Insert instead “alcohol or drug related driving offence”.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "22",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "[3] Clause 66 Variation, suspension or cancellation for heavy vehicle dimension\nrequirement offence",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -330,24 +414,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit “an accident” from clause 66(1)(d)(ii). Insert instead “a crash”.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "25",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "[4] Clause 67A",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -358,24 +428,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit “*alcohol or other drug related driving offence*”.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "27",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Insert instead “*alcohol or drug related driving offence*”.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -386,13 +442,6 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h3",
-    "content": "2.6 Road Transport (General) Regulation 2021",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "29",
     "clause-type": null,
@@ -400,24 +449,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
-    "content": "[1] Section 148 Certain decisions stayed only in exceptional circumstances",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "30",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit “an accident” from section 148(5), definition of **circumstances of aggravation**,\nparagraph (b).",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -435,13 +470,6 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Insert instead “a crash”.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "33",
     "clause-type": null,
@@ -449,24 +477,10 @@
   },
   {
     "correlation-id": null,
-    "tag": "List-l1",
-    "content": "[2] Schedule 5 Penalty notice offences",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "34",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Omit “alcohol or other drug related driving offence” from the matter relating to the *Road\nTransport Act 2013* wherever occurring.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
@@ -484,23 +498,9 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Insert instead “alcohol or drug related driving offence”.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "37",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Page number",
-    "content": "Page 17",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
   }
 ]

@@ -7,11 +7,18 @@
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "35",
+    "correlation-id": null,
     "tag": "Clause",
-    "content": "[35] Section 212 Interlock exemption orders",
+    "content": "**[35]** Section 212 Interlock exemption orders",
     "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Paragraph",
+    "content": "Insert \"under this section\" before \"only if\" in section 212(3).",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 93%)"
   },
   {
     "correlation-id": null,
@@ -22,31 +29,17 @@
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Insert “under this section” before “only if” in section 212(3).",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
     "tag": "Line number",
     "content": "2",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "36",
+    "correlation-id": null,
     "tag": "Clause",
-    "content": "[36] Section 212A",
+    "content": "**[36]** Section 212A",
     "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Line number",
-    "content": "3",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
   },
   {
     "correlation-id": null,
@@ -58,14 +51,21 @@
   {
     "correlation-id": null,
     "tag": "Line number",
+    "content": "3",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Line number",
     "content": "4",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h3",
-    "content": "212A Application for interlock exemption orders after conviction",
+    "tag": "Heading-h2",
+    "content": "**212A** Application for interlock exemption orders after conviction",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
@@ -226,9 +226,9 @@
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(2) The application must be accompanied by a current statement of the offender’s driving record issued by Transport for NSW.",
+    "content": "(2) The application must be accompanied by a current statement of the offender's driving record issued by Transport for NSW.",
     "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
+    "verification-flag": "Verified (Match 99%)"
   },
   {
     "correlation-id": null,
@@ -261,9 +261,9 @@
   {
     "correlation-id": null,
     "tag": "List-l2",
-    "content": "(a) an updated statement of the offender’s driving record to be given by the offender,",
+    "content": "(a) an updated statement of the offender's driving record to be given by the offender,",
     "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
+    "verification-flag": "Verified (Match 99%)"
   },
   {
     "correlation-id": null,
@@ -380,9 +380,9 @@
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(5) The relevant registrar of the court must notify Transport for NSW of the court’s decision on the application.",
+    "content": "(5) The relevant registrar of the court must notify Transport for NSW of the court's decision on the application.",
     "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
+    "verification-flag": "Verified (Match 99%)"
   },
   {
     "correlation-id": null,

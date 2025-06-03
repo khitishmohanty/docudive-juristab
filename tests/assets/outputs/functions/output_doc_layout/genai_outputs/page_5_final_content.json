@@ -15,7 +15,7 @@
   },
   {
     "correlation-id": null,
-    "tag": "Subtitle",
+    "tag": "Heading-h2",
     "content": "New South Wales",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
@@ -23,14 +23,14 @@
   {
     "correlation-id": null,
     "tag": "Title",
-    "content": "Road Transport Legislation Amendment\n(Post-Crash Drug and Alcohol Testing) Bill\n2025",
+    "content": "**Road Transport Legislation Amendment\n(Post-Crash Drug and Alcohol Testing) Bill\n2025**",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
     "tag": "Heading-h1",
-    "content": "Contents",
+    "content": "**Contents**",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },

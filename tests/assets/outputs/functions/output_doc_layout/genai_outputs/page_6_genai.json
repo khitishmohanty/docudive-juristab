@@ -2,14 +2,7 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "This PUBLIC BILL, originated in the *LEGISLATIVE COUNCIL* and, having this day passed,\nis now ready for presentation to the *LEGISLATIVE ASSEMBLY* for its concurrence.",
-    "clause-type": null,
-    "page_number": 6
-  },
-  {
-    "correlation-id": null,
-    "tag": "Header",
-    "content": "Legislative Council",
+    "content": "*This PUBLIC BILL, originated in the LEGISLATIVE COUNCIL and, having this day passed,\nis now ready for presentation to the LEGISLATIVE ASSEMBLY for its concurrence.*",
     "clause-type": null,
     "page_number": 6
   },
@@ -22,8 +15,15 @@
   },
   {
     "correlation-id": null,
+    "tag": "Header",
+    "content": "Legislative Council",
+    "clause-type": null,
+    "page_number": 6
+  },
+  {
+    "correlation-id": null,
     "tag": "Figure",
-    "content": "ORTA RECENS QUAM PURA NITES",
+    "content": "ORT RECENS QUAM PURA NITES",
     "clause-type": null,
     "page_number": 6
   },
@@ -50,7 +50,7 @@
   },
   {
     "correlation-id": null,
-    "tag": "Heading-h3",
+    "tag": "Heading-h2",
     "content": "A Bill for",
     "clause-type": null,
     "page_number": 6
@@ -65,21 +65,21 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "The *LEGISLATIVE ASSEMBLY* has this day agreed to this Bill with/without amendment.",
+    "content": "*The LEGISLATIVE ASSEMBLY has this day agreed to this Bill with/without amendment.*",
     "clause-type": null,
     "page_number": 6
   },
   {
     "correlation-id": null,
-    "tag": "Header",
-    "content": "Legislative Assembly",
-    "clause-type": null,
-    "page_number": 6
-  },
-  {
-    "correlation-id": null,
-    "tag": "Header",
+    "tag": "Footer",
     "content": "Clerk of the Legislative Assembly",
+    "clause-type": null,
+    "page_number": 6
+  },
+  {
+    "correlation-id": null,
+    "tag": "Footer",
+    "content": "Legislative Assembly",
     "clause-type": null,
     "page_number": 6
   }

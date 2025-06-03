@@ -1,510 +1,510 @@
 [
   {
-    "correlation-id": "b93a1f11-66f0-49e8-974c-c2c520002a38",
+    "correlation-id": null,
     "tag": "Header",
-    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nSchedule 1 Amendment of Road Transport Act 2013 No 18",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "840b46c9-8cc8-4490-9ed0-1a03a0483abf",
+    "correlation-id": null,
     "tag": "Heading-h2",
     "content": "Schedule 1 Amendment of Road Transport Act 2013 No 18",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "2d2919b1-50f6-4b51-889b-70d93ae28285",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "1",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "1227eb46-9b0b-462e-9b78-a789e0585a67",
+    "correlation-id": null,
     "tag": "Clause",
     "content": "[1] Whole Act",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "4a81c668-a4fa-4626-a05d-c3ef945778e6",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "2",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "0a92059e-667a-4918-9fbc-c81c7308b61d",
-    "tag": "Line number",
-    "content": "3",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": "d28b62a5-b35c-4373-96c0-0570b9e10167",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Omit all bracketed notes wherever occurring in headings that draw attention (“cf”) to\nprovisions of other Acts and statutory rules.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "0cf90943-3a2c-4214-a9b0-6a0a6c1043e1",
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "3",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
     "tag": "Line number",
     "content": "4",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "09c175cf-2dd0-4d93-9569-f96e71064f22",
+    "correlation-id": null,
     "tag": "Clause",
     "content": "[2] Section 4 Definitions",
-    "clause-type": "Definition/Interpretation",
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "a0b5cf85-c9ef-4abf-a9a5-20c76d927c7a",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "5",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "7b603a8d-2521-47bb-bd88-9ebbb71df440",
-    "tag": "Line number",
-    "content": "6",
-    "clause-type": null,
-    "verification-flag": "Verified (Exact Match)"
-  },
-  {
-    "correlation-id": "36f63fdc-4505-4e94-b932-3456a200b92f",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Omit the definitions of **alcohol or other drug related driving offence** and **fatal accident**\nfrom section 4(1).",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "7593684e-d9a1-4c3b-a431-618f1e3f8d16",
+    "correlation-id": null,
+    "tag": "Line number",
+    "content": "6",
+    "clause-type": null,
+    "verification-flag": "Verified (Exact Match)"
+  },
+  {
+    "correlation-id": null,
     "tag": "Line number",
     "content": "7",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "33083166-73f5-4c29-8348-205e1f3a08ee",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Insert in alphabetical order—",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "437969f1-e790-4507-9e7b-f8ed8c215051",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "8",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "8b30df54-f38c-411f-9110-17c7f3c4f558",
-    "tag": "List-l1",
+    "correlation-id": null,
+    "tag": "Clause",
     "content": "**alcohol or drug related driving offence** means an offence—",
-    "clause-type": null,
+    "clause-type": "Definition/Interpretation",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "230a7559-5519-42ae-a021-89961e0f10a0",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "9",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "a851488d-88f7-4592-835f-87ebae7b6f3d",
-    "tag": "List-l2",
+    "correlation-id": null,
+    "tag": "List-l1",
     "content": "(a) involving the presence of—",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "c206d5a5-e1b8-4a82-bc3d-ae896372aa75",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "10",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "74971912-6a92-4e04-9c4a-881efc8ebae2",
-    "tag": "List-l3",
-    "content": "(i) alcohol in a person’s breath or blood, or",
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(i) alcohol in a person's breath or blood, or",
     "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
+    "verification-flag": "Verified (Match 98%)"
   },
   {
-    "correlation-id": "600bb8d2-9c84-435d-a182-708c89513507",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "11",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "62210f2c-444d-42d1-bb02-d9a0bb10632f",
-    "tag": "List-l3",
-    "content": "(ii) a drug in a person’s oral fluid, blood or urine, and",
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(ii) a drug in a person's oral fluid, blood or urine, and",
     "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
+    "verification-flag": "Verified (Match 98%)"
   },
   {
-    "correlation-id": "736259ba-5e17-454f-a78a-5581cdb55103",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "12",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "30420bb2-bcf9-4e57-8e3c-d15b00594cf4",
-    "tag": "List-l2",
+    "correlation-id": null,
+    "tag": "List-l1",
     "content": "(b) prescribed by the statutory rules.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "07b66e74-03cf-4f9f-bf71-4ab299c2c87c",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "13",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "0f8b0b99-8395-4733-83e5-842c26e91017",
-    "tag": "List-l1",
+    "correlation-id": null,
+    "tag": "Clause",
     "content": "**bicycle** has the same meaning as in the *Road Rules 2014*.",
-    "clause-type": null,
+    "clause-type": "Definition/Interpretation",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "82c27c7b-4d3e-4023-82a9-21717c456390",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "14",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "ff47d9f0-7f5a-4f42-b51a-979076763e48",
-    "tag": "List-l1",
+    "correlation-id": null,
+    "tag": "Clause",
     "content": "**crash** means—",
-    "clause-type": null,
+    "clause-type": "Definition/Interpretation",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "e1c745e8-960e-428b-a7ab-e5dd079c73cd",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "15",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "31635eb7-031c-496e-b18e-d31ca68f604d",
-    "tag": "List-l2",
+    "correlation-id": null,
+    "tag": "List-l1",
     "content": "(a) a collision between 2 or more vehicles, or",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "02887e05-096b-4a92-aa92-40d1e332cd97",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "16",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "6e3d5130-71f3-4286-8988-a505db33660a",
-    "tag": "List-l2",
+    "correlation-id": null,
+    "tag": "List-l1",
     "content": "(b) a collision or incident involving a vehicle in which—",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "10d77d4b-c3ab-4ab3-868b-fc0c555b3c88",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "17",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "b7bb9069-b82f-4d71-a44d-cf68295ba07e",
-    "tag": "List-l3",
+    "correlation-id": null,
+    "tag": "List-l2",
     "content": "(i) a person is killed or injured, or",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "140240fd-c673-418f-9696-7b14ef338438",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "18",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "c07553c3-7015-4932-b7c4-2737523934df",
-    "tag": "List-l3",
+    "correlation-id": null,
+    "tag": "List-l2",
     "content": "(ii) the vehicle or other property is damaged, or",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "d6a15d04-a248-4227-9cfc-f5332287ca2c",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "19",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "28ba9c26-7741-4039-a93c-d24ae2db977b",
-    "tag": "List-l3",
-    "content": "(iii) an animal in a person’s charge is killed or injured.",
+    "correlation-id": null,
+    "tag": "List-l2",
+    "content": "(iii) an animal in a person's charge is killed or injured.",
     "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
+    "verification-flag": "Verified (Match 98%)"
   },
   {
-    "correlation-id": "c1c535a1-f847-44c0-a139-8f7a0e107bb1",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "20",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "5522e171-e546-4a2a-ac54-24f1a31ef6cd",
-    "tag": "List-l1",
+    "correlation-id": null,
+    "tag": "Clause",
     "content": "**fatal crash** means a crash on a road or road related area involving a motor\nvehicle or bicycle that results in the death of 1 or more persons.",
-    "clause-type": null,
+    "clause-type": "Definition/Interpretation",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "611d47d9-2b4f-44c2-9791-b6e31cd6a625",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "21",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "ab78a608-221c-4eb6-a164-69d86ddb92dd",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "22",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "9523b26b-efc7-4b01-a9b4-8cd65087e8ac",
+    "correlation-id": null,
     "tag": "Clause",
     "content": "[3] Section 4(1), definition of “drug”, paragraph (a)",
-    "clause-type": "Definition/Interpretation",
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "d37cc17c-994b-42e9-935d-424d4ac99f98",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "23",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "5247b9bc-e1a6-49b0-97c7-0f4c00993021",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Omit the paragraph.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "a3f7a48c-9ed5-41b9-ad95-6e23165a461f",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "24",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "4914df48-c51c-44f9-a705-f57ff7db0856",
+    "correlation-id": null,
     "tag": "Clause",
     "content": "[4] Section 4(1), definition of “drug”, paragraph (d)",
-    "clause-type": "Definition/Interpretation",
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "d970a823-e0a2-430a-af2a-202280438f09",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "25",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "3b61d269-d3ee-4658-80e2-6342b4e6e43e",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Insert “, other than alcohol,” after “any other substance”.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "6ca7c321-78f7-462b-b048-5b56e712a649",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "26",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "f162ff5d-6818-40c7-b4a8-fc744b856450",
+    "correlation-id": null,
     "tag": "Clause",
     "content": "[5] Section 4(1), definition of “major offence”, paragraph (b)",
-    "clause-type": "Definition/Interpretation",
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "8f60ef34-b9a2-4c02-b6d8-481670951e41",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "27",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "a83c2407-4204-4320-9b82-610ba24434cb",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Insert “, 52A” after “51B”.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "0490d95c-65ef-439b-8b0a-da5d896e3ac7",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "28",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "7e0d749e-6c5a-4a33-9e57-a335e38a8723",
+    "correlation-id": null,
     "tag": "Clause",
     "content": "[6] Section 9 Determination of “first offence” and “second or subsequent offence”",
-    "clause-type": "Definition/Interpretation",
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "9274c9a9-fca4-4d54-a60e-7e2b7ebf4ac8",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "29",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "2a999718-04cc-4f6d-90cd-4d02d88f7318",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Omit “other” from section 9(2A)(a).",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "240a508a-7d10-4e8f-801a-fdd017603529",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "30",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "53ff26c9-f6dd-4658-8971-45b54d6b9ef5",
+    "correlation-id": null,
     "tag": "Clause",
     "content": "[7] Section 13 Notes",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "504e34d7-743b-424a-9c4e-1e7d270f7277",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "31",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "29359409-c842-42a1-8899-b674761d4866",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Omit the note.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "3e51cd35-dfda-4f7b-9375-82321c2490a0",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "32",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "06a6214f-7740-485a-8b03-a70c4732ba45",
+    "correlation-id": null,
     "tag": "Clause",
     "content": "[8] Section 59, heading",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "da75767a-4744-4b02-8903-71446f1e489a",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "33",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "095b83dd-d4e2-460b-b20e-857a456d1a54",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Omit the heading. Insert instead—",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "bdf34b21-057c-4b1f-8d4d-6287bbbc8496",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "34",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "20bb3f97-1501-40a5-9919-5c500d34a12a",
-    "tag": "Heading-h3",
+    "correlation-id": null,
+    "tag": "Paragraph",
     "content": "59 Cancellation or suspension—speeding, drug or alcohol offences",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "7603f152-07d2-4371-8c42-b3341ae57189",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "35",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "2564e7cd-e96a-4dd6-9d07-cfc7b41a7a99",
+    "correlation-id": null,
     "tag": "Clause",
     "content": "[9] Section 59(1) and (4A)",
-    "clause-type": null,
+    "clause-type": "Obligation/Requirement",
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "b4b509e8-d6e6-4f24-b7c8-a00895c67c3c",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "36",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "34b66d3e-2f22-496d-8ca4-ba466622a196",
+    "correlation-id": null,
     "tag": "Paragraph",
     "content": "Omit “other drug” wherever occurring. Insert instead “drug”.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
-    "correlation-id": "711d9e87-4cf5-490f-ac60-63a0ca708a92",
+    "correlation-id": null,
     "tag": "Line number",
     "content": "37",
     "clause-type": null,
     "verification-flag": "Verified (Exact Match)"
   },
   {
-    "correlation-id": "c5a49972-3d7a-4ab3-9236-06a0531498c5",
+    "correlation-id": null,
     "tag": "Page number",
     "content": "Page 3",
     "clause-type": null,

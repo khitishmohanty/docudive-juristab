@@ -2,14 +2,21 @@
   {
     "correlation-id": null,
     "tag": "Header",
-    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]\nExplanatory note",
+    "content": "Road Transport Legislation Amendment (Post-Crash Drug and Alcohol Testing) Bill 2025 [NSW]",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Header",
+    "content": "Explanatory note",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
     "tag": "List-l2",
-    "content": "(v) require authorised sample takers to take samples from a person who attends or is\nadmitted to hospital because of a crash (a **crash hospital patient**) rather than the\nmedical practitioner attending the patient, and",
+    "content": "(v) require authorised sample takers to take samples from a person who attends or is\nadmitted to hospital because of a crash (a *crash hospital patient*) rather than the\nmedical practitioner attending the patient, and",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
@@ -44,14 +51,14 @@
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(b)\namend the *Crimes (Sentencing Procedure) Act 1999* to prescribe combined drink and drug\ndriving offences under the Act as offences in relation to which the court must take into\naccount particular aggravating, mitigating and other objective or subjective factors that\naffect the relative seriousness of the offence when determining the appropriate sentence for\nthat offence, and",
+    "content": "(b) amend the *Crimes (Sentencing Procedure) Act 1999* to prescribe combined drink and drug\ndriving offences under the Act as offences in relation to which the court must take into\naccount particular aggravating, mitigating and other objective or subjective factors that\naffect the relative seriousness of the offence when determining the appropriate sentence for\nthat offence, and",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
     "tag": "List-l1",
-    "content": "(c)\nmake consequential amendments to other Acts and regulations.",
+    "content": "(c) make consequential amendments to other Acts and regulations.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
@@ -65,21 +72,21 @@
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**Clause 1** sets out the name of the proposed Act.",
+    "content": "Clause 1 sets out the name of the proposed Act.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "**Clause 2** provides for the commencement of the proposed Act.",
+    "content": "Clause 2 provides for the commencement of the proposed Act.",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
     "tag": "Heading-h3",
-    "content": "Schedule 1\nAmendment of Road Transport Act 2013 No 18",
+    "content": "Schedule 1 Amendment of Road Transport Act 2013 No 18",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
