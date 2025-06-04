@@ -88,7 +88,7 @@ def lambda_handler(event, context):
         parent_urls_data = {
             "id": parent_urls_record_id, # Include the generated ID for parent_urls
             "base_url": db_base_url,
-            "crawl": "Y",
+            "crawl_status": "pending",
             "robots_file_name": robots_fn,
             "sitemap_file_name": sitemap_fn,
             "config_file_fetch_status": "pending"
@@ -215,36 +215,36 @@ def lambda_handler(event, context):
         return response
 
 # Example usage (for local testing, not part of Lambda deployment normally):
-# if __name__ == '__main__':
-#     # Before running locally, ensure environment variables for aws_utils.py are set
-#     # (DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_DIALECT, DB_DRIVER)
-#     # For example, by creating a .env file in the same directory as aws_utils.py
-#     # and ensuring python-dotenv is installed.
+if __name__ == '__main__':
+    # Before running locally, ensure environment variables for aws_utils.py are set
+    # (DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_DIALECT, DB_DRIVER)
+    # For example, by creating a .env file in the same directory as aws_utils.py
+    # and ensuring python-dotenv is installed.
 
-#     # --- Mocking AWS Lambda event and context ---
-#     mock_event_success = {
-#         'url': 'https://legislation.nsw.gov.au/'
-#     }
-#     mock_event_invalid_url = {
-#         'url': 'not_a_url'
-#     }
-#     mock_event_no_url = {}
+    # --- Mocking AWS Lambda event and context ---
+    mock_event_success = {
+        'url': 'https://legislation.nsw.gov.au/'
+    }
+    mock_event_invalid_url = {
+        'url': 'not_a_url'
+    }
+    mock_event_no_url = {}
 
-#     print("--- Testing with a valid URL ---")
-#     result = lambda_handler(mock_event_success, None)
-#     print(f"Lambda handler returned: {result}\n")
+    print("--- Testing with a valid URL ---")
+    result = lambda_handler(mock_event_success, None)
+    print(f"Lambda handler returned: {result}\n")
 
-#     print("--- Testing with an invalid URL ---")
-#     result = lambda_handler(mock_event_invalid_url, None)
-#     print(f"Lambda handler returned: {result}\n")
+    print("--- Testing with an invalid URL ---")
+    result = lambda_handler(mock_event_invalid_url, None)
+    print(f"Lambda handler returned: {result}\n")
 
-#     print("--- Testing with no URL ---")
-#     result = lambda_handler(mock_event_no_url, None)
-#     print(f"Lambda handler returned: {result}\n")
+    print("--- Testing with no URL ---")
+    result = lambda_handler(mock_event_no_url, None)
+    print(f"Lambda handler returned: {result}\n")
 
-#     print("--- Testing with a URL that might have www and complex TLD ---")
-#     mock_event_complex_tld = {
-#         'url': 'http://www.subdomain.example.co.uk/somepage?query=1'
-#     }
-#     result = lambda_handler(mock_event_complex_tld, None)
-#     print(f"Lambda handler returned: {result}\n")
+    print("--- Testing with a URL that might have www and complex TLD ---")
+    mock_event_complex_tld = {
+        'url': 'http://www.subdomain.example.co.uk/somepage?query=1'
+    }
+    result = lambda_handler(mock_event_complex_tld, None)
+    print(f"Lambda handler returned: {result}\n")
