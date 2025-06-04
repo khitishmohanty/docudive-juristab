@@ -295,7 +295,7 @@ if __name__ == '__main__':
     print("Starting script example...")
     
     # IMPORTANT: Replace "your-test-uuid" with an actual ID from your parent_urls table for testing.
-    test_item_id = "df8edd0e-0f69-484a-930b-67dc6072013b" 
+    test_item_id = "d4886db7-3a22-4ec5-9943-c71bebe7878c" 
     # test_item_id = "actual-id-from-db" # Example
     
     if test_item_id == "your-test-uuid":
