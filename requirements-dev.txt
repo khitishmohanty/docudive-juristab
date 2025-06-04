@@ -15,3 +15,11 @@ pdf2image
 pytesseract
 thefuzz
 google-cloud-documentai
+beautifulsoup4
+
+#DB
+mysql-connector-python
+SQLAlchemy
+
+#AWS
+boto3
