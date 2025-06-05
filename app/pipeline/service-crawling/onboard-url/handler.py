@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
     # --- Mocking AWS Lambda event and context ---
     mock_event_success = {
-        'url': 'https://legislation.nsw.gov.au/'
+        'url': 'https://www.legislation.vic.gov.au/'
     }
     mock_event_invalid_url = {
         'url': 'not_a_url'
@@ -238,13 +238,13 @@ if __name__ == '__main__':
     result = lambda_handler(mock_event_invalid_url, None)
     print(f"Lambda handler returned: {result}\n")
 
-    print("--- Testing with no URL ---")
-    result = lambda_handler(mock_event_no_url, None)
-    print(f"Lambda handler returned: {result}\n")
+    # print("--- Testing with no URL ---")
+    # result = lambda_handler(mock_event_no_url, None)
+    # print(f"Lambda handler returned: {result}\n")
 
-    print("--- Testing with a URL that might have www and complex TLD ---")
-    mock_event_complex_tld = {
-        'url': 'http://www.subdomain.example.co.uk/somepage?query=1'
-    }
+    # print("--- Testing with a URL that might have www and complex TLD ---")
+    # mock_event_complex_tld = {
+    #     'url': 'http://www.subdomain.example.co.uk/somepage?query=1'
+    # }
     result = lambda_handler(mock_event_complex_tld, None)
     print(f"Lambda handler returned: {result}\n")
