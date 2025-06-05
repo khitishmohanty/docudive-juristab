@@ -1,39 +1,16 @@
 --- Page 1 ---
-Published July 10, 2024
-XIIIFannie Mae notiﬁes servicers of changes and updates to servicing policies and procedures through Servicing
-Guide announcements, lender letters, and notices as described below:
-Servicing Guide announcements describe changes to policies and requirements within the Servicing
-Guide  content. Servicing Guide announcements are numbered in chronological order as: SVC–202X–XX.
-Lender letters communicate 
--  new or modiﬁed policies and requirements that may be temporary in nature,
--  reminders of existing policies, and
--  advance notice of policy changes with future eﬀective dates to be included in future Servicing
-Guide  updates. Lender Letters are numbered in chronological order as: LL–202X–XX.
-Servicing Notices provide notiﬁcation of information not impacting the Servicing Guide  content, such as
-updates to an Exhibit on Fannie Mae’s website. Notices are identiﬁed by the date published (and are not
-numbered).
-Fannie Mae does not mail printed copies of Guide updates, announcements, lender letters, or notices. Fannie
-Mae notiﬁes servicers of changes and updates to its Servicing Guide  policies and procedures in two ways:
-posting the documents on Fannie Mae’s website and the AllRegs® subscription website, and
-email notiﬁcation to servicers that subscribe to Fannie Mae’s email subscription service and select the
-option “Servicing News.”
-For a list of  Servicing Guide  policy changes and updates, see In Case You Missed It .
-2021 In Case You Missed It
-2020 In Case You Missed It
-Exhibits, Forms, and Content Incorporated by Reference
-Information about speciﬁc forms the servicer must use to fulﬁll the policies and requirements contained in the
-Servicing Guide  is provided within the Guide. Servicers can access the actual forms in two ways:
-on Fannie Mae’s website via the Guide Forms and Legal Documents pages, which provide a complete list
-of all forms and legal documents, or
-on the AllRegs subscription website for users with a full subscription to AllRegs.
-Some exhibits that relate to Fannie Mae policies and requirements are only referenced in the Servicing Guide
-and are posted in their entirety on Fannie Mae’s website. All materials referenced by hyperlink, such as forms,
-exhibits and reference materials that are posted to Fannie Mae’s website are incorporated by reference into the
-Servicing Guide  and are fully enforceable.
-In addition, from time to time, Fannie Mae issues product-speciﬁc guides or directives, which are incorporated
-into the Servicing Guide  by reference. All forms, exhibits, and product-speciﬁc information — whether it
-currently exists or is subsequently created — referenced in the Servicing Guide  now or later are legally a part of
-the Servicing Guide  and Fannie Mae’s contract with its servicers.
-Guide Maintenance
-Periodically non-policy related maintenance is needed to ensure the integrity of the  Servicing Guide . Examples
+Guidance
+Unfair commercial practices
+Published 4 April 2025
+Contents
+Overview
+Core concepts: trader, commercial practice, consumer, transactional decision
+Banned practices
+Omission of material information from an invitation to purchase
+Misleading actions
+Misleading omissions
+Aggressive practices
+Contravention of the requirements of professional diligence
+Promoting unfair commercial practices in codes of conduct
+Offences relating to unfair commercial practices
 

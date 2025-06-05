@@ -1,196 +1,51 @@
 [
   {
     "correlation-id": null,
+    "tag": "Header",
+    "content": "GOV.UK",
+    "clause-type": null,
+    "verification-flag": "Failed (Match 57%)"
+  },
+  {
+    "correlation-id": null,
     "tag": "Figure",
-    "content": "✔ Fannie Mae",
+    "content": "СМА\nCompetition & Markets Authority",
     "clause-type": null,
-    "verification-flag": "Verified (Match 92%)"
+    "verification-flag": "Failed (Match 48%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Subtitle",
+    "content": "Guidance",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
+  },
+  {
+    "correlation-id": null,
+    "tag": "Title",
+    "content": "Unfair commercial practices",
+    "clause-type": null,
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
     "tag": "Paragraph",
-    "content": "Fannie Mae notifies servicers of changes and updates to servicing policies and procedures through *Servicing Guide* announcements, lender letters, and notices as described below:",
+    "content": "Published 4 April 2025",
     "clause-type": null,
-    "verification-flag": "Verified (Match 99%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "• *Servicing Guide* announcements describe changes to policies and requirements within the *Servicing Guide* content. *Servicing Guide* announcements are numbered in chronological order as: SVC-202X-XX.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 99%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "• Lender letters communicate",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 96%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l2",
-    "content": "Ο\nnew or modified policies and requirements that may be temporary in nature,",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 96%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l2",
-    "content": "Ο\nreminders of existing policies, and",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 97%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l2",
-    "content": "Ο\nadvance notice of policy changes with future effective dates to be included in future *Servicing Guide* updates. Lender Letters are numbered in chronological order as: LL-202X-XX.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 98%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "• *Servicing Notices* provide notification of information not impacting the *Servicing Guide* content, such as updates to an Exhibit on Fannie Mae's website. Notices are identified by the date published (and are not numbered).",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 98%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Fannie Mae does not mail printed copies of Guide updates, announcements, lender letters, or notices. Fannie Mae notifies servicers of changes and updates to its *Servicing Guide* policies and procedures in two ways:",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 99%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "• posting the documents on Fannie Mae's website and the AllRegs® subscription website, and",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 99%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "• email notification to servicers that subscribe to Fannie Mae's email subscription service and select the option \"Servicing News.\"",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 98%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "For a list of *Servicing Guide* policy changes and updates, see In Case You Missed It.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)",
-    "hyperlinks": [
-      {
-        "text": "In Case You Missed It",
-        "url": "https://singlefamily.fanniemae.com/media/document/pdf/case-you-missed-it-summary-2022-selling-guide-servicing-guide-policy-updates"
-      }
-    ]
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "• 2021 In Case You Missed It",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 96%)",
-    "hyperlinks": [
-      {
-        "text": "In Case You Missed It",
-        "url": "https://singlefamily.fanniemae.com/media/document/pdf/case-you-missed-it-summary-2022-selling-guide-servicing-guide-policy-updates"
-      },
-      {
-        "text": "2021 In Case You Missed It",
-        "url": "https://singlefamily.fanniemae.com/media/document/pdf/case-you-missed-it-summary-2021-selling-guide-servicing-guide-policy-updates"
-      }
-    ]
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "• 2020 In Case You Missed It",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 96%)",
-    "hyperlinks": [
-      {
-        "text": "In Case You Missed It",
-        "url": "https://singlefamily.fanniemae.com/media/document/pdf/case-you-missed-it-summary-2022-selling-guide-servicing-guide-policy-updates"
-      },
-      {
-        "text": "2020 In Case You Missed It",
-        "url": "https://singlefamily.fanniemae.com/media/document/pdf/case-you-missed-it-summary-2020-selling-guide-servicing-guide-policy-updates"
-      }
-    ]
+    "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
     "tag": "Heading-h2",
-    "content": "Exhibits, Forms, and Content Incorporated by Reference",
+    "content": "Contents",
     "clause-type": null,
     "verification-flag": "Verified (Match 100%)"
   },
   {
     "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Information about specific forms the servicer must use to fulfill the policies and requirements contained in the *Servicing Guide* is provided within the Guide. Servicers can access the actual forms in two ways:",
+    "tag": "Table of Contents",
+    "content": "[\n  {\"item_text\": \"Overview\", \"page_number\": null},\n  {\"item_text\": \"Core concepts: trader, commercial practice, consumer, transactional decision\", \"page_number\": null},\n  {\"item_text\": \"Banned practices\", \"page_number\": null},\n  {\"item_text\": \"Omission of material information from an invitation to purchase\", \"page_number\": null},\n  {\"item_text\": \"Misleading actions\", \"page_number\": null},\n  {\"item_text\": \"Misleading omissions\", \"page_number\": null},\n  {\"item_text\": \"Aggressive practices\", \"page_number\": null},\n  {\"item_text\": \"Contravention of the requirements of professional diligence\", \"page_number\": null},\n  {\"item_text\": \"Promoting unfair commercial practices in codes of conduct\", \"page_number\": null},\n  {\"item_text\": \"Offences relating to unfair commercial practices\", \"page_number\": null}\n]",
     "clause-type": null,
-    "verification-flag": "Verified (Match 98%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "• on Fannie Mae's website via the Guide Forms and Legal Documents pages, which provide a complete list of all forms and legal documents, or",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 99%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "List-l1",
-    "content": "• on the AllRegs subscription website for users with a full subscription to AllRegs.",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 99%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Clause",
-    "content": "Some exhibits that relate to Fannie Mae policies and requirements are only referenced in the *Servicing Guide* and are posted in their entirety on Fannie Mae's website. All materials referenced by hyperlink, such as forms, exhibits and reference materials that are posted to Fannie Mae's website are incorporated by reference into the *Servicing Guide* and are fully enforceable.",
-    "clause-type": "Definition/Interpretation",
-    "verification-flag": "Verified (Match 99%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Clause",
-    "content": "In addition, from time to time, Fannie Mae issues product-specific guides or directives, which are incorporated into the *Servicing Guide* by reference. All forms, exhibits, and product-specific information — whether it currently exists or is subsequently created — referenced in the *Servicing Guide* now or later are legally a part of the *Servicing Guide* and Fannie Mae's contract with its servicers.",
-    "clause-type": "Definition/Interpretation",
-    "verification-flag": "Verified (Match 99%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Heading-h2",
-    "content": "Guide Maintenance",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Paragraph",
-    "content": "Periodically non-policy related maintenance is needed to ensure the integrity of the *Servicing Guide*. Examples",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Footer",
-    "content": "Published July 10, 2024",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
-  },
-  {
-    "correlation-id": null,
-    "tag": "Page number",
-    "content": "XIII",
-    "clause-type": null,
-    "verification-flag": "Verified (Match 100%)"
+    "verification-flag": "Failed (Match 67%)"
   }
 ]
