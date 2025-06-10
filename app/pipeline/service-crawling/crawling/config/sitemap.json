@@ -93,7 +93,7 @@
         "description": "Navigates to 'All Bills'",
         "steps": [
           { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101688']/div/div[2]/h3/a" }, "description": "Bills", "is_breadcrumb": true },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101694']/div/div[2]/h3/a" }, "description": "All Bills", "is_breadcrumb": true },
+          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101694']/div/div/h3/a" }, "description": "All Bills", "is_breadcrumb": true },
           { "action": "click", "description": "Apply search filters", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" } },
           {
             "action": "numeric_pagination_loop",

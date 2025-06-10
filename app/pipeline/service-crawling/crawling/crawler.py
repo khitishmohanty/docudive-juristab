@@ -19,6 +19,8 @@ from aws_utils import create_db_engine
 # --- Configuration ---
 CONFIG_FILE_PATH = os.path.join('config', 'sitemap.json')
 MAX_RETRIES = 3 # Maximum number of times to retry a failed journey
+# --- NEW: Configurable depth for duplicate checking ---
+NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3))
 
 def load_config(path):
     """Loads the crawler configuration from a JSON file."""
@@ -64,48 +66,45 @@ def get_parent_url_details(engine, parent_url_id):
         print(f"  - FATAL ERROR: Could not query database: {e}")
         return None
 
-def get_last_scraped_page(engine, parent_url_id, journey_id):
-    """
-    Queries the database to find the highest page number successfully scraped for a given journey.
-    """
-    print(f"  - Checking for last scraped page for journey '{journey_id}'...")
-    max_page = 0
-    try:
-        with engine.connect() as connection:
-            path_filter = f"%/{journey_id}/%"
-            query = text("SELECT navigation_path FROM book_links WHERE parent_url_id = :parent_url_id AND navigation_path LIKE :path_filter")
-            results = connection.execute(query, {"parent_url_id": parent_url_id, "path_filter": path_filter}).fetchall()
-            
-            page_regex = re.compile(r"/Page/(\d+)$")
-            for row in results:
-                path_string = row[0]
-                match = page_regex.search(path_string)
-                if match:
-                    page = int(match.group(1))
-                    if page > max_page:
-                        max_page = page
-        
-        if max_page > 0:
-            print(f"  - Found last successfully scraped page: {max_page}")
-        else:
-            print("  - No previous progress found for this journey. Starting from page 1.")
-        return max_page
-    except Exception as e:
-        print(f"  - WARNING: Could not query for last scraped page. Starting from page 1. Error: {e}")
-        return 0
-
 def save_book_links_to_db(engine, scraped_data, parent_url_id, navigation_path_parts, page_num):
-    """Saves a list of scraped book links to the database with a simple path string."""
+    """
+    Saves a list of scraped book links to the database, checking for duplicates
+    based on the parent_url_id and a configurable portion of the navigation path.
+    This version uses a single transaction for the entire operation for robustness.
+    """
     if not scraped_data:
         print("  - No data to save for this page.")
         return
 
     human_readable_path = "/".join(navigation_path_parts) + f"/Page/{page_num}"
-    print(f"  - Saving {len(scraped_data)} records to 'book_links' with path: {human_readable_path}")
+    
     try:
+        # --- NEW ROBUST TRANSACTION LOGIC ---
+        # The entire check-and-insert operation is now wrapped in a single transaction
         with engine.connect() as connection:
-            with connection.begin():
-                for item in scraped_data:
+            with connection.begin(): # Start one transaction for the whole operation
+                # 1. Construct the path prefix for the duplicate check
+                path_prefix_parts = navigation_path_parts[:NAVIGATION_PATH_DEPTH]
+                path_prefix = "/".join(path_prefix_parts) + "%"
+                print(f"  - Checking for existing records with path prefix: '{path_prefix}'")
+
+                # 2. Get all existing book_urls within the same transaction
+                existing_urls_query = text("SELECT book_url FROM book_links WHERE parent_url_id = :parent_url_id AND navigation_path LIKE :path_prefix")
+                existing_urls_result = connection.execute(existing_urls_query, {"parent_url_id": parent_url_id, "path_prefix": path_prefix}).fetchall()
+                existing_urls = {row[0] for row in existing_urls_result}
+                print(f"  - Found {len(existing_urls)} existing records for this path context.")
+
+                # 3. Filter out records that already exist
+                records_to_insert = [item for item in scraped_data if item.get('link') not in existing_urls]
+
+                if not records_to_insert:
+                    print("  - All scraped records for this page already exist in this context. Nothing to insert.")
+                    return
+
+                print(f"  - Found {len(records_to_insert)} new records to insert.")
+                
+                # 4. Insert only the new records within the same transaction
+                for item in records_to_insert:
                     query = text("""
                         INSERT INTO book_links (id, parent_url_id, book_name, book_number, book_url, navigation_path, date_collected, is_active)
                         VALUES (:id, :parent_url_id, :book_name, :book_number, :book_url, :navigation_path, :date_collected, :is_active)
@@ -117,9 +116,10 @@ def save_book_links_to_db(engine, scraped_data, parent_url_id, navigation_path_p
                         "date_collected": datetime.now(), "is_active": 1
                     }
                     connection.execute(query, params)
-            print(f"  - Successfully saved {len(scraped_data)} records.")
+                print(f"  - Successfully saved {len(records_to_insert)} new records with path: {human_readable_path}")
+
     except Exception as e:
-        print(f"  - FATAL ERROR: Failed to insert data into 'book_links' table: {e}")
+        print(f"  - FATAL ERROR: Failed during database save operation: {e}")
 
 def initialize_driver():
     """Initializes and returns a more stable, production-ready Selenium WebDriver."""
@@ -258,6 +258,34 @@ def get_page_from_url(url):
     except (ValueError, IndexError):
         return 1
 
+def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, is_resuming, current_page=1):
+    """
+    Main dispatcher function. Processes a single step from the configuration.
+    """
+    action = step.get('action')
+    print(f"\nProcessing Step: {step.get('description', action)}")
+
+    if action == 'click':
+        if is_resuming:
+            print("  - In resume mode, skipping initial navigation click.")
+            return True
+        clicked_text = perform_click(driver, step.get('target'))
+        if clicked_text == "browser_crash": return False
+        return True
+
+    elif action == 'numeric_pagination_loop':
+        return process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, current_page)
+
+    elif action == 'process_results':
+        scraping_config = step.get('scraping_config')
+        if not scraping_config:
+            print("  - FATAL ERROR: 'process_results' action requires a 'scraping_config' object.")
+            return False
+        return scrape_configured_data(driver, step['target']['value'], scraping_config, db_engine, parent_url_id, navigation_path_parts, current_page)
+    else:
+        print(f"  - WARNING: Unknown action type '{action}'. Skipping.")
+    return True
+
 def run_crawler(parent_url_id):
     """Main function to initialize and run the crawler."""
     config = load_config(CONFIG_FILE_PATH)
@@ -275,12 +303,10 @@ def run_crawler(parent_url_id):
         while retries < MAX_RETRIES:
             driver = None
             try:
-                # Build the canonical navigation path from the sitemap before starting
                 navigation_path_parts = ["Home"]
                 for step in journey['steps']:
                     if step.get('is_breadcrumb'):
                         navigation_path_parts.append(step.get('description', ''))
-                # Also append the journey_id to make the path uniquely identifiable for resumption
                 navigation_path_parts.append(journey_id)
 
                 driver = initialize_driver()
@@ -299,7 +325,6 @@ def run_crawler(parent_url_id):
                 
                 journey_succeeded = True
                 
-                # If resuming, find the pagination step and execute it directly
                 if is_resuming:
                     pagination_step = next((s for s in journey['steps'] if s['action'] == 'numeric_pagination_loop'), None)
                     if pagination_step:
@@ -311,21 +336,13 @@ def run_crawler(parent_url_id):
                         print("  - ERROR: In resume mode but could not find a pagination loop step in sitemap.")
                         journey_succeeded = False
                 else:
-                    # If it's a fresh run, execute all initial clicks to get to the pagination page
                     for step in journey['steps']:
-                        if step['action'] == 'click':
-                            if perform_click(driver, step['target']) == 'browser_crash':
-                                resume_from_url = driver.current_url
-                                journey_succeeded = False
-                                break
-                        elif step['action'] == 'numeric_pagination_loop':
-                            if not process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, start_page):
-                                resume_from_url = driver.current_url
-                                journey_succeeded = False
-                                break
-                    if not journey_succeeded:
-                        print(f"  - Recording resume URL for next attempt: {resume_from_url}")
-
+                        if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, False, 1):
+                            resume_from_url = driver.current_url
+                            print(f"  - Recording resume URL for next attempt: {resume_from_url}")
+                            journey_succeeded = False
+                            break
+                
                 if journey_succeeded:
                     print(f"\n✅ Journey '{journey_id}' completed successfully.")
                     break
@@ -345,8 +362,8 @@ def run_crawler(parent_url_id):
                     driver.quit()
             
             if retries < MAX_RETRIES:
-                 print(f"  - Waiting 10 seconds before retrying journey '{journey_id}'...")
-                 time.sleep(10)
+                print(f"  - Waiting 10 seconds before retrying journey '{journey_id}'...")
+                time.sleep(10)
         
         if retries >= MAX_RETRIES:
             print(f"\n❌ FATAL: Journey '{journey_id}' failed after {MAX_RETRIES} attempts. Moving to next journey.")
