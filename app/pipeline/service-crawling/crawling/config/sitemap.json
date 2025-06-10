@@ -1,143 +1,118 @@
 {
   "crawler_config": {
-    "start_url": "https://www.legislation.vic.gov.au/",
     "journeys": [
       {
         "journey_id": "acts_in_force",
-        "description": "Navigates to 'Acts in force' and scrapes results via pagination.",
+        "description": "Navigates to 'Acts in force'",
         "steps": [
-          { "action": "navigate", "target": "https://www.legislation.vic.gov.au/" },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101686']/div/div[2]/h3/a" }, "post_action_wait_seconds": 3 },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101689']/div/div/h3/a" }, "post_action_wait_seconds": 5 },
-          { "action": "click", "description": "Click apply filter to load initial results.", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" }, "post_action_wait_seconds": 5 },
+          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101686']/div/div[2]/h3/a" }, "description": "Legislation in force", "is_breadcrumb": true },
+          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101689']/div/div/h3/a" }, "description": "Acts in force", "is_breadcrumb": true },
+          { "action": "click", "description": "Apply search filters", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" } },
           {
             "action": "numeric_pagination_loop",
-            "description": "Loop through all result pages by clicking numbers.",
             "page_number_xpath_template": "//nav//ol//button[normalize-space()='{page_num}']",
             "next_button_fallback_xpath": "//nav//button[last()]",
-            "post_action_wait_seconds": 3,
             "loop_steps": [
-              { "action": "process_results", "description": "Scrape results from the current page.", "target": { "type": "xpath", "value": "//div[contains(@class, 'search-results')]" } }
+              { 
+                "action": "process_results", 
+                "target": { "type": "xpath", "value": "//*[@id='rpl-main']" },
+                "scraping_config": {
+                  "row_xpath": "//div[contains(@class, 'rpl-table')]//tbody/tr",
+                  "columns": [
+                    {"name": "title", "xpath": ".//td[1]/a", "type": "text"},
+                    {"name": "link", "xpath": ".//td[1]/a", "type": "href"},
+                    {"name": "number", "xpath": ".//td[2]", "type": "text"},
+                    {"name": "year", "xpath": ".//td[3]", "type": "text"}
+                  ]
+                }
+              }
             ]
           }
         ]
       },
       {
         "journey_id": "statutory_rules_in_force",
-        "description": "Navigates to 'Statutory rules in force' and scrapes results via pagination.",
+        "description": "Navigates to 'Statutory rules in force'",
         "steps": [
-          { "action": "navigate", "target": "https://www.legislation.vic.gov.au/" },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101686']/div/div[2]/h3/a" }, "post_action_wait_seconds": 3 },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101690']/div/div/h3/a" }, "post_action_wait_seconds": 5 },
-          { "action": "click", "description": "Click apply filter to load initial results.", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" }, "post_action_wait_seconds": 5 },
+          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101686']/div/div[2]/h3/a" }, "description": "Legislation in force", "is_breadcrumb": true },
+          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101690']/div/div/h3/a" }, "description": "Statutory rules in force", "is_breadcrumb": true },
+          { "action": "click", "description": "Apply search filters", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" } },
           {
             "action": "numeric_pagination_loop",
-            "description": "Loop through all result pages by clicking numbers.",
             "page_number_xpath_template": "//nav//ol//button[normalize-space()='{page_num}']",
             "next_button_fallback_xpath": "//nav//button[last()]",
-            "post_action_wait_seconds": 3,
             "loop_steps": [
-              { "action": "process_results", "description": "Scrape results from the current page.", "target": { "type": "xpath", "value": "//div[contains(@class, 'search-results')]" } }
-            ]
-          }
-        ]
-      },
-      {
-        "journey_id": "acts_as_enacted",
-        "description": "Navigates to 'Acts as enacted' and scrapes results via pagination.",
-        "steps": [
-          { "action": "navigate", "target": "https://www.legislation.vic.gov.au/" },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101687']/div/div[2]/h3/a" }, "post_action_wait_seconds": 3 },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101691']/div/div/h3/a" }, "post_action_wait_seconds": 5 },
-          { "action": "click", "description": "Click apply filter to load initial results.", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" }, "post_action_wait_seconds": 5 },
-          {
-            "action": "numeric_pagination_loop",
-            "description": "Loop through all result pages by clicking numbers.",
-            "page_number_xpath_template": "//nav//ol//button[normalize-space()='{page_num}']",
-            "next_button_fallback_xpath": "//nav//button[last()]",
-            "post_action_wait_seconds": 3,
-            "loop_steps": [
-              { "action": "process_results", "description": "Scrape results from the current page.", "target": { "type": "xpath", "value": "//div[contains(@class, 'search-results')]" } }
-            ]
-          }
-        ]
-      },
-      {
-        "journey_id": "statutory_rules_as_made",
-        "description": "Navigates to 'Statutory rules as made' and scrapes results via pagination.",
-        "steps": [
-          { "action": "navigate", "target": "https://www.legislation.vic.gov.au/" },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101687']/div/div[2]/h3/a" }, "post_action_wait_seconds": 3 },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101692']/div/div/h3/a" }, "post_action_wait_seconds": 5 },
-          { "action": "click", "description": "Click apply filter to load initial results.", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" }, "post_action_wait_seconds": 5 },
-          {
-            "action": "numeric_pagination_loop",
-            "description": "Loop through all result pages by clicking numbers.",
-            "page_number_xpath_template": "//nav//ol//button[normalize-space()='{page_num}']",
-            "next_button_fallback_xpath": "//nav//button[last()]",
-            "post_action_wait_seconds": 3,
-            "loop_steps": [
-              { "action": "process_results", "description": "Scrape results from the current page.", "target": { "type": "xpath", "value": "//div[contains(@class, 'search-results')]" } }
-            ]
-          }
-        ]
-      },
-      {
-        "journey_id": "historical_acts",
-        "description": "Navigates to 'Historical Acts (1851-1995)' and scrapes results via pagination.",
-        "steps": [
-          { "action": "navigate", "target": "https://www.legislation.vic.gov.au/" },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101687']/div/div[2]/h3/a" }, "post_action_wait_seconds": 3 },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101702']/div/div/h3/a" }, "post_action_wait_seconds": 5 },
-          { "action": "click", "description": "Click apply filter to load initial results.", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" }, "post_action_wait_seconds": 5 },
-          {
-            "action": "numeric_pagination_loop",
-            "description": "Loop through all result pages by clicking numbers.",
-            "page_number_xpath_template": "//nav//ol//button[normalize-space()='{page_num}']",
-            "next_button_fallback_xpath": "//nav//button[last()]",
-            "post_action_wait_seconds": 3,
-            "loop_steps": [
-              { "action": "process_results", "description": "Scrape results from the current page.", "target": { "type": "xpath", "value": "//div[contains(@class, 'search-results')]" } }
+              { 
+                "action": "process_results", 
+                "target": { "type": "xpath", "value": "//*[@id='rpl-main']" },
+                "scraping_config": {
+                  "row_xpath": "//div[contains(@class, 'rpl-table')]//tbody/tr",
+                  "columns": [
+                    {"name": "title", "xpath": ".//td[1]/a", "type": "text"},
+                    {"name": "link", "xpath": ".//td[1]/a", "type": "href"},
+                    {"name": "number", "xpath": ".//td[2]", "type": "text"},
+                    {"name": "year", "xpath": ".//td[3]", "type": "text"}
+                  ]
+                }
+              }
             ]
           }
         ]
       },
       {
         "journey_id": "bills_in_parliament",
-        "description": "Navigates to 'Bills in Parliament' and scrapes results via pagination.",
+        "description": "Navigates to 'Bills in Parliament'",
         "steps": [
-          { "action": "navigate", "target": "https://www.legislation.vic.gov.au/" },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101688']/div/div[2]/h3/a" }, "post_action_wait_seconds": 3 },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101693']/div/div/h3/a" }, "post_action_wait_seconds": 5 },
-          { "action": "click", "description": "Click apply filter to load initial results.", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" }, "post_action_wait_seconds": 5 },
+          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101688']/div/div[2]/h3/a" }, "description": "Bills", "is_breadcrumb": true },
+          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101693']/div/div/h3/a" }, "description": "Bills in Parliament", "is_breadcrumb": true },
+          { "action": "click", "description": "Apply search filters", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" } },
           {
             "action": "numeric_pagination_loop",
-            "description": "Loop through all result pages by clicking numbers.",
             "page_number_xpath_template": "//nav//ol//button[normalize-space()='{page_num}']",
             "next_button_fallback_xpath": "//nav//button[last()]",
-            "post_action_wait_seconds": 3,
             "loop_steps": [
-              { "action": "process_results", "description": "Scrape results from the current page.", "target": { "type": "xpath", "value": "//div[contains(@class, 'search-results')]" } }
+              { 
+                "action": "process_results", 
+                "target": { "type": "xpath", "value": "//*[@id='rpl-main']" },
+                "scraping_config": {
+                  "row_xpath": "//div[contains(@class, 'rpl-table')]//tbody/tr",
+                  "columns": [
+                    {"name": "title", "xpath": ".//td[1]/a", "type": "text"},
+                    {"name": "link", "xpath": ".//td[1]/a", "type": "href"},
+                    {"name": "number", "xpath": ".//td[2]", "type": "text"},
+                    {"name": "year", "xpath": ".//td[3]", "type": "text"}
+                  ]
+                }
+              }
             ]
           }
         ]
       },
       {
         "journey_id": "all_bills",
-        "description": "Navigates to 'All Bills' and scrapes results via pagination.",
+        "description": "Navigates to 'All Bills'",
         "steps": [
-          { "action": "navigate", "target": "https://www.legislation.vic.gov.au/" },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101688']/div/div[2]/h3/a" }, "post_action_wait_seconds": 3 },
-          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101694']/div/div/h3/a" }, "post_action_wait_seconds": 5 },
-          { "action": "click", "description": "Click apply filter to load initial results.", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" }, "post_action_wait_seconds": 5 },
+          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101688']/div/div[2]/h3/a" }, "description": "Bills", "is_breadcrumb": true },
+          { "action": "click", "target": { "type": "xpath", "value": "//*[@id='page-component-101694']/div/div[2]/h3/a" }, "description": "All Bills", "is_breadcrumb": true },
+          { "action": "click", "description": "Apply search filters", "target": { "type": "xpath", "value": "//button[@id='tide-search-filter-form-actions']" } },
           {
             "action": "numeric_pagination_loop",
-            "description": "Loop through all result pages by clicking numbers.",
             "page_number_xpath_template": "//nav//ol//button[normalize-space()='{page_num}']",
             "next_button_fallback_xpath": "//nav//button[last()]",
-            "post_action_wait_seconds": 3,
             "loop_steps": [
-              { "action": "process_results", "description": "Scrape results from the current page.", "target": { "type": "xpath", "value": "//div[contains(@class, 'search-results')]" } }
+              { 
+                "action": "process_results", 
+                "target": { "type": "xpath", "value": "//*[@id='rpl-main']" },
+                "scraping_config": {
+                  "row_xpath": "//div[contains(@class, 'rpl-table')]//tbody/tr",
+                  "columns": [
+                    {"name": "title", "xpath": ".//td[1]/a", "type": "text"},
+                    {"name": "link", "xpath": ".//td[1]/a", "type": "href"},
+                    {"name": "number", "xpath": ".//td[2]", "type": "text"},
+                    {"name": "year", "xpath": ".//td[3]", "type": "text"}
+                  ]
+                }
+              }
             ]
           }
         ]
