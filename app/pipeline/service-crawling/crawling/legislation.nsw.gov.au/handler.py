@@ -153,7 +153,8 @@ def initialize_driver():
     """Initializes a more stable, production-ready Selenium WebDriver."""
     print("Initializing Chrome WebDriver with stability options...")
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    # The --headless argument is now commented out for visual testing
+    # options.add_argument("--headless") 
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
@@ -184,17 +185,18 @@ def perform_click(driver, target, is_pagination=False):
             return "browser_crash"
         raise
 
-def scrape_configured_data(driver, scraping_config, db_engine, parent_url_id, navigation_path_parts, page_num, job_state):
+# --- BUG FIX: Corrected function signature and logic ---
+def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, parent_url_id, navigation_path_parts, page_num, job_state):
     """Generic scraping function that saves results directly to the database."""
     try:
         wait = WebDriverWait(driver, 30)
-        row_xpath = scraping_config['row_xpath']
-        print(f"  - Waiting for table rows to be present ({row_xpath})...")
-        wait.until(EC.presence_of_element_located((By.XPATH, row_xpath)))
-        print("  - Table rows found.")
+        print(f"  - Waiting for table container to be present ({container_xpath})...")
+        container_element = wait.until(EC.presence_of_element_located((By.XPATH, container_xpath)))
+        print("  - Table container found.")
         time.sleep(1)
 
-        rows = driver.find_elements(By.XPATH, row_xpath)
+        row_xpath = scraping_config['row_xpath']
+        rows = container_element.find_elements(By.XPATH, row_xpath)
         print(f"  - Found {len(rows)} result rows to scrape using XPath: {row_xpath}")
         if not rows: return True
 
@@ -214,7 +216,7 @@ def scrape_configured_data(driver, scraping_config, db_engine, parent_url_id, na
             scraped_data.append(row_data)
         
         if scraped_data:
-            new_records = save_book_links_to_db(db_engine, scraped_data, parent_url_id, navigation_path_parts, page_num, job_state)
+            new_records = save_book_links_to_db(db_engine, scraped_data, parent_url_id, navigation_path_parts, page_num)
             job_state['records_saved'] += new_records
         return True
     except TimeoutException:
@@ -262,7 +264,6 @@ def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_pat
         return False
         
     print(f"  - Finding all alphabet links with XPath: {target_xpath}")
-    # Find all alphabet links before starting the loop
     try:
         alphabet_links = driver.find_elements(By.XPATH, target_xpath)
         alphabet_urls = [a.get_attribute('href') for a in alphabet_links]
@@ -275,19 +276,19 @@ def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_pat
         print(f"\n--- Processing alphabet link {i+1}/{len(alphabet_urls)}: {url} ---")
         try:
             driver.get(url)
-            # Create a sub-path for this letter
-            letter_path_parts = navigation_path_parts + [f"Letter-{i+1}"]
+            letter_text = url.split('=')[-1] if '=' in url else f"Letter-{i+1}"
+            letter_path_parts = navigation_path_parts + [letter_text]
             for loop_step in step['loop_steps']:
                 if not process_step(driver, loop_step, db_engine, parent_url_id, letter_path_parts, job_state):
                     print(f"  - Step failed within alphabet loop for URL {url}. Skipping to next letter.")
-                    # A failure inside the inner loop is not fatal for the whole journey
                     break 
         except WebDriverException as e:
             print(f"  - BROWSER CRASH during alphabet loop for URL {url}: {e}")
-            return False # Signal a fatal error to trigger a retry
+            return False
             
     return True
 
+# --- Corrected process_step function ---
 def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, current_page=1):
     """Main dispatcher function. Processes a single step from the configuration."""
     action = step.get('action')
@@ -298,7 +299,6 @@ def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, 
         if clicked_text == "browser_crash": return False
         return True
     
-    # --- NEW: Call the new loop handlers ---
     elif action == 'alphabet_loop':
         return process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state)
     
@@ -310,6 +310,7 @@ def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, 
         if not scraping_config:
             print("  - FATAL ERROR: 'process_results' action requires a 'scraping_config' object.")
             return False
+        # BUG FIX: The function call is now correct
         return scrape_configured_data(driver, step.get('target', {}).get('value'), scraping_config, db_engine, parent_url_id, navigation_path_parts, current_page, job_state)
     else:
         print(f"  - WARNING: Unknown action type '{action}'. Skipping.")
@@ -318,7 +319,7 @@ def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, 
 def run_crawler(parent_url_id, sitemap_file_name):
     """Main function to initialize and run the crawler."""
     config_file_path = os.path.join('config', sitemap_file_name)
-    config = load_config(config_file_path) # Load the dynamically specified sitemap
+    config = load_config(config_file_path)
     if not config: return
 
     db_engine = create_db_engine()
@@ -341,7 +342,6 @@ def run_crawler(parent_url_id, sitemap_file_name):
             try:
                 driver = initialize_driver()
                 
-                # Pre-build the navigation path for this journey
                 navigation_path_parts = ["Home"]
                 if journey.get('description'):
                     navigation_path_parts.append(journey['description'])
@@ -357,7 +357,7 @@ def run_crawler(parent_url_id, sitemap_file_name):
                     if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state):
                         print(f"\n!!! Step failed in Journey '{journey['journey_id']}'. Halting this journey. !!!")
                         journey_succeeded = False
-                        final_status = 'failed' # Mark the whole job as failed if any journey fails
+                        final_status = 'failed'
                         final_error_message = f"Journey '{journey['journey_id']}' failed."
                         break
                 

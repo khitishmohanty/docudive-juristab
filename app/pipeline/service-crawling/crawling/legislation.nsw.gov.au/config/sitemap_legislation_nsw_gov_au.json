@@ -73,7 +73,7 @@
             "action": "click",
             "target": {
               "type": "xpath",
-              "value": "//*[@id='nav-site']/nav[2]/li[2]/a"
+              "value": "//*[@id='nav-site']/nav[2]/li[1]/a"
             },
             "description": "Navigate to Statutory Instruments In Force",
             "is_breadcrumb": true
@@ -137,7 +137,7 @@
             "action": "click",
             "target": {
               "type": "xpath",
-              "value": "//*[@id='nav-site']/nav[2]/li[3]/a"
+              "value": "//*[@id='nav-site']/nav[2]/li[1]/a"
             },
             "description": "Navigate to EPIs In Force",
             "is_breadcrumb": true
