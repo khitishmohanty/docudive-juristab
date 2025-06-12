@@ -27,14 +27,18 @@ def lambda_handler(event, context):
         print("FATAL ERROR: 'parent_url_id' not found in the Lambda event.")
         return {'statusCode': 400, 'body': json.dumps('Error: parent_url_id is required.')}
 
+    # These would ideally come from the event or environment variables
+    sitemap_filename = os.path.join('config', 'sitemap_legislation_vic_gov_au.json')
+    destination_tablename = "book_links"
+
     print(f"Starting FULL crawler run for parent_url_id: {parent_url_id}")
-    run_crawler(parent_url_id)
+    run_crawler(parent_url_id, sitemap_filename, destination_tablename)
     
     return {'statusCode': 200, 'body': json.dumps(f'Successfully completed crawling for {parent_url_id}')}
 
-def run_crawler(parent_url_id):
+def run_crawler(parent_url_id, sitemap_filename, destination_tablename):
     """Main function to initialize and run the crawler."""
-    config = load_config(CONFIG_FILE_PATH_lEGISLATION_VIC_GOV_AU)
+    config = load_config(sitemap_filename)
     if not config: return
     db_engine = create_db_engine()
     if not db_engine: return
@@ -85,7 +89,7 @@ def run_crawler(parent_url_id):
                     if is_resuming:
                         pagination_step = next((s for s in journey['steps'] if s['action'] == 'numeric_pagination_loop'), None)
                         if pagination_step:
-                            if not process_pagination_loop(driver, pagination_step, db_engine, parent_url_id, navigation_path_parts, start_page, job_state):
+                            if not process_pagination_loop(driver, pagination_step, db_engine, parent_url_id, navigation_path_parts, start_page, job_state, destination_tablename):
                                 resume_from_url = driver.current_url
                                 print(f"  - Recording resume URL for next attempt: {resume_from_url}")
                                 journey_succeeded = False
@@ -94,7 +98,7 @@ def run_crawler(parent_url_id):
                             journey_succeeded = False
                     else:
                         for step in journey['steps']:
-                            if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, False, job_state, 1):
+                            if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, False, job_state, destination_tablename, 1):
                                 resume_from_url = driver.current_url
                                 print(f"  - Recording resume URL for next attempt: {resume_from_url}")
                                 journey_succeeded = False
@@ -141,6 +145,11 @@ def run_crawler(parent_url_id):
         print("\nAll journeys finished.")
 
 if __name__ == "__main__":
+    # Define inputs for the crawler function
     parent_url_id_for_testing = "d4886db7-3a22-4ec5-9943-c71bebe7878c"
+    sitemap_input = os.path.join('config', 'sitemap_legislation_vic_gov_au.json')
+    tablename_input = "l1_scan_legislation_vic_gov_au"
+    
     print(f"--- Running in FULL test mode for parent_url_id: {parent_url_id_for_testing} ---")
-    run_crawler(parent_url_id_for_testing)
+    print(f"--- Using sitemap: '{sitemap_input}' and destination table: '{tablename_input}' ---")
+    run_crawler(parent_url_id_for_testing, sitemap_input, tablename_input)

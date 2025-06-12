@@ -6,7 +6,6 @@ from datetime import datetime
 
 NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3)) # Duplicate checking
 
-# --- Crawler Core Functions ---
 def get_parent_url_details(engine, parent_url_id):
     """Connects to the database and fetches the base_url for the given ID."""
     print(f"\nFetching base_url for parent_url_id: {parent_url_id}...")
@@ -21,7 +20,7 @@ def get_parent_url_details(engine, parent_url_id):
         print(f"  - FATAL ERROR: Could not query database: {e}")
         return None
 
-def save_book_links_to_db(engine, scraped_data, parent_url_id, navigation_path_parts, page_num, job_state):
+def save_book_links_to_db(engine, scraped_data, parent_url_id, navigation_path_parts, page_num, job_state, destination_tablename):
     """
     Saves a list of scraped book links to the database, checking for duplicates.
     Returns the number of new records inserted.
@@ -37,9 +36,9 @@ def save_book_links_to_db(engine, scraped_data, parent_url_id, navigation_path_p
             with connection.begin():
                 path_prefix_parts = navigation_path_parts[:NAVIGATION_PATH_DEPTH]
                 path_prefix = "/".join(path_prefix_parts) + "%"
-                print(f"  - Checking for existing records with path prefix: '{path_prefix}'")
+                print(f"  - Checking for existing records in table '{destination_tablename}' with path prefix: '{path_prefix}'")
 
-                existing_urls_query = text("SELECT book_url FROM book_links WHERE parent_url_id = :parent_url_id AND navigation_path LIKE :path_prefix")
+                existing_urls_query = text(f"SELECT book_url FROM {destination_tablename} WHERE parent_url_id = :parent_url_id AND navigation_path LIKE :path_prefix")
                 existing_urls_result = connection.execute(existing_urls_query, {"parent_url_id": parent_url_id, "path_prefix": path_prefix}).fetchall()
                 existing_urls = {row[0] for row in existing_urls_result}
                 print(f"  - Found {len(existing_urls)} existing records for this path context.")
@@ -50,11 +49,11 @@ def save_book_links_to_db(engine, scraped_data, parent_url_id, navigation_path_p
                     print("  - All scraped records for this page already exist. Nothing to insert.")
                     return 0
 
-                print(f"  - Found {len(records_to_insert)} new records to insert.")
+                print(f"  - Found {len(records_to_insert)} new records to insert into '{destination_tablename}'.")
                 
                 for item in records_to_insert:
-                    query = text("""
-                        INSERT INTO book_links (id, parent_url_id, book_name, book_number, book_url, navigation_path, date_collected, is_active)
+                    query = text(f"""
+                        INSERT INTO {destination_tablename} (id, parent_url_id, book_name, book_number, book_url, navigation_path, date_collected, is_active)
                         VALUES (:id, :parent_url_id, :book_name, :book_number, :book_url, :navigation_path, :date_collected, :is_active)
                     """)
                     params = {

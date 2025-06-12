@@ -3,7 +3,7 @@ import time
 from core.scraping import perform_click, scrape_configured_data
 
 
-def process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, start_page, job_state):
+def process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, start_page, job_state, destination_tablename):
     """Dedicated function to handle the pagination loop, including fast-forwarding."""
     page_counter = start_page
     
@@ -22,7 +22,7 @@ def process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_p
     while True:
         print(f"\n--- Scraping results on page {page_counter} ---")
         for loop_step in step['loop_steps']:
-            if not scrape_configured_data(driver, loop_step['target']['value'], loop_step['scraping_config'], db_engine, parent_url_id, navigation_path_parts, page_counter, job_state):
+            if not scrape_configured_data(driver, loop_step['target']['value'], loop_step['scraping_config'], db_engine, parent_url_id, navigation_path_parts, page_counter, job_state, destination_tablename):
                 print(f"--- Stopping pagination loop due to a scraping error on page {page_counter} ---")
                 return False
 
@@ -49,7 +49,7 @@ def process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_p
     return True
 
 
-def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, is_resuming, job_state, current_page=1):
+def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, is_resuming, job_state, destination_tablename, current_page=1):
     """
     Main dispatcher function. Processes a single step from the configuration.
     """
@@ -66,14 +66,14 @@ def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, 
         return True
 
     elif action == 'numeric_pagination_loop':
-        return process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, current_page, job_state)
+        return process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, current_page, job_state, destination_tablename)
 
     elif action == 'process_results':
         scraping_config = step.get('scraping_config')
         if not scraping_config:
             print("  - FATAL ERROR: 'process_results' action requires a 'scraping_config' object.")
             return False
-        return scrape_configured_data(driver, step['target']['value'], scraping_config, db_engine, parent_url_id, navigation_path_parts, current_page, job_state)
+        return scrape_configured_data(driver, step['target']['value'], scraping_config, db_engine, parent_url_id, navigation_path_parts, current_page, job_state, destination_tablename)
     else:
         print(f"  - WARNING: Unknown action type '{action}'. Skipping.")
     return True

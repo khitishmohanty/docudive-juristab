@@ -316,7 +316,7 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     # Example local test event
-    test_event = {"id": "d4886db7-3a22-4ec5-9943-c71bebe7878c"} 
+    test_event = {"id": "36940ced-4781-41d5-a0b5-aaf0b4fb910c"} 
     # Ensure environment variables are set for DB and S3 access for local testing.
     print("🚀 LOCAL TEST RUN STARTING 🚀")
     response = lambda_handler(test_event, None)
