@@ -26,7 +26,7 @@ def create_audit_log_entry(engine, job_name):
         return None
 
 def update_audit_log_entry(engine, audit_id, final_status, message):
-    """Updates the audit_log entry with the final status, duration, and message."""
+    """Updates the audit_log entry with the final status and duration."""
     if not audit_id:
         print("  - WARNING: No audit_id provided, cannot update audit log.")
         return
@@ -35,7 +35,6 @@ def update_audit_log_entry(engine, audit_id, final_status, message):
     try:
         with engine.connect() as connection:
             with connection.begin():
-                # First, get the start_time to calculate duration
                 start_time_query = text("SELECT start_time FROM audit_log WHERE id = :id")
                 start_time_result = connection.execute(start_time_query, {"id": audit_id}).fetchone()
                 
@@ -47,13 +46,7 @@ def update_audit_log_entry(engine, audit_id, final_status, message):
                     SET end_time = :end_time, job_status = :status, job_duration = :duration, message = :message
                     WHERE id = :id
                 """)
-                params = {
-                    "id": audit_id,
-                    "end_time": end_time,
-                    "status": final_status,
-                    "duration": duration,
-                    "message": message
-                }
+                params = {"id": audit_id, "end_time": end_time, "status": final_status, "duration": duration, "message": message}
                 connection.execute(query, params)
         print("  - Audit log entry updated successfully.")
     except Exception as e:

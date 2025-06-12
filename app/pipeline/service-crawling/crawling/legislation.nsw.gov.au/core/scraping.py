@@ -3,24 +3,30 @@ import time
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
+from urllib.parse import urljoin
 
-from core.database import save_book_links_to_db
+from core.database import save_scraped_data_to_db
 
 
-def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, parent_url_id, navigation_path_parts, page_num, job_state):
+def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, parent_url_id, navigation_path_parts, page_num, job_state, destination_table):
     """Generic scraping function that saves results directly to the database."""
     try:
         wait = WebDriverWait(driver, 30)
-        print(f"  - Waiting for main results container ({container_xpath})...")
-        wait.until(EC.presence_of_element_located((By.XPATH, container_xpath)))
-        loading_spinner_xpath = f"{container_xpath}//div[contains(@class, 'rpl-search-results__loading')]"
-        print(f"  - Waiting for loading spinner to disappear ({loading_spinner_xpath})...")
-        wait.until(EC.invisibility_of_element_located((By.XPATH, loading_spinner_xpath)))
-        print("  - Loading spinner gone. Content should be loaded.")
-        time.sleep(1)
-
         row_xpath = scraping_config['row_xpath']
-        rows = driver.find_elements(By.XPATH, row_xpath)
+
+        # If a container is specified, wait for it. Otherwise, use the whole body.
+        if container_xpath:
+            print(f"  - Waiting for table container to be present ({container_xpath})...")
+            container_element = wait.until(EC.presence_of_element_located((By.XPATH, container_xpath)))
+            print("  - Table container found.")
+        else:
+            # If no container is specified, the row_xpath should be absolute.
+            print("  - No container specified, searching for rows in the whole document.")
+            container_element = driver.find_element(By.XPATH, "//body") # The context is the whole page
+        
+        time.sleep(1)
+        
+        rows = container_element.find_elements(By.XPATH, row_xpath)
         print(f"  - Found {len(rows)} result rows to scrape using XPath: {row_xpath}")
         if not rows: return True
 
@@ -31,16 +37,20 @@ def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, 
                 col_name, col_xpath, col_type = column_config['name'], column_config['xpath'], column_config.get('type', 'text')
                 try:
                     element = row.find_element(By.XPATH, col_xpath)
-                    row_data[col_name] = element.text if col_type == 'text' else element.get_attribute('href')
+                    if col_type == 'text':
+                        row_data[col_name] = element.text
+                    elif col_type == 'href':
+                        row_data[col_name] = urljoin(driver.current_url, element.get_attribute('href'))
                 except NoSuchElementException:
                     row_data[col_name] = None
             scraped_data.append(row_data)
         
         if scraped_data:
-            save_book_links_to_db(db_engine, scraped_data, parent_url_id, navigation_path_parts, page_num, job_state)
+            new_records = save_scraped_data_to_db(db_engine, scraped_data, parent_url_id, navigation_path_parts, page_num, destination_table)
+            job_state['records_saved'] += new_records
         return True
     except TimeoutException:
-        print(f"  - INFO: Loading spinner did not appear or timed out. Assuming no results and continuing.")
+        print(f"  - INFO: Timed out waiting for table rows. Assuming page is empty and continuing.")
         return True
     except WebDriverException as e:
         if "invalid session id" in str(e) or "browser has closed" in str(e):
