@@ -11,16 +11,15 @@
               "type": "xpath",
               "value": "//*[@id='nav-site']/ul/li[2]/a"
             },
-            "description": "Navigate to In force legislation page",
-            "is_breadcrumb": true
+            "description": "Navigate to In force legislation page"
           },
           {
             "action": "alphabet_loop",
-            "target_xpath": "//h3[starts-with(text(), 'Acts')]/following-sibling::div[1]/a",
+            "target_xpath": "//*[@id='main']/div[2]/div[1]/div/div/div/a",
             "loop_steps": [
               {
                 "action": "next_button_pagination_loop",
-                "next_button_xpath": "//li[@id='table_1_next' and not(contains(@class, 'disabled'))]",
+                "next_button_xpath": "//a[@id='table_1_next'][not(ancestor::li[contains(@class, 'disabled')])]",
                 "loop_steps": [
                   {
                     "action": "process_results",
@@ -75,22 +74,21 @@
               "type": "xpath",
               "value": "//*[@id='nav-site']/ul/li[2]/a"
             },
-            "description": "Navigate to In force legislation page",
-            "is_breadcrumb": true
+            "description": "Navigate to In force legislation page"
           },
           {
             "action": "alphabet_loop",
-            "target_xpath": "//h3[starts-with(text(), 'Subordinate')]/following-sibling::div[1]/a",
+            "target_xpath": "//*[@id='main']/div[2]/div[3]/div/div/div/a",
             "loop_steps": [
               {
                 "action": "next_button_pagination_loop",
-                "next_button_xpath": "//li[@id='table_2_next' and not(contains(@class, 'disabled'))]",
+                "next_button_xpath": "//a[@id='table_1_next'][not(ancestor::li[contains(@class, 'disabled')])]",
                 "loop_steps": [
                   {
                     "action": "process_results",
                     "target": {
                       "type": "xpath",
-                      "value": "//*[@id='table_2']"
+                      "value": "//*[@id='table_1']"
                     },
                     "scraping_config": {
                       "row_xpath": "./tbody/tr",

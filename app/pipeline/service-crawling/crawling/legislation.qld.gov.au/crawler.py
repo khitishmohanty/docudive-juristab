@@ -13,6 +13,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException,
 from urllib.parse import urljoin, urlparse, parse_qs
 
 # Import the database engine creator from your utils file
+# Ensure you have a utils/aws_utils.py file with a create_db_engine function
 from utils.aws_utils import create_db_engine
 
 
@@ -132,11 +133,9 @@ def save_scraped_data_to_db(engine, scraped_data, parent_url_id, navigation_path
                         if item.get('year'): book_year_val = int(item.get('year'))
                     except (ValueError, TypeError): pass
                     try:
-                        # Date format on QLD site is DD Month YYYY (e.g., 6 June 2024)
                         if item.get('effective_date'):
-                            # More robust date parsing
                             date_str = item.get('effective_date').strip()
-                            book_effective_date_val = datetime.strptime(date_str, '%d %B %Y').date()
+                            book_effective_date_val = datetime.strptime(date_str, '%d/%m/%Y').date()
                     except (ValueError, TypeError) as e: 
                         print(f"  - WARNING: Could not parse date '{item.get('effective_date')}'. Error: {e}")
                         pass
@@ -173,10 +172,12 @@ def process_next_button_pagination_loop(driver, step, db_engine, parent_url_id, 
     page_counter = 1
     while True:
         print(f"\n--- Scraping results on page {page_counter} ---")
-        for loop_step in step['loop_steps']:
-            if not process_step(driver, loop_step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, current_page=page_counter):
-                return False
         
+        step_success = process_step(driver, step['loop_steps'][0], db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, current_page=page_counter)
+        
+        if not step_success:
+            return False
+
         next_button_xpath = step.get('next_button_xpath')
         if not next_button_xpath:
             print("  - ERROR: 'next_button_xpath' not defined for this loop.")
@@ -189,33 +190,34 @@ def process_next_button_pagination_loop(driver, step, db_engine, parent_url_id, 
             break
         
         page_counter += 1
-        time.sleep(2) # Wait for table to load
-    return True
+        time.sleep(2)
 
+    return True
 
 def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table):
     """
-    Handles alphabet-based navigation for dynamic pages by re-finding elements 
-    before each click to prevent StaleElementReferenceException.
+    Handles alphabet-based navigation by first waiting for the alphabet bar to be present,
+    then finding and clicking each alphabet link in turn.
     """
     target_xpath = step.get('target_xpath')
     if not target_xpath:
         print("  - ERROR: 'target_xpath' not defined for alphabet_loop.")
         return False
         
-    print(f"  - Finding all alphabet links with XPath: {target_xpath}")
+    print(f"  - Waiting for alphabet links to be present ({target_xpath})...")
     try:
-        # Initial find to get the total number of links to process
-        alphabet_links = WebDriverWait(driver, 20).until(
-            EC.presence_of_all_elements_located((By.XPATH, target_xpath))
+        # This is the key wait that ensures the page is ready after the initial click.
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, target_xpath))
         )
+        alphabet_links = driver.find_elements(By.XPATH, target_xpath)
         num_links = len(alphabet_links)
         print(f"  - Found {num_links} alphabet links to process.")
         if num_links == 0:
             print("  - WARNING: No alphabet links found, skipping loop.")
             return True
     except (TimeoutException, NoSuchElementException) as e:
-        print(f"  - ERROR: Could not find initial alphabet links: {e}")
+        print(f"  - FATAL ERROR: Could not find initial alphabet links: {e}")
         return False
 
     for i in range(num_links):
@@ -226,41 +228,32 @@ def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_pat
                 EC.presence_of_all_elements_located((By.XPATH, target_xpath))
             )
             
-            # Defensive check in case the page changes unexpectedly
             if i >= len(current_alphabet_links):
-                print(f"  - ERROR: Index {i} out of bounds after re-finding links. Something changed on the page.")
+                print(f"  - ERROR: Index {i} out of bounds after re-finding links.")
                 break
 
             link_to_click = current_alphabet_links[i]
             letter_text = link_to_click.text.strip()
             print(f"  - Preparing to click letter: '{letter_text}'")
             
-            # Scroll into view and click
-            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", link_to_click)
-            time.sleep(0.5)
+            # This click triggers the JavaScript to load the table for that letter
             link_to_click.click()
 
-            # Wait for the table to refresh. A static sleep is a fallback, but a more
-            # robust wait would look for a specific element to change.
-            time.sleep(3) 
-
-            # Create navigation path for this specific letter
             letter_path_parts = navigation_path_parts + [f"Letter-{letter_text}"]
             
-            # Process the nested steps (e.g., pagination and scraping for this letter)
+            # Process the nested steps (pagination and scraping)
             for loop_step in step['loop_steps']:
                 if not process_step(driver, loop_step, db_engine, parent_url_id, letter_path_parts, job_state, destination_table):
                     print(f"  - A step failed within the alphabet loop for letter '{letter_text}'. Skipping to the next letter.")
                     break 
         
         except StaleElementReferenceException:
-            print(f"  - RECOVERABLE ERROR: StaleElementReferenceException on letter index {i}. The DOM changed. Will continue to the next letter.")
+            print(f"  - RECOVERABLE ERROR: StaleElementReferenceException on letter index {i}. Will retry.")
             continue
         except WebDriverException as e:
             if "invalid session id" in str(e) or "browser has closed" in str(e):
                 print(f"  - FATAL BROWSER CRASH during alphabet loop for letter index {i}: {e}")
-                return False # Abort this journey
-            # Re-raise other WebDriver exceptions
+                return False
             raise
             
     return True
@@ -268,7 +261,7 @@ def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_pat
 def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, current_page=1):
     """Main dispatcher function. Processes a single step from the configuration."""
     action = step.get('action')
-    print(f"\nProcessing Step: {step.get('description', action)}")
+    print(f"\nProcessing Step: {step.get('description', 'No description')}")
 
     if action == 'click':
         clicked_text = perform_click(driver, step.get('target'))
@@ -292,24 +285,27 @@ def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, 
     return True
 
 def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, parent_url_id, navigation_path_parts, page_num, job_state, destination_table):
-    """Generic scraping function that saves results directly to the database."""
+    """
+    Generic scraping function that intelligently waits for data to be loaded 
+    into the table before saving results directly to the database.
+    """
     try:
-        wait = WebDriverWait(driver, 30)
+        wait = WebDriverWait(driver, 20)
         row_xpath = scraping_config['row_xpath']
 
-        if container_xpath:
-            print(f"  - Waiting for table container to be present ({container_xpath})...")
-            container_element = wait.until(EC.presence_of_element_located((By.XPATH, container_xpath)))
-            print("  - Table container found.")
-        else:
-            print("  - No container specified, searching for rows in the whole document.")
-            container_element = driver.find_element(By.XPATH, "//body") 
+        # This wait is crucial. It waits for the data to be loaded after clicking a letter or 'Next'.
+        data_loaded_xpath = f"{container_xpath}/tbody/tr"
+
+        print(f"  - Waiting for data to load in table ({data_loaded_xpath})...")
+        wait.until(EC.presence_of_element_located((By.XPATH, data_loaded_xpath)))
+        print("  - Data has loaded.")
         
-        time.sleep(1) # Small delay for elements to be interactable
-        
+        container_element = driver.find_element(By.XPATH, container_xpath)
         rows = container_element.find_elements(By.XPATH, row_xpath)
-        print(f"  - Found {len(rows)} result rows to scrape using XPath: {row_xpath}")
-        if not rows: return True
+        
+        print(f"  - Found {len(rows)} result rows to scrape.")
+        if not rows: 
+            return True
 
         scraped_data = []
         base_url = "https://www.legislation.qld.gov.au"
@@ -332,7 +328,8 @@ def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, 
             job_state['records_saved'] += new_records
         return True
     except TimeoutException:
-        print(f"  - INFO: Timed out waiting for table rows on page {page_num} for path '{'/'.join(navigation_path_parts)}'. Assuming page is empty and continuing.")
+        # This is now the expected outcome for pages with no results (e.g., letter 'X').
+        print(f"  - INFO: No data found in table for this page. This is normal for letters with no legislation.")
         return True
     except WebDriverException as e:
         if "invalid session id" in str(e) or "browser has closed" in str(e):
@@ -397,12 +394,15 @@ def lambda_handler(event, context):
 
 def run_crawler(parent_url_id, sitemap_file_name, destination_table):
     """Main function to initialize and run the crawler."""
+    # Assumes sitemap is in a 'config' subdirectory relative to the script
     config_file_path = os.path.join('config', sitemap_file_name)
     config = load_config(config_file_path)
     if not config: return
 
     db_engine = create_db_engine()
-    if not db_engine: return
+    if not db_engine: 
+        print("Database engine creation failed. Aborting crawler run.")
+        return
 
     base_url = get_parent_url_details(db_engine, parent_url_id)
     if not base_url: return
@@ -467,31 +467,18 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
 
 if __name__ == "__main__":
     # This block is for local testing. It simulates the Lambda event.
-    # Replace with the actual ID for legislation.qld.gov.au from your parent_urls table
-    parent_url_id_for_testing = "36940ced-4781-41d5-a0b5-aaf0b4fb910c" 
+    # --- IMPORTANT ---
+    # 1. You must have a 'config' folder in the same directory as this script.
+    # 2. Inside 'config', you must have your sitemap JSON file.
+    # 3. Replace the placeholder ID with a real one from your `parent_urls` table.
+    
+    parent_url_id_for_testing = "36940ced-4781-41d5-a0b5-aaf0b4fb910c" # <--- REPLACE THIS
     sitemap_for_testing = "sitemap_legislation_qld_gov_au.json"
     destination_table_for_testing = "l1_scan_legislation_qld_gov_au"
     
     print(f"--- Running in local test mode for parent_url_id: {parent_url_id_for_testing} ---")
     
-    # You would need to create a dummy 'config' folder with the sitemap in it
-    if not os.path.exists('config'):
-        os.makedirs('config')
-    with open(os.path.join('config', sitemap_for_testing), 'w') as f:
-        # A minimal sitemap for local testing
-        json.dump({ "crawler_config": { "journeys": [] } }, f)
-        print("Created dummy sitemap for local run.")
-
-    # Create a dummy utils folder and aws_utils.py if they don't exist
-    if not os.path.exists('utils'):
-        os.makedirs('utils')
-    if not os.path.exists('utils/aws_utils.py'):
-        with open('utils/aws_utils.py', 'w') as f:
-            f.write("# Dummy file for local testing\ndef create_db_engine():\n    print('NOTE: Using dummy DB engine. No data will be saved.')\n    return None\n")
-            print("Created dummy aws_utils.py for local run.")
-    
     if parent_url_id_for_testing == "your_qld_parent_url_id_here":
-        print("\nWARNING: Please replace 'your_qld_parent_url_id_here' with a valid ID for testing.")
+        print("\nWARNING: Please replace 'your_qld_parent_url_id_here' in the script with a valid ID for testing.")
     else:
         run_crawler(parent_url_id_for_testing, sitemap_for_testing, destination_table_for_testing)
-
