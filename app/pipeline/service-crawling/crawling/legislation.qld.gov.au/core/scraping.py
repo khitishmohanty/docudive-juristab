@@ -9,28 +9,30 @@ from core.database import save_scraped_data_to_db
 
 
 def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, parent_url_id, navigation_path_parts, page_num, job_state, destination_table):
-    """Generic scraping function that saves results directly to the database."""
+    """
+    Generic scraping function that intelligently waits for data to be loaded 
+    into the table before saving results directly to the database.
+    """
     try:
-        wait = WebDriverWait(driver, 30)
+        wait = WebDriverWait(driver, 20)
         row_xpath = scraping_config['row_xpath']
 
-        # If a container is specified, wait for it. Otherwise, use the whole body.
-        if container_xpath:
-            print(f"  - Waiting for table container to be present ({container_xpath})...")
-            container_element = wait.until(EC.presence_of_element_located((By.XPATH, container_xpath)))
-            print("  - Table container found.")
-        else:
-            # If no container is specified, the row_xpath should be absolute.
-            print("  - No container specified, searching for rows in the whole document.")
-            container_element = driver.find_element(By.XPATH, "//body") # The context is the whole page
+        # This wait is crucial. It waits for the data to be loaded after clicking a letter or 'Next'.
+        data_loaded_xpath = f"{container_xpath}/tbody/tr"
+
+        print(f"  - Waiting for data to load in table ({data_loaded_xpath})...")
+        wait.until(EC.presence_of_element_located((By.XPATH, data_loaded_xpath)))
+        print("  - Data has loaded.")
         
-        time.sleep(1)
-        
+        container_element = driver.find_element(By.XPATH, container_xpath)
         rows = container_element.find_elements(By.XPATH, row_xpath)
-        print(f"  - Found {len(rows)} result rows to scrape using XPath: {row_xpath}")
-        if not rows: return True
+        
+        print(f"  - Found {len(rows)} result rows to scrape.")
+        if not rows: 
+            return True
 
         scraped_data = []
+        base_url = "https://www.legislation.qld.gov.au"
         for row in rows:
             row_data = {}
             for column_config in scraping_config['columns']:
@@ -40,7 +42,7 @@ def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, 
                     if col_type == 'text':
                         row_data[col_name] = element.text
                     elif col_type == 'href':
-                        row_data[col_name] = urljoin(driver.current_url, element.get_attribute('href'))
+                        row_data[col_name] = urljoin(base_url, element.get_attribute('href'))
                 except NoSuchElementException:
                     row_data[col_name] = None
             scraped_data.append(row_data)
@@ -50,7 +52,8 @@ def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, 
             job_state['records_saved'] += new_records
         return True
     except TimeoutException:
-        print(f"  - INFO: Timed out waiting for table rows. Assuming page is empty and continuing.")
+        # This is now the expected outcome for pages with no results (e.g., letter 'X').
+        print(f"  - INFO: No data found in table for this page. This is normal for letters with no legislation.")
         return True
     except WebDriverException as e:
         if "invalid session id" in str(e) or "browser has closed" in str(e):
@@ -60,7 +63,6 @@ def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, 
     except Exception as e:
         print(f"  - An unexpected error occurred during scraping: {e}")
         return False
-    
     
 def perform_click(driver, target, is_pagination=False):
     """Waits for an element to be clickable, clicks it, and returns the element's text."""

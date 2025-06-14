@@ -7,7 +7,6 @@ from datetime import datetime
 
 NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3)) # Duplicate checking
 
-# --- Crawler Core Functions ---
 def get_parent_url_details(engine, parent_url_id):
     """Connects to the database and fetches the base_url for the given ID."""
     print(f"\nFetching base_url for parent_url_id: {parent_url_id}...")
@@ -61,8 +60,12 @@ def save_scraped_data_to_db(engine, scraped_data, parent_url_id, navigation_path
                         if item.get('year'): book_year_val = int(item.get('year'))
                     except (ValueError, TypeError): pass
                     try:
-                        if item.get('effective_date'): book_effective_date_val = datetime.strptime(item.get('effective_date'), '%d/%m/%Y').date()
-                    except (ValueError, TypeError): pass
+                        if item.get('effective_date'):
+                            date_str = item.get('effective_date').strip()
+                            book_effective_date_val = datetime.strptime(date_str, '%d/%m/%Y').date()
+                    except (ValueError, TypeError) as e: 
+                        print(f"  - WARNING: Could not parse date '{item.get('effective_date')}'. Error: {e}")
+                        pass
                     
                     params = {
                         "id": str(uuid.uuid4()), "parent_url_id": parent_url_id,

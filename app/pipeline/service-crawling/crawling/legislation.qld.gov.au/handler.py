@@ -19,30 +19,33 @@ NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3))
 # --- Lambda Handler ---
 def lambda_handler(event, context):
     """
-    AWS Lambda handler function. Expects 'parent_url_id' and 'sitemap_file_name'.
+    AWS Lambda handler function. Expects 'parent_url_id', 'sitemap_file_name', and 'destination_table'.
     """
     print("Lambda function invoked.")
     parent_url_id = event.get('parent_url_id')
     sitemap_file_name = event.get('sitemap_file_name')
-    if not parent_url_id or not sitemap_file_name:
-        print("FATAL ERROR: 'parent_url_id' and 'sitemap_file_name' are required.")
-        return {'statusCode': 400, 'body': json.dumps('Error: parent_url_id and sitemap_file_name are required.')}
+    destination_table = event.get('destination_table')
+    if not all([parent_url_id, sitemap_file_name, destination_table]):
+        error_msg = 'Error: parent_url_id, sitemap_file_name, and destination_table are required.'
+        print(f"FATAL ERROR: {error_msg}")
+        return {'statusCode': 400, 'body': json.dumps(error_msg)}
 
     print(f"Starting FULL crawler run for parent_url_id: {parent_url_id} using sitemap: {sitemap_file_name}")
-    run_crawler(parent_url_id, sitemap_file_name)
+    run_crawler(parent_url_id, sitemap_file_name, destination_table)
     
     return {'statusCode': 200, 'body': json.dumps(f'Successfully completed crawling for {parent_url_id}')}
 
-
-
 def run_crawler(parent_url_id, sitemap_file_name, destination_table):
     """Main function to initialize and run the crawler."""
+    # Assumes sitemap is in a 'config' subdirectory relative to the script
     config_file_path = os.path.join('config', sitemap_file_name)
     config = load_config(config_file_path)
     if not config: return
 
     db_engine = create_db_engine()
-    if not db_engine: return
+    if not db_engine: 
+        print("Database engine creation failed. Aborting crawler run.")
+        return
 
     base_url = get_parent_url_details(db_engine, parent_url_id)
     if not base_url: return
@@ -107,10 +110,19 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
 
 if __name__ == "__main__":
     # This block is for local testing. It simulates the Lambda event.
-    parent_url_id_for_testing = "df8edd0e-0f69-484a-930b-67dc6072013b"
-    sitemap_for_testing = "sitemap_legislation_nsw_gov_au.json"
-    destination_table_for_testing = "l1_scan_legislation_nsw_gov_au"
+    # --- IMPORTANT ---
+    # 1. You must have a 'config' folder in the same directory as this script.
+    # 2. Inside 'config', you must have your sitemap JSON file.
+    # 3. Replace the placeholder ID with a real one from your `parent_urls` table.
     
-    print(f"--- Running in FULL test mode for parent_url_id: {parent_url_id_for_testing} ---")
-    run_crawler(parent_url_id_for_testing, sitemap_for_testing, destination_table_for_testing)
+    parent_url_id_for_testing = "36940ced-4781-41d5-a0b5-aaf0b4fb910c" # <--- REPLACE THIS
+    sitemap_for_testing = "sitemap_legislation_qld_gov_au.json"
+    destination_table_for_testing = "l1_scan_legislation_qld_gov_au"
+    
+    print(f"--- Running in local test mode for parent_url_id: {parent_url_id_for_testing} ---")
+    
+    if parent_url_id_for_testing == "your_qld_parent_url_id_here":
+        print("\nWARNING: Please replace 'your_qld_parent_url_id_here' in the script with a valid ID for testing.")
+    else:
+        run_crawler(parent_url_id_for_testing, sitemap_for_testing, destination_table_for_testing)
 

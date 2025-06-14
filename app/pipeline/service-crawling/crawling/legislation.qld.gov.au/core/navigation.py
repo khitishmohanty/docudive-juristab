@@ -1,6 +1,8 @@
 import time
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, StaleElementReferenceException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from core.scraping import perform_click, scrape_configured_data
 
@@ -10,10 +12,12 @@ def process_next_button_pagination_loop(driver, step, db_engine, parent_url_id, 
     page_counter = 1
     while True:
         print(f"\n--- Scraping results on page {page_counter} ---")
-        for loop_step in step['loop_steps']:
-            if not process_step(driver, loop_step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, current_page=page_counter):
-                return False
         
+        step_success = process_step(driver, step['loop_steps'][0], db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, current_page=page_counter)
+        
+        if not step_success:
+            return False
+
         next_button_xpath = step.get('next_button_xpath')
         if not next_button_xpath:
             print("  - ERROR: 'next_button_xpath' not defined for this loop.")
@@ -27,46 +31,77 @@ def process_next_button_pagination_loop(driver, step, db_engine, parent_url_id, 
         
         page_counter += 1
         time.sleep(2)
+
     return True
 
-
 def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table):
-    """Dedicated function for alphabet-based navigation."""
+    """
+    Handles alphabet-based navigation by first waiting for the alphabet bar to be present,
+    then finding and clicking each alphabet link in turn.
+    """
     target_xpath = step.get('target_xpath')
     if not target_xpath:
         print("  - ERROR: 'target_xpath' not defined for alphabet_loop.")
         return False
         
-    print(f"  - Finding all alphabet links with XPath: {target_xpath}")
+    print(f"  - Waiting for alphabet links to be present ({target_xpath})...")
     try:
+        # This is the key wait that ensures the page is ready after the initial click.
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, target_xpath))
+        )
         alphabet_links = driver.find_elements(By.XPATH, target_xpath)
-        alphabet_urls = [a.get_attribute('href') for a in alphabet_links]
-        print(f"  - Found {len(alphabet_urls)} alphabet links to process.")
-    except Exception as e:
-        print(f"  - ERROR: Could not find alphabet links: {e}")
+        num_links = len(alphabet_links)
+        print(f"  - Found {num_links} alphabet links to process.")
+        if num_links == 0:
+            print("  - WARNING: No alphabet links found, skipping loop.")
+            return True
+    except (TimeoutException, NoSuchElementException) as e:
+        print(f"  - FATAL ERROR: Could not find initial alphabet links: {e}")
         return False
 
-    for i, url in enumerate(alphabet_urls):
-        print(f"\n--- Processing alphabet link {i+1}/{len(alphabet_urls)}: {url} ---")
+    for i in range(num_links):
+        print(f"\n--- Processing alphabet link {i+1}/{num_links} ---")
         try:
-            driver.get(url)
-            letter_text = url.split('=')[-1] if '=' in url else f"Letter-{i+1}"
-            letter_path_parts = navigation_path_parts + [letter_text]
+            # Re-find the elements in each iteration to get a fresh, non-stale list
+            current_alphabet_links = WebDriverWait(driver, 20).until(
+                EC.presence_of_all_elements_located((By.XPATH, target_xpath))
+            )
+            
+            if i >= len(current_alphabet_links):
+                print(f"  - ERROR: Index {i} out of bounds after re-finding links.")
+                break
+
+            link_to_click = current_alphabet_links[i]
+            letter_text = link_to_click.text.strip()
+            print(f"  - Preparing to click letter: '{letter_text}'")
+            
+            # This click triggers the JavaScript to load the table for that letter
+            link_to_click.click()
+
+            letter_path_parts = navigation_path_parts + [f"Letter-{letter_text}"]
+            
+            # Process the nested steps (pagination and scraping)
             for loop_step in step['loop_steps']:
                 if not process_step(driver, loop_step, db_engine, parent_url_id, letter_path_parts, job_state, destination_table):
-                    print(f"  - Step failed within alphabet loop for URL {url}. Skipping to next letter.")
+                    print(f"  - A step failed within the alphabet loop for letter '{letter_text}'. Skipping to the next letter.")
                     break 
+        
+        except StaleElementReferenceException:
+            print(f"  - RECOVERABLE ERROR: StaleElementReferenceException on letter index {i}. Will retry.")
+            continue
         except WebDriverException as e:
-            print(f"  - BROWSER CRASH during alphabet loop for URL {url}: {e}")
-            return False
+            if "invalid session id" in str(e) or "browser has closed" in str(e):
+                print(f"  - FATAL BROWSER CRASH during alphabet loop for letter index {i}: {e}")
+                return False
+            raise
             
     return True
 
-# --- Corrected process_step function ---
 def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, current_page=1):
     """Main dispatcher function. Processes a single step from the configuration."""
     action = step.get('action')
-    print(f"\nProcessing Step: {step.get('description', action)}")
+    print(f"\nProcessing Step: {step.get('description', 'No description')}")
 
     if action == 'click':
         clicked_text = perform_click(driver, step.get('target'))
@@ -84,7 +119,6 @@ def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, 
         if not scraping_config:
             print("  - FATAL ERROR: 'process_results' action requires a 'scraping_config' object.")
             return False
-        # BUG FIX: The function call signature is now correct.
         return scrape_configured_data(driver, step.get('target', {}).get('value'), scraping_config, db_engine, parent_url_id, navigation_path_parts, current_page, job_state, destination_table)
     else:
         print(f"  - WARNING: Unknown action type '{action}'. Skipping.")

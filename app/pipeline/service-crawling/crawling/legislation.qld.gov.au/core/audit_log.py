@@ -1,4 +1,3 @@
-
 from datetime import datetime
 import uuid
 import os
@@ -6,7 +5,6 @@ from sqlalchemy import text
 
 NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3)) # Duplicate checking
 
-# --- Audit Log Functions ---
 def create_audit_log_entry(engine, job_name):
     """Creates a new entry in the audit_log table and returns its ID."""
     audit_id = str(uuid.uuid4())
