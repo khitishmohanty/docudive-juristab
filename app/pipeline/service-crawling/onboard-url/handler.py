@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
     # --- Mocking AWS Lambda event and context ---
     mock_event_success = {
-        'url': 'https://www.legislation.sa.gov.au/'
+        'url': 'https://www.legislation.tas.gov.au/'
     }
     mock_event_invalid_url = {
         'url': 'not_a_url'

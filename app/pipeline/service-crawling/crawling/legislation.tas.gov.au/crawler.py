@@ -159,7 +159,7 @@ def initialize_driver():
     """Initializes a more stable, production-ready Selenium WebDriver."""
     print("Initializing Chrome WebDriver with stability options...")
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless") 
+    #options.add_argument("--headless") 
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
@@ -308,7 +308,8 @@ def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, 
             return True
 
         scraped_data = []
-        base_url = "https://www.legislation.qld.gov.au"
+        # The base URL for Tasmania legislation is different from QLD
+        base_url = "https://www.legislation.tas.gov.au"
         for row in rows:
             row_data = {}
             for column_config in scraping_config['columns']:
@@ -429,6 +430,8 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
                 print(f"Starting Journey: {journey['description']} ({journey['journey_id']})")
                 print(f"=================================================")
                 
+                # Navigate to the base URL fetched from the DB
+                # For TAS, this should be https://www.legislation.tas.gov.au/browse/inforce
                 driver.get(base_url)
                 
                 journey_succeeded = True
@@ -469,16 +472,17 @@ if __name__ == "__main__":
     # This block is for local testing. It simulates the Lambda event.
     # --- IMPORTANT ---
     # 1. You must have a 'config' folder in the same directory as this script.
-    # 2. Inside 'config', you must have your sitemap JSON file.
-    # 3. Replace the placeholder ID with a real one from your `parent_urls` table.
+    # 2. Inside 'config', you must have your sitemap JSON file (e.g., sitemap_legislation_tas_gov_au.json).
+    # 3. The parent_url_id must exist in your database and point to the correct starting URL.
+    #    For TAS In Force, the URL should be: https://www.legislation.tas.gov.au/browse/inforce
     
-    parent_url_id_for_testing = "36940ced-4781-41d5-a0b5-aaf0b4fb910c" # <--- REPLACE THIS
-    sitemap_for_testing = "sitemap_legislation_qld_gov_au.json"
-    destination_table_for_testing = "l1_scan_legislation_qld_gov_au"
+    parent_url_id_for_testing = "8b0f6669-6e69-4045-8396-79a7ba0e1f36"  # <--- REPLACE with the actual ID from your DB for the TAS site
+    sitemap_for_testing = "sitemap_legislation_tas_gov_au.json"
+    destination_table_for_testing = "l1_scan_legislation_tas_gov_au"
     
     print(f"--- Running in local test mode for parent_url_id: {parent_url_id_for_testing} ---")
     
-    if parent_url_id_for_testing == "your_qld_parent_url_id_here":
-        print("\nWARNING: Please replace 'your_qld_parent_url_id_here' in the script with a valid ID for testing.")
+    if "your_tas_parent_url_id_here" in parent_url_id_for_testing:
+        print("\nWARNING: Please replace 'your_tas_parent_url_id_here' in the script with a valid ID for testing.")
     else:
         run_crawler(parent_url_id_for_testing, sitemap_for_testing, destination_table_for_testing)
