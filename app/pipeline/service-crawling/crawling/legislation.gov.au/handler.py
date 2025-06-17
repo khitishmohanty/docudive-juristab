@@ -19,9 +19,7 @@ NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3))
     
 # --- Lambda Handler ---
 def lambda_handler(event, context):
-    """
-    AWS Lambda handler function.
-    """
+    """AWS Lambda handler function."""
     print("Lambda function invoked.")
     parent_url_id = event.get('parent_url_id')
     sitemap_file_name = event.get('sitemap_file_name')
@@ -37,7 +35,7 @@ def lambda_handler(event, context):
     return {'statusCode': 200, 'body': json.dumps(f'Successfully completed crawling for {parent_url_id}')}
 
 def run_crawler(parent_url_id, sitemap_file_name, destination_table):
-    """Main function to initialize and run the crawler with intelligent resume logic."""
+    """Main function to initialize and run the crawler."""
     config_file_path = os.path.join('config', sitemap_file_name)
     config = load_config(config_file_path)
     if not config: return
@@ -61,8 +59,7 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
     for i, journey in enumerate(config['crawler_config']['journeys']):
         retries = 0
         journey_succeeded = False
-        # NEW: State object to track progress within this journey
-        journey_state = {'last_completed_index': -1}
+        journey_state = {} 
 
         while retries <= MAX_RETRIES and not journey_succeeded:
             driver = None
@@ -82,7 +79,6 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
                 print(f"=================================================")
                 
                 for step in journey['steps']:
-                    # Pass the state object down to the processing functions
                     if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, journey_state=journey_state):
                         raise Exception(f"Step failed in Journey '{journey['journey_id']}'")
                 
@@ -113,22 +109,24 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
 
 if __name__ == "__main__":
     # This block is for local testing. It simulates the Lambda event.
-    
-    # --- Configuration for ACT ---
-    # The parent_url_id should be the ID in your 'parent_urls' table that corresponds to 'https://www.legislation.act.gov.au/'
-    parent_url_id_for_testing = "fcf216a1-dbf1-425c-8407-6c60796a23bf" # <--- REPLACE with the actual ID from your DB
-    sitemap_for_testing = "sitemap_legislation_act_gov_au.json"
-    destination_table_for_testing = "l1_scan_legislation_act_gov_au"
-
-    # --- Example Configuration for NT ---
-    # parent_url_id_for_testing = "your_nt_parent_url_id_here" 
-    # sitemap_for_testing = "sitemap_legislation_nt_gov_au.json"
-    # destination_table_for_testing = "l1_scan_legislation_nt_gov_au"
+    # --- REPLACE these values for your local test ---
+    parent_url_id_for_testing = "493df9a1-e971-451e-8bf0-de5092019ef1" 
+    sitemap_for_testing = "sitemap_legislation_gov_au.json"
+    destination_table_for_testing = "l1_scan_legislation_gov_au"
     
     print(f"--- Running in local test mode for parent_url_id: {parent_url_id_for_testing} ---")
     
-    if "your_act_parent_url_id_here" in parent_url_id_for_testing:
-        print("\nWARNING: Please replace 'your_act_parent_url_id_here' in the script with a valid ID from your database for testing.")
+    if "your_legislation_gov_au_parent_url_id" in parent_url_id_for_testing:
+        print("\nWARNING: Please replace 'your_legislation_gov_au_parent_url_id' in the script with a valid ID from your parent_urls table for testing.")
     else:
-        run_crawler(parent_url_id_for_testing, sitemap_for_testing, destination_table_for_testing)
+        # Create a dummy config directory for local testing
+        if not os.path.exists('config'):
+            os.makedirs('config')
+        # This assumes the sitemap json content is available to be written
+        sitemap_content = {
+          "crawler_config": { "journeys": [ { "journey_id": "acts_principal_in_force_au", "description": "Scrapes all principal Acts currently in force from legislation.gov.au.", "steps": [ { "action": "click", "description": "Click the 'Acts' button in the main navigation.", "target": { "type": "xpath", "value": "//nav//a[normalize-space(.)='Acts']" } }, { "action": "click", "description": "Click the 'Principal in force' link from the dropdown.", "target": { "type": "xpath", "value": "//a[normalize-space(.)='Principal in force']" } }, { "action": "pagination_loop", "description": "Iterate through each page of the results table.", "target": { "type": "xpath", "value": "//ngx-datatable" }, "next_button_xpath": "//a[@aria-label='go to next page']", "scraping_config": { "row_xpath": ".//datatable-row-wrapper", "columns": [ { "name": "book_name", "xpath": ".//datatable-body-cell[1]//a", "type": "text" }, { "name": "book_url", "xpath": ".//datatable-body-cell[1]//a", "type": "href" }, { "name": "metadata_text", "xpath": ".//datatable-body-cell[1]/div/div[2]", "type": "text" }, { "name": "book_effective_date", "xpath": ".//datatable-body-cell[2]", "type": "text" } ] } } ] } ] }
+        }
+        with open(os.path.join('config', sitemap_for_testing), 'w') as f:
+            json.dump(sitemap_content, f)
 
+        run_crawler(parent_url_id_for_testing, sitemap_for_testing, destination_table_for_testing)

@@ -4,7 +4,7 @@ def initialize_driver():
     """Initializes a more stable, production-ready Selenium WebDriver."""
     print("Initializing Chrome WebDriver with stability options...")
     options = webdriver.ChromeOptions()
-    # options.add_argument("--headless") 
+    options.add_argument("--headless") 
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
