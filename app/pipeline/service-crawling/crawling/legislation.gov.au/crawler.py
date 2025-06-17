@@ -20,6 +20,7 @@ from utils.aws_utils import create_db_engine
 # --- Configuration ---
 MAX_RETRIES = 3 # Maximum number of times to retry a failed journey
 NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3)) # Duplicate checking
+PAGE_LOAD_TIMEOUT = 30 # Increased timeout for slow-loading pages
 
 def create_audit_log_entry(engine, job_name):
     """Creates a new entry in the audit_log table and returns its ID."""
@@ -94,7 +95,7 @@ def get_parent_url_details(engine, parent_url_id):
         return None
 
 def save_scraped_data_to_db(engine, scraped_data, parent_url_id, navigation_path_parts, page_num, destination_table):
-    """Saves a list of scraped book links to the specified destination table."""
+    """Saves a list of scraped data to the specified destination table with parsing."""
     if not scraped_data: return 0
     
     if not re.match(r"^[a-zA-Z0-9_]+$", destination_table):
@@ -113,53 +114,68 @@ def save_scraped_data_to_db(engine, scraped_data, parent_url_id, navigation_path
                 
                 existing_urls_result = connection.execute(existing_urls_query, {"parent_url_id": parent_url_id, "path_prefix": path_prefix}).fetchall()
                 existing_urls = {row[0] for row in existing_urls_result}
-                records_to_insert = [item for item in scraped_data if item.get('link') not in existing_urls]
+                
+                records_to_insert = []
+                for item in scraped_data:
+                    book_url = item.get('book_url')
+                    if book_url and book_url not in existing_urls:
+                        # --- Parsing Logic for legislation.gov.au ---
+                        metadata_text = item.get('metadata_text') or ''
+                        
+                        version_match = re.search(r'(C[0-9A-Z]+)', metadata_text)
+                        book_version = version_match.group(1) if version_match else None
+                        
+                        act_no_match = re.search(r'(Act No\. \d+, \d{4})', metadata_text)
+                        book_act_no = act_no_match.group(1) if act_no_match else None
+                        
+                        reg_date_match = re.search(r'Registered: (\d{2}/\d{2}/\d{4})', metadata_text)
+                        book_registered_date = None
+                        if reg_date_match:
+                            try:
+                                book_registered_date = datetime.strptime(reg_date_match.group(1), '%d/%m/%Y')
+                            except ValueError:
+                                print(f"  - WARNING: Could not parse date '{reg_date_match.group(1)}'. Storing as NULL.")
+
+                        record = {
+                            "id": str(uuid.uuid4()), "parent_url_id": parent_url_id,
+                            "book_name": item.get('book_name'),
+                            "book_url": book_url,
+                            "book_effective_date": item.get('book_effective_date'),
+                            "book_version": book_version,
+                            "book_act_no": book_act_no,
+                            "book_registered_date": book_registered_date,
+                            "navigation_path": human_readable_path,
+                            "date_collected": datetime.now(), "is_active": 1,
+                        }
+                        records_to_insert.append(record)
                 
                 if not records_to_insert:
                     print(f"  - All {len(scraped_data)} scraped records for this page already exist. Nothing to insert.")
                     return 0
                 print(f"  - Found {len(records_to_insert)} new records to insert.")
 
-                # Check if the new column is present in the scraped data
-                has_year_number = 'year_number' in records_to_insert[0]
-
-                # Dynamically build the insert query
-                columns_to_insert = ["id", "parent_url_id", "book_name", "book_url", "navigation_path", "date_collected", "is_active"]
-                placeholders = [":id", ":parent_url_id", ":book_name", ":book_url", ":navigation_path", ":date_collected", ":is_active"]
-
-                if has_year_number:
-                    columns_to_insert.insert(4, "book_year_number")
-                    placeholders.insert(4, ":book_year_number")
-
                 insert_query_str = f"""
-                    INSERT INTO {destination_table} ({', '.join(columns_to_insert)})
-                    VALUES ({', '.join(placeholders)})
+                    INSERT INTO {destination_table} (
+                        id, parent_url_id, book_name, book_url, navigation_path, date_collected, is_active,
+                        book_effective_date, book_act_no, book_registered_date, book_version
+                    ) VALUES (
+                        :id, :parent_url_id, :book_name, :book_url, :navigation_path, :date_collected, :is_active,
+                        :book_effective_date, :book_act_no, :book_registered_date, :book_version
+                    )
                 """
                 query = text(insert_query_str)
-
-                for item in records_to_insert:
-                    params = {
-                        "id": str(uuid.uuid4()), "parent_url_id": parent_url_id,
-                        "book_name": item.get('title'),
-                        "book_url": item.get('link'), "navigation_path": human_readable_path,
-                        "date_collected": datetime.now(), "is_active": 1,
-                    }
-                    if has_year_number:
-                        params["book_year_number"] = item.get('year_number')
-                        
-                    connection.execute(query, params)
+                connection.execute(query, records_to_insert)
                 print(f"  - Successfully saved {len(records_to_insert)} new records to '{destination_table}'.")
                 return len(records_to_insert)
     except Exception as e:
         print(f"  - FATAL ERROR: Failed during database save operation: {e}")
-        # We re-raise to ensure the journey retry logic catches this
         raise e
     
 def initialize_driver():
     """Initializes a more stable, production-ready Selenium WebDriver."""
     print("Initializing Chrome WebDriver with stability options...")
     options = webdriver.ChromeOptions()
-    # options.add_argument("--headless") 
+    #options.add_argument("--headless") 
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
@@ -168,68 +184,55 @@ def initialize_driver():
     options.add_argument('--ignore-certificate-errors')
     return webdriver.Chrome(options=options)
 
-def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, journey_state=None):
-    """
-    Handles alphabet-based navigation, with logic to resume from a specific letter if a crash occurred.
-    """
-    target_xpath = step.get('target_xpath')
-    if not target_xpath:
-        print("  - ERROR: 'target_xpath' not defined for alphabet_loop.")
-        return False
+def process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table):
+    """Handles pagination by repeatedly scraping and clicking 'next'."""
+    next_button_xpath = step.get('next_button_xpath')
+    container_xpath = step.get('target', {}).get('value')
+    scraping_config = step.get('scraping_config')
+    page_num = 1
+    
+    while True:
+        print(f"\n--- Scraping Page {page_num} ---")
         
-    print(f"  - Waiting for alphabet links to be present ({target_xpath})...")
-    try:
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, target_xpath)))
-        alphabet_links = driver.find_elements(By.XPATH, target_xpath)
-        num_links = len(alphabet_links)
-        print(f"  - Found {num_links} alphabet links to process.")
-        if num_links == 0:
-            print("  - WARNING: No alphabet links found, skipping loop.")
-            return True
-    except (TimeoutException, NoSuchElementException) as e:
-        print(f"  - FATAL ERROR: Could not find initial alphabet links: {e}")
-        return False
-
-    # NEW: Logic to resume from where it left off
-    start_index = 0
-    if journey_state and journey_state.get('last_completed_index', -1) >= 0:
-        start_index = journey_state['last_completed_index'] + 1
-        print(f"  - Resuming alphabet loop from index {start_index}.")
-
-    for i in range(start_index, num_links):
         try:
-            current_alphabet_links = WebDriverWait(driver, 20).until(
-                EC.presence_of_all_elements_located((By.XPATH, target_xpath))
+            WebDriverWait(driver, PAGE_LOAD_TIMEOUT).until(
+                EC.presence_of_element_located((By.XPATH, container_xpath))
             )
+        except TimeoutException:
+            print(f"  - ERROR: Could not find the results container on page {page_num}. Ending pagination.")
+            break
+
+        scrape_configured_data(driver, container_xpath, scraping_config, db_engine, parent_url_id, navigation_path_parts, page_num, job_state, destination_table)
+        
+        # Check for and click the next button
+        try:
+            wait = WebDriverWait(driver, 10)
             
-            if i >= len(current_alphabet_links):
-                print(f"  - ERROR: Index {i} out of bounds after re-finding links.")
+            # Find the 'Next' button's parent list item to check if it's disabled
+            next_button_li = driver.find_element(By.XPATH, f"{next_button_xpath}/ancestor::li[1]")
+            if "disabled" in next_button_li.get_attribute("class"):
+                print("  - Pagination complete. 'Next' button is disabled.")
                 break
 
-            link_to_click = current_alphabet_links[i]
-            letter_text = link_to_click.text.strip()
-            print(f"\n--- Processing alphabet link {i+1}/{num_links} (Letter: '{letter_text}') ---")
+            next_button = wait.until(EC.element_to_be_clickable((By.XPATH, next_button_xpath)))
             
-            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", link_to_click)
-            time.sleep(0.5)
-            link_to_click.click()
+            print("  - Found active 'Next' button. Clicking...")
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", next_button)
             time.sleep(1)
-
-            letter_path_parts = navigation_path_parts + [f"Letter-{letter_text}"]
+            next_button.click()
             
-            for loop_step in step['loop_steps']:
-                if not process_step(driver, loop_step, db_engine, parent_url_id, letter_path_parts, job_state, destination_table, journey_state=journey_state):
-                    raise Exception(f"Step failed for letter '{letter_text}'")
+            # Wait for the next page's number to become the active one.
+            next_page_num = page_num + 1
+            print(f"  - Waiting for Page {next_page_num} to load...")
+            wait.until(EC.presence_of_element_located(
+                (By.XPATH, f"//li[contains(@class, 'active') and @aria-label='page {next_page_num}']")
+            ))
+            page_num += 1
             
-            # NEW: Update state after successfully processing a letter
-            if journey_state is not None:
-                journey_state['last_completed_index'] = i
-                print(f"  - Successfully completed letter index {i}. State updated.")
-
-        except Exception as e:
-            # Re-raise the exception to be caught by the journey-level retry loop
-            print(f"  - An error occurred processing letter index {i}. Last successful index was {journey_state.get('last_completed_index', -1)}.")
-            raise e
+        except (NoSuchElementException, TimeoutException, StaleElementReferenceException):
+            # If the button is not found, disabled, or stale, we assume pagination is complete.
+            print("  - Pagination complete. No more active 'Next' buttons or page indicator not found.")
+            break
             
     return True
 
@@ -240,11 +243,11 @@ def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, 
 
     if action == 'click':
         perform_click(driver, step.get('target'))
-        time.sleep(2) 
+        time.sleep(3) 
         return True
     
-    elif action == 'alphabet_loop':
-        return process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, journey_state=journey_state)
+    elif action == 'pagination_loop':
+        return process_pagination_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table)
     
     elif action == 'process_results':
         scraping_config = step.get('scraping_config')
@@ -259,48 +262,63 @@ def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, 
 def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, parent_url_id, navigation_path_parts, page_num, job_state, destination_table):
     """
     Generic scraping function that waits for data to load and saves it to the database.
+    This version uses an indexed loop to prevent StaleElementReferenceException.
     """
     try:
-        wait = WebDriverWait(driver, 20)
+        wait = WebDriverWait(driver, PAGE_LOAD_TIMEOUT)
         
         print(f"  - Waiting for container to be present ({container_xpath})...")
         wait.until(EC.presence_of_element_located((By.XPATH, container_xpath)))
 
         row_xpath = scraping_config['row_xpath']
-        
+        print(f"  - Waiting for rows to be present ({row_xpath})...")
         wait.until(EC.presence_of_element_located((By.XPATH, row_xpath)))
         
-        rows = driver.find_elements(By.XPATH, row_xpath)
-        print(f"  - Found {len(rows)} result rows to scrape.")
-        if not rows: 
+        # Get the total count of rows to iterate by index
+        num_rows = len(driver.find_elements(By.XPATH, row_xpath))
+        print(f"  - Found {num_rows} result rows to process.")
+        if not num_rows: 
             return True
 
         scraped_data = []
-        for row in rows:
+        # Iterate by index to avoid stale element issues
+        for i in range(num_rows):
             row_data = {}
-            for column_config in scraping_config['columns']:
-                col_name, col_xpath, col_type = column_config['name'], column_config['xpath'], column_config.get('type', 'text')
-                try:
-                    element = row.find_element(By.XPATH, col_xpath) if col_xpath != '.' else row
-                    if col_type == 'text':
-                        row_data[col_name] = element.text
-                    elif col_type == 'href':
-                        row_data[col_name] = urljoin(driver.current_url, element.get_attribute('href'))
-                except NoSuchElementException:
-                    row_data[col_name] = None
-            scraped_data.append(row_data)
-        
+            # This loop attempts to process one row at a time.
+            # If a stale element error occurs, it will be caught by the outer journey's retry mechanism.
+            try:
+                # Re-find all rows and select the one for the current iteration
+                # This ensures we always have a fresh element reference
+                row = driver.find_elements(By.XPATH, row_xpath)[i]
+                
+                for column_config in scraping_config['columns']:
+                    col_name, col_xpath, col_type = column_config['name'], column_config['xpath'], column_config.get('type', 'text')
+                    try:
+                        element = row.find_element(By.XPATH, col_xpath) if col_xpath != '.' else row
+                        if col_type == 'text':
+                            row_data[col_name] = element.text
+                        elif col_type == 'href':
+                            row_data[col_name] = urljoin(driver.current_url, element.get_attribute('href'))
+                    except NoSuchElementException:
+                        row_data[col_name] = None
+                scraped_data.append(row_data)
+            except IndexError:
+                # This can happen if the number of rows changes mid-scrape
+                print(f"  - WARNING: Table content changed during scraping. Number of rows is now less than {num_rows}. Ending scrape for this page.")
+                break # Exit the loop
+
         if scraped_data:
+            print(f"  - Successfully processed {len(scraped_data)} rows.")
             new_records = save_scraped_data_to_db(db_engine, scraped_data, parent_url_id, navigation_path_parts, page_num, destination_table)
             job_state['records_saved'] += new_records
         return True
     except TimeoutException:
-        print(f"  - INFO: No data rows found in container. This is normal for letters with no legislation.")
+        print(f"  - INFO: No data rows found in container for page {page_num}.")
         return True
     
 def perform_click(driver, target):
     """Waits for an element to be clickable and clicks it."""
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, PAGE_LOAD_TIMEOUT)
     element_locator = (By.XPATH, target['value'])
     element = wait.until(EC.presence_of_element_located(element_locator))
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
@@ -310,11 +328,9 @@ def perform_click(driver, target):
     print(f"  - Clicking element with XPath: {target['value']} (Text: '{element_text}')")
     element_to_click.click()
 
-# --- Lambda Handler ---
+# --- Lambda Handler & Main Execution ---
 def lambda_handler(event, context):
-    """
-    AWS Lambda handler function.
-    """
+    """AWS Lambda handler function."""
     print("Lambda function invoked.")
     parent_url_id = event.get('parent_url_id')
     sitemap_file_name = event.get('sitemap_file_name')
@@ -330,7 +346,7 @@ def lambda_handler(event, context):
     return {'statusCode': 200, 'body': json.dumps(f'Successfully completed crawling for {parent_url_id}')}
 
 def run_crawler(parent_url_id, sitemap_file_name, destination_table):
-    """Main function to initialize and run the crawler with intelligent resume logic."""
+    """Main function to initialize and run the crawler."""
     config_file_path = os.path.join('config', sitemap_file_name)
     config = load_config(config_file_path)
     if not config: return
@@ -354,8 +370,7 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
     for i, journey in enumerate(config['crawler_config']['journeys']):
         retries = 0
         journey_succeeded = False
-        # NEW: State object to track progress within this journey
-        journey_state = {'last_completed_index': -1}
+        journey_state = {} 
 
         while retries <= MAX_RETRIES and not journey_succeeded:
             driver = None
@@ -375,7 +390,6 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
                 print(f"=================================================")
                 
                 for step in journey['steps']:
-                    # Pass the state object down to the processing functions
                     if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, journey_state=journey_state):
                         raise Exception(f"Step failed in Journey '{journey['journey_id']}'")
                 
@@ -406,21 +420,24 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
 
 if __name__ == "__main__":
     # This block is for local testing. It simulates the Lambda event.
-    
-    # --- Configuration for ACT ---
-    # The parent_url_id should be the ID in your 'parent_urls' table that corresponds to 'https://www.legislation.act.gov.au/'
-    parent_url_id_for_testing = "fcf216a1-dbf1-425c-8407-6c60796a23bf" # <--- REPLACE with the actual ID from your DB
-    sitemap_for_testing = "sitemap_legislation_act_gov_au.json"
-    destination_table_for_testing = "l1_scan_legislation_act_gov_au"
-
-    # --- Example Configuration for NT ---
-    # parent_url_id_for_testing = "your_nt_parent_url_id_here" 
-    # sitemap_for_testing = "sitemap_legislation_nt_gov_au.json"
-    # destination_table_for_testing = "l1_scan_legislation_nt_gov_au"
+    # --- REPLACE these values for your local test ---
+    parent_url_id_for_testing = "493df9a1-e971-451e-8bf0-de5092019ef1" 
+    sitemap_for_testing = "sitemap_legislation_gov_au.json"
+    destination_table_for_testing = "l1_scan_legislation_gov_au"
     
     print(f"--- Running in local test mode for parent_url_id: {parent_url_id_for_testing} ---")
     
-    if "your_act_parent_url_id_here" in parent_url_id_for_testing:
-        print("\nWARNING: Please replace 'your_act_parent_url_id_here' in the script with a valid ID from your database for testing.")
+    if "your_legislation_gov_au_parent_url_id" in parent_url_id_for_testing:
+        print("\nWARNING: Please replace 'your_legislation_gov_au_parent_url_id' in the script with a valid ID from your parent_urls table for testing.")
     else:
+        # Create a dummy config directory for local testing
+        if not os.path.exists('config'):
+            os.makedirs('config')
+        # This assumes the sitemap json content is available to be written
+        sitemap_content = {
+          "crawler_config": { "journeys": [ { "journey_id": "acts_principal_in_force_au", "description": "Scrapes all principal Acts currently in force from legislation.gov.au.", "steps": [ { "action": "click", "description": "Click the 'Acts' button in the main navigation.", "target": { "type": "xpath", "value": "//nav//a[normalize-space(.)='Acts']" } }, { "action": "click", "description": "Click the 'Principal in force' link from the dropdown.", "target": { "type": "xpath", "value": "//a[normalize-space(.)='Principal in force']" } }, { "action": "pagination_loop", "description": "Iterate through each page of the results table.", "target": { "type": "xpath", "value": "//ngx-datatable" }, "next_button_xpath": "//a[@aria-label='go to next page']", "scraping_config": { "row_xpath": ".//datatable-row-wrapper", "columns": [ { "name": "book_name", "xpath": ".//datatable-body-cell[1]//a", "type": "text" }, { "name": "book_url", "xpath": ".//datatable-body-cell[1]//a", "type": "href" }, { "name": "metadata_text", "xpath": ".//datatable-body-cell[1]/div/div[2]", "type": "text" }, { "name": "book_effective_date", "xpath": ".//datatable-body-cell[2]", "type": "text" } ] } } ] } ] }
+        }
+        with open(os.path.join('config', sitemap_for_testing), 'w') as f:
+            json.dump(sitemap_content, f)
+
         run_crawler(parent_url_id_for_testing, sitemap_for_testing, destination_table_for_testing)
