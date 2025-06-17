@@ -18,7 +18,6 @@ from utils.aws_utils import create_db_engine
 
 
 # --- Configuration ---
-# The sitemap path is now passed into the run_crawler function.
 MAX_RETRIES = 3 # Maximum number of times to retry a failed journey
 NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3)) # Duplicate checking
 
@@ -139,7 +138,8 @@ def save_scraped_data_to_db(engine, scraped_data, parent_url_id, navigation_path
                 return len(records_to_insert)
     except Exception as e:
         print(f"  - FATAL ERROR: Failed during database save operation: {e}")
-        return 0
+        # We re-raise to ensure the journey retry logic catches this
+        raise e
     
 def initialize_driver():
     """Initializes a more stable, production-ready Selenium WebDriver."""
@@ -154,9 +154,9 @@ def initialize_driver():
     options.add_argument('--ignore-certificate-errors')
     return webdriver.Chrome(options=options)
 
-def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table):
+def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, journey_state=None):
     """
-    Handles alphabet-based navigation by finding and clicking each alphabet link in turn.
+    Handles alphabet-based navigation, with logic to resume from a specific letter if a crash occurred.
     """
     target_xpath = step.get('target_xpath')
     if not target_xpath:
@@ -165,9 +165,7 @@ def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_pat
         
     print(f"  - Waiting for alphabet links to be present ({target_xpath})...")
     try:
-        WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, target_xpath))
-        )
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, target_xpath)))
         alphabet_links = driver.find_elements(By.XPATH, target_xpath)
         num_links = len(alphabet_links)
         print(f"  - Found {num_links} alphabet links to process.")
@@ -178,37 +176,51 @@ def process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_pat
         print(f"  - FATAL ERROR: Could not find initial alphabet links: {e}")
         return False
 
-    for i in range(num_links):
-        # Re-find elements in each iteration to prevent staleness
-        current_alphabet_links = WebDriverWait(driver, 20).until(
-            EC.presence_of_all_elements_located((By.XPATH, target_xpath))
-        )
-        
-        if i >= len(current_alphabet_links):
-            print(f"  - ERROR: Index {i} out of bounds after re-finding links.")
-            break
+    # NEW: Logic to resume from where it left off
+    start_index = 0
+    if journey_state and journey_state.get('last_completed_index', -1) >= 0:
+        start_index = journey_state['last_completed_index'] + 1
+        print(f"  - Resuming alphabet loop from index {start_index}.")
 
-        link_to_click = current_alphabet_links[i]
-        letter_text = link_to_click.text.strip()
-        print(f"\n--- Processing alphabet link {i+1}/{num_links} (Letter: '{letter_text}') ---")
-        
-        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", link_to_click)
-        time.sleep(0.5)
-        link_to_click.click()
-        time.sleep(1) 
+    for i in range(start_index, num_links):
+        try:
+            current_alphabet_links = WebDriverWait(driver, 20).until(
+                EC.presence_of_all_elements_located((By.XPATH, target_xpath))
+            )
+            
+            if i >= len(current_alphabet_links):
+                print(f"  - ERROR: Index {i} out of bounds after re-finding links.")
+                break
 
-        letter_path_parts = navigation_path_parts + [f"Letter-{letter_text}"]
-        
-        for loop_step in step['loop_steps']:
-            if not process_step(driver, loop_step, db_engine, parent_url_id, letter_path_parts, job_state, destination_table):
-                print(f"  - A step failed within the alphabet loop for letter '{letter_text}'. This will fail the journey.")
-                # Propagate failure up to the journey level retry logic
-                raise Exception(f"Step failed for letter '{letter_text}'")
+            link_to_click = current_alphabet_links[i]
+            letter_text = link_to_click.text.strip()
+            print(f"\n--- Processing alphabet link {i+1}/{num_links} (Letter: '{letter_text}') ---")
+            
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", link_to_click)
+            time.sleep(0.5)
+            link_to_click.click()
+            time.sleep(1)
+
+            letter_path_parts = navigation_path_parts + [f"Letter-{letter_text}"]
+            
+            for loop_step in step['loop_steps']:
+                if not process_step(driver, loop_step, db_engine, parent_url_id, letter_path_parts, job_state, destination_table, journey_state=journey_state):
+                    raise Exception(f"Step failed for letter '{letter_text}'")
+            
+            # NEW: Update state after successfully processing a letter
+            if journey_state is not None:
+                journey_state['last_completed_index'] = i
+                print(f"  - Successfully completed letter index {i}. State updated.")
+
+        except Exception as e:
+            # Re-raise the exception to be caught by the journey-level retry loop
+            print(f"  - An error occurred processing letter index {i}. Last successful index was {journey_state.get('last_completed_index', -1)}.")
+            raise e
             
     return True
 
-def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, current_page=1):
-    """Main dispatcher function. Processes a single step from the configuration."""
+def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, current_page=1, journey_state=None):
+    """Main dispatcher function. Passes journey_state down to relevant actions."""
     action = step.get('action')
     print(f"\nProcessing Step: {step.get('description', 'No description')}")
 
@@ -218,7 +230,7 @@ def process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, 
         return True
     
     elif action == 'alphabet_loop':
-        return process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table)
+        return process_alphabet_loop(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, journey_state=journey_state)
     
     elif action == 'process_results':
         scraping_config = step.get('scraping_config')
@@ -242,7 +254,6 @@ def scrape_configured_data(driver, container_xpath, scraping_config, db_engine, 
 
         row_xpath = scraping_config['row_xpath']
         
-        # Wait for at least one row to appear.
         wait.until(EC.presence_of_element_located((By.XPATH, row_xpath)))
         
         rows = driver.find_elements(By.XPATH, row_xpath)
@@ -305,7 +316,7 @@ def lambda_handler(event, context):
     return {'statusCode': 200, 'body': json.dumps(f'Successfully completed crawling for {parent_url_id}')}
 
 def run_crawler(parent_url_id, sitemap_file_name, destination_table):
-    """Main function to initialize and run the crawler with retry logic."""
+    """Main function to initialize and run the crawler with intelligent resume logic."""
     config_file_path = os.path.join('config', sitemap_file_name)
     config = load_config(config_file_path)
     if not config: return
@@ -329,6 +340,9 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
     for i, journey in enumerate(config['crawler_config']['journeys']):
         retries = 0
         journey_succeeded = False
+        # NEW: State object to track progress within this journey
+        journey_state = {'last_completed_index': -1}
+
         while retries <= MAX_RETRIES and not journey_succeeded:
             driver = None
             try:
@@ -347,8 +361,8 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
                 print(f"=================================================")
                 
                 for step in journey['steps']:
-                    if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table):
-                        # This exception will be caught by the outer block to trigger a retry
+                    # Pass the state object down to the processing functions
+                    if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, journey_state=journey_state):
                         raise Exception(f"Step failed in Journey '{journey['journey_id']}'")
                 
                 journey_succeeded = True
@@ -363,7 +377,7 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
                     final_status = 'failed'
                     final_error_message += f"Journey '{journey['description']}' failed after {MAX_RETRIES} retries. Last error: {e}\n"
                 else:
-                    time.sleep(5) # Wait before retrying
+                    time.sleep(5)
             
             finally:
                 if driver:

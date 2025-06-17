@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 # Import the database engine creator from your utils file
 from utils.aws_utils import create_db_engine
@@ -19,7 +20,7 @@ NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3))
 # --- Lambda Handler ---
 def lambda_handler(event, context):
     """
-    AWS Lambda handler function. Expects 'parent_url_id', 'sitemap_file_name', and 'destination_table'.
+    AWS Lambda handler function.
     """
     print("Lambda function invoked.")
     parent_url_id = event.get('parent_url_id')
@@ -36,8 +37,7 @@ def lambda_handler(event, context):
     return {'statusCode': 200, 'body': json.dumps(f'Successfully completed crawling for {parent_url_id}')}
 
 def run_crawler(parent_url_id, sitemap_file_name, destination_table):
-    """Main function to initialize and run the crawler."""
-    # Assumes sitemap is in a 'config' subdirectory relative to the script
+    """Main function to initialize and run the crawler with intelligent resume logic."""
     config_file_path = os.path.join('config', sitemap_file_name)
     config = load_config(config_file_path)
     if not config: return
@@ -56,73 +56,71 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
 
     job_state = {'records_saved': 0}
     final_status = 'success'
-    final_error_message = None
+    final_error_message = ""
     
-    try:
-        for i, journey in enumerate(config['crawler_config']['journeys']):
+    for i, journey in enumerate(config['crawler_config']['journeys']):
+        retries = 0
+        journey_succeeded = False
+        # NEW: State object to track progress within this journey
+        journey_state = {'last_completed_index': -1}
+
+        while retries <= MAX_RETRIES and not journey_succeeded:
             driver = None
             try:
+                if retries > 0:
+                    print(f"\n--- Retrying Journey '{journey['description']}' (Attempt {retries + 1}/{MAX_RETRIES + 1}) ---")
+
                 driver = initialize_driver()
                 
-                navigation_path_parts = ["Home"]
-                if journey.get('description'):
-                    navigation_path_parts.append(journey['description'])
+                print(f"\nNavigating to base URL for journey: {base_url}")
+                driver.get(base_url)
 
+                navigation_path_parts = ["Home", journey.get('description', f'Journey-{i+1}')]
+                
                 print(f"\n=================================================")
                 print(f"Starting Journey: {journey['description']} ({journey['journey_id']})")
                 print(f"=================================================")
                 
-                driver.get(base_url)
+                for step in journey['steps']:
+                    # Pass the state object down to the processing functions
+                    if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, journey_state=journey_state):
+                        raise Exception(f"Step failed in Journey '{journey['journey_id']}'")
                 
                 journey_succeeded = True
-                for step in journey['steps']:
-                    if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table):
-                        print(f"\n!!! Step failed in Journey '{journey['journey_id']}'. Halting this journey. !!!")
-                        journey_succeeded = False
-                        final_status = 'failed'
-                        final_error_message = f"Journey '{journey['journey_id']}' failed."
-                        break
-                
-                if journey_succeeded:
-                    print(f"\n✅ Journey '{journey['journey_id']}' completed successfully.")
+                print(f"\n✅ Journey '{journey['description']}' completed successfully on attempt {retries + 1}.")
 
             except Exception as e:
-                print(f"\n!!! An unexpected exception occurred during Journey '{journey['journey_id']}': {e}")
-                final_status = 'failed'
-                final_error_message = str(e)
+                retries += 1
+                print(f"\n!!! An exception occurred during Journey '{journey['description']}': {e}")
+                print(f"  - This was attempt {retries}. Retrying if possible.")
+                if retries > MAX_RETRIES:
+                    print(f"  - Max retries exceeded for this journey. Marking as failed.")
+                    final_status = 'failed'
+                    final_error_message += f"Journey '{journey['description']}' failed after {MAX_RETRIES} retries. Last error: {e}\n"
+                else:
+                    time.sleep(5)
             
             finally:
                 if driver:
-                    print(f"Closing WebDriver for Journey '{journey['journey_id']}'.")
+                    print(f"Closing WebDriver for attempt {retries}.")
                     driver.quit()
 
-    except Exception as e:
-        print(f"  - An uncaught exception terminated the crawler run: {e}")
-        final_status = 'failed'
-        final_error_message = str(e)
-    
-    finally:
-        message = f"Successfully processed {job_state['records_saved']} new records."
-        if final_status == 'failed':
-            message = f"Job failed. Processed {job_state['records_saved']} new records. Last error: {final_error_message}"
-        update_audit_log_entry(db_engine, audit_log_id, final_status, message)
-        print("\nAll journeys finished.")
+    message = f"Successfully processed {job_state['records_saved']} new records."
+    if final_status == 'failed':
+        message = f"Job failed. Processed {job_state['records_saved']} new records. Last errors: {final_error_message}"
+    update_audit_log_entry(db_engine, audit_log_id, final_status, message)
+    print("\nAll journeys finished.")
 
 if __name__ == "__main__":
     # This block is for local testing. It simulates the Lambda event.
-    # --- IMPORTANT ---
-    # 1. You must have a 'config' folder in the same directory as this script.
-    # 2. Inside 'config', you must have your sitemap JSON file.
-    # 3. Replace the placeholder ID with a real one from your `parent_urls` table.
-    
-    parent_url_id_for_testing = "36940ced-4781-41d5-a0b5-aaf0b4fb910c" # <--- REPLACE THIS
-    sitemap_for_testing = "sitemap_legislation_qld_gov_au.json"
-    destination_table_for_testing = "l1_scan_legislation_qld_gov_au"
+    parent_url_id_for_testing = "dc7dc489-691b-4df3-8988-2700b6374219" # <--- REPLACE with the actual ID from your DB for the NT site
+    sitemap_for_testing = "sitemap_legislation_nt_gov_au.json"
+    destination_table_for_testing = "l1_scan_legislation_nt_gov_au"
     
     print(f"--- Running in local test mode for parent_url_id: {parent_url_id_for_testing} ---")
     
-    if parent_url_id_for_testing == "your_qld_parent_url_id_here":
-        print("\nWARNING: Please replace 'your_qld_parent_url_id_here' in the script with a valid ID for testing.")
+    if "your_nt_parent_url_id_here" in parent_url_id_for_testing:
+        print("\nWARNING: Please replace 'your_nt_parent_url_id_here' in the script with a valid ID for testing.")
     else:
         run_crawler(parent_url_id_for_testing, sitemap_for_testing, destination_table_for_testing)
 

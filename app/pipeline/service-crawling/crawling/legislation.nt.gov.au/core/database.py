@@ -49,35 +49,22 @@ def save_scraped_data_to_db(engine, scraped_data, parent_url_id, navigation_path
                 print(f"  - Found {len(records_to_insert)} new records to insert.")
 
                 insert_query_str = f"""
-                    INSERT INTO {destination_table} (id, parent_url_id, book_name, book_number, book_url, navigation_path, date_collected, is_active, book_effective_date, book_year)
-                    VALUES (:id, :parent_url_id, :book_name, :book_number, :book_url, :navigation_path, :date_collected, :is_active, :book_effective_date, :book_year)
+                    INSERT INTO {destination_table} (id, parent_url_id, book_name, book_url, navigation_path, date_collected, is_active)
+                    VALUES (:id, :parent_url_id, :book_name, :book_url, :navigation_path, :date_collected, :is_active)
                 """
                 query = text(insert_query_str)
 
                 for item in records_to_insert:
-                    book_year_val, book_effective_date_val = None, None
-                    try:
-                        if item.get('year'): book_year_val = int(item.get('year'))
-                    except (ValueError, TypeError): pass
-                    try:
-                        if item.get('effective_date'):
-                            date_str = item.get('effective_date').strip()
-                            book_effective_date_val = datetime.strptime(date_str, '%d/%m/%Y').date()
-                    except (ValueError, TypeError) as e: 
-                        print(f"  - WARNING: Could not parse date '{item.get('effective_date')}'. Error: {e}")
-                        pass
-                    
                     params = {
                         "id": str(uuid.uuid4()), "parent_url_id": parent_url_id,
-                        "book_name": item.get('title'), "book_number": item.get('number'),
+                        "book_name": item.get('title'),
                         "book_url": item.get('link'), "navigation_path": human_readable_path,
                         "date_collected": datetime.now(), "is_active": 1,
-                        "book_effective_date": book_effective_date_val,
-                        "book_year": book_year_val
                     }
                     connection.execute(query, params)
                 print(f"  - Successfully saved {len(records_to_insert)} new records to '{destination_table}'.")
                 return len(records_to_insert)
     except Exception as e:
         print(f"  - FATAL ERROR: Failed during database save operation: {e}")
-        return 0
+        # We re-raise to ensure the journey retry logic catches this
+        raise e

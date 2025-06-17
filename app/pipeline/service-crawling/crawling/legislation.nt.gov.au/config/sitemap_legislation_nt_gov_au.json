@@ -26,7 +26,7 @@
                   "value": "//div[contains(@class, 'legislation-category-panel')]"
                 },
                 "scraping_config": {
-                  "row_xpath": "//div[contains(@class, 'panel-collapse') and contains(@class, 'in')]/div[@class='panel-body']/p/a",
+                  "row_xpath": "(//div[contains(@class, 'panel-collapse') and contains(@class, 'in')])[last()]//div[@class='panel-body']/p/a",
                   "columns": [
                     {
                       "name": "title",
@@ -70,7 +70,7 @@
                   "value": "//div[contains(@class, 'legislation-category-panel')]"
                 },
                 "scraping_config": {
-                  "row_xpath": "//div[contains(@class, 'panel-collapse') and contains(@class, 'in')]/div[@class='panel-body']/p/a",
+                  "row_xpath": "(//div[contains(@class, 'panel-collapse') and contains(@class, 'in')])[last()]//div[@class='panel-body']/p/a",
                   "columns": [
                     {
                       "name": "title",
