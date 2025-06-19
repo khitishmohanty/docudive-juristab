@@ -22,7 +22,7 @@ def get_parent_url_details(engine, parent_url_id):
         return None
 
 def save_scraped_data_to_db(engine, scraped_data, parent_url_id, navigation_path_parts, page_num, destination_table):
-    """Saves a list of scraped data to the specified destination table with parsing."""
+    """Saves a list of scraped links to the specified destination table."""
     if not scraped_data: return 0
     
     if not re.match(r"^[a-zA-Z0-9_]+$", destination_table):
@@ -41,40 +41,7 @@ def save_scraped_data_to_db(engine, scraped_data, parent_url_id, navigation_path
                 
                 existing_urls_result = connection.execute(existing_urls_query, {"parent_url_id": parent_url_id, "path_prefix": path_prefix}).fetchall()
                 existing_urls = {row[0] for row in existing_urls_result}
-                
-                records_to_insert = []
-                for item in scraped_data:
-                    book_url = item.get('book_url')
-                    if book_url and book_url not in existing_urls:
-                        # --- Parsing Logic for legislation.gov.au ---
-                        metadata_text = item.get('metadata_text') or ''
-                        
-                        version_match = re.search(r'(C[0-9A-Z]+)', metadata_text)
-                        book_version = version_match.group(1) if version_match else None
-                        
-                        act_no_match = re.search(r'(Act No\. \d+, \d{4})', metadata_text)
-                        book_act_no = act_no_match.group(1) if act_no_match else None
-                        
-                        reg_date_match = re.search(r'Registered: (\d{2}/\d{2}/\d{4})', metadata_text)
-                        book_registered_date = None
-                        if reg_date_match:
-                            try:
-                                book_registered_date = datetime.strptime(reg_date_match.group(1), '%d/%m/%Y')
-                            except ValueError:
-                                print(f"  - WARNING: Could not parse date '{reg_date_match.group(1)}'. Storing as NULL.")
-
-                        record = {
-                            "id": str(uuid.uuid4()), "parent_url_id": parent_url_id,
-                            "book_name": item.get('book_name'),
-                            "book_url": book_url,
-                            "book_effective_date": item.get('book_effective_date'),
-                            "book_version": book_version,
-                            "book_act_no": book_act_no,
-                            "book_registered_date": book_registered_date,
-                            "navigation_path": human_readable_path,
-                            "date_collected": datetime.now(), "is_active": 1,
-                        }
-                        records_to_insert.append(record)
+                records_to_insert = [item for item in scraped_data if item.get('link') not in existing_urls]
                 
                 if not records_to_insert:
                     print(f"  - All {len(scraped_data)} scraped records for this page already exist. Nothing to insert.")
@@ -82,18 +49,34 @@ def save_scraped_data_to_db(engine, scraped_data, parent_url_id, navigation_path
                 print(f"  - Found {len(records_to_insert)} new records to insert.")
 
                 insert_query_str = f"""
-                    INSERT INTO {destination_table} (
-                        id, parent_url_id, book_name, book_url, navigation_path, date_collected, is_active,
-                        book_effective_date, book_act_no, book_registered_date, book_version
-                    ) VALUES (
-                        :id, :parent_url_id, :book_name, :book_url, :navigation_path, :date_collected, :is_active,
-                        :book_effective_date, :book_act_no, :book_registered_date, :book_version
-                    )
+                    INSERT INTO {destination_table} (id, parent_url_id, book_name, book_url, navigation_path, date_collected, is_active, book_version, book_act_no, book_effective_date, book_registered_date)
+                    VALUES (:id, :parent_url_id, :book_name, :book_url, :navigation_path, :date_collected, :is_active, :book_version, :book_act_no, :book_effective_date, :book_registered_date)
                 """
                 query = text(insert_query_str)
-                connection.execute(query, records_to_insert)
+
+                for item in records_to_insert:
+                    # Get the registered date as simple text
+                    book_registered_date_val = (item.get('registered_date') or '').strip() or None
+                    
+                    # --- KEY CHANGE: Get the effective_date as simple text ---
+                    book_effective_date_val = (item.get('effective_date') or '').strip() or None
+                    
+                    params = {
+                        "id": str(uuid.uuid4()), 
+                        "parent_url_id": parent_url_id,
+                        "book_name": item.get('title'), 
+                        "book_url": item.get('link'), 
+                        "navigation_path": human_readable_path,
+                        "date_collected": datetime.now(), 
+                        "is_active": 1,
+                        "book_version": item.get('version'),
+                        "book_act_no": item.get('act_no'),
+                        "book_effective_date": book_effective_date_val,
+                        "book_registered_date": book_registered_date_val
+                    }
+                    connection.execute(query, params)
                 print(f"  - Successfully saved {len(records_to_insert)} new records to '{destination_table}'.")
                 return len(records_to_insert)
     except Exception as e:
         print(f"  - FATAL ERROR: Failed during database save operation: {e}")
-        raise e
+        return 0

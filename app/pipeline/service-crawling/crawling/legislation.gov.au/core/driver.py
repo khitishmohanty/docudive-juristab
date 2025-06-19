@@ -10,5 +10,4 @@ def initialize_driver():
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--disable-extensions")
-    options.add_argument('--ignore-certificate-errors')
     return webdriver.Chrome(options=options)

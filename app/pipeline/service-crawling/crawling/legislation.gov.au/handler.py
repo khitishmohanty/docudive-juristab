@@ -19,7 +19,9 @@ NAVIGATION_PATH_DEPTH = int(os.getenv("NAVIGATION_PATH_DEPTH", 3))
     
 # --- Lambda Handler ---
 def lambda_handler(event, context):
-    """AWS Lambda handler function."""
+    """
+    AWS Lambda handler function. Expects 'parent_url_id', 'sitemap_file_name', and 'destination_table'.
+    """
     print("Lambda function invoked.")
     parent_url_id = event.get('parent_url_id')
     sitemap_file_name = event.get('sitemap_file_name')
@@ -54,79 +56,74 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table):
 
     job_state = {'records_saved': 0}
     final_status = 'success'
-    final_error_message = ""
     
-    for i, journey in enumerate(config['crawler_config']['journeys']):
-        retries = 0
-        journey_succeeded = False
-        journey_state = {} 
+    # --- KEY CHANGE: Added journey retry loop ---
+    MAX_JOURNEY_RETRIES = 3
 
-        while retries <= MAX_RETRIES and not journey_succeeded:
-            driver = None
-            try:
-                if retries > 0:
-                    print(f"\n--- Retrying Journey '{journey['description']}' (Attempt {retries + 1}/{MAX_RETRIES + 1}) ---")
+    try:
+        for i, journey in enumerate(config['crawler_config']['journeys']):
+            journey_succeeded = False
+            for attempt in range(MAX_JOURNEY_RETRIES):
+                driver = None
+                try:
+                    if attempt > 0:
+                        print(f"\n--- RETRYING Journey '{journey['journey_id']}' (Attempt {attempt + 1}/{MAX_JOURNEY_RETRIES}) ---")
+                        time.sleep(5) # Wait before retrying
 
-                driver = initialize_driver()
-                
-                print(f"\nNavigating to base URL for journey: {base_url}")
-                driver.get(base_url)
+                    driver = initialize_driver()
+                    
+                    navigation_path_parts = ["Home"]
+                    if journey.get('description'):
+                        navigation_path_parts.append(journey['description'])
 
-                navigation_path_parts = ["Home", journey.get('description', f'Journey-{i+1}')]
-                
-                print(f"\n=================================================")
-                print(f"Starting Journey: {journey['description']} ({journey['journey_id']})")
-                print(f"=================================================")
-                
-                for step in journey['steps']:
-                    if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table, journey_state=journey_state):
-                        raise Exception(f"Step failed in Journey '{journey['journey_id']}'")
-                
-                journey_succeeded = True
-                print(f"\n✅ Journey '{journey['description']}' completed successfully on attempt {retries + 1}.")
+                    print(f"\n=================================================")
+                    print(f"Starting Journey: {journey['description']} ({journey['journey_id']})")
+                    print(f"=================================================")
+                    
+                    driver.get(base_url)
+                    
+                    for step in journey['steps']:
+                        if not process_step(driver, step, db_engine, parent_url_id, navigation_path_parts, job_state, destination_table):
+                            # This will raise an exception to be caught below, triggering a retry
+                            raise Exception(f"Step failed in Journey '{journey['journey_id']}'")
+                    
+                    # If all steps complete without error, mark as success and break the retry loop
+                    journey_succeeded = True
+                    print(f"\n✅ Journey '{journey['journey_id']}' completed successfully.")
+                    break
 
-            except Exception as e:
-                retries += 1
-                print(f"\n!!! An exception occurred during Journey '{journey['description']}': {e}")
-                print(f"  - This was attempt {retries}. Retrying if possible.")
-                if retries > MAX_RETRIES:
-                    print(f"  - Max retries exceeded for this journey. Marking as failed.")
-                    final_status = 'failed'
-                    final_error_message += f"Journey '{journey['description']}' failed after {MAX_RETRIES} retries. Last error: {e}\n"
-                else:
-                    time.sleep(5)
+                except Exception as e:
+                    print(f"\n!!! An exception occurred during Journey '{journey['journey_id']}' on attempt {attempt + 1}: {e}")
+                
+                finally:
+                    if driver:
+                        print(f"Closing WebDriver for attempt {attempt + 1}.")
+                        driver.quit()
             
-            finally:
-                if driver:
-                    print(f"Closing WebDriver for attempt {retries}.")
-                    driver.quit()
+            if not journey_succeeded:
+                print(f"\n❌ Journey '{journey['journey_id']}' failed after {MAX_JOURNEY_RETRIES} attempts.")
+                final_status = 'failed'
 
-    message = f"Successfully processed {job_state['records_saved']} new records."
-    if final_status == 'failed':
-        message = f"Job failed. Processed {job_state['records_saved']} new records. Last errors: {final_error_message}"
-    update_audit_log_entry(db_engine, audit_log_id, final_status, message)
-    print("\nAll journeys finished.")
+    except Exception as e:
+        print(f"  - An uncaught exception terminated the crawler run: {e}")
+        final_status = 'failed'
+    
+    finally:
+        message = f"Job finished. Processed {job_state['records_saved']} new records."
+        if final_status == 'failed':
+            message = f"Job finished with failures. Processed {job_state['records_saved']} new records."
+        update_audit_log_entry(db_engine, audit_log_id, final_status, message)
+        print("\nAll journeys finished.")
+
 
 if __name__ == "__main__":
-    # This block is for local testing. It simulates the Lambda event.
-    # --- REPLACE these values for your local test ---
     parent_url_id_for_testing = "493df9a1-e971-451e-8bf0-de5092019ef1" 
     sitemap_for_testing = "sitemap_legislation_gov_au.json"
     destination_table_for_testing = "l1_scan_legislation_gov_au"
     
     print(f"--- Running in local test mode for parent_url_id: {parent_url_id_for_testing} ---")
     
-    if "your_legislation_gov_au_parent_url_id" in parent_url_id_for_testing:
-        print("\nWARNING: Please replace 'your_legislation_gov_au_parent_url_id' in the script with a valid ID from your parent_urls table for testing.")
+    if "your_federal_legislation_parent_url_id" in parent_url_id_for_testing:
+        print("\nWARNING: Please replace 'your_federal_legislation_parent_url_id' in the script with a valid ID from your database for testing.")
     else:
-        # Create a dummy config directory for local testing
-        if not os.path.exists('config'):
-            os.makedirs('config')
-        # This assumes the sitemap json content is available to be written
-        sitemap_content = {
-          "crawler_config": { "journeys": [ { "journey_id": "acts_principal_in_force_au", "description": "Scrapes all principal Acts currently in force from legislation.gov.au.", "steps": [ { "action": "click", "description": "Click the 'Acts' button in the main navigation.", "target": { "type": "xpath", "value": "//nav//a[normalize-space(.)='Acts']" } }, { "action": "click", "description": "Click the 'Principal in force' link from the dropdown.", "target": { "type": "xpath", "value": "//a[normalize-space(.)='Principal in force']" } }, { "action": "pagination_loop", "description": "Iterate through each page of the results table.", "target": { "type": "xpath", "value": "//ngx-datatable" }, "next_button_xpath": "//a[@aria-label='go to next page']", "scraping_config": { "row_xpath": ".//datatable-row-wrapper", "columns": [ { "name": "book_name", "xpath": ".//datatable-body-cell[1]//a", "type": "text" }, { "name": "book_url", "xpath": ".//datatable-body-cell[1]//a", "type": "href" }, { "name": "metadata_text", "xpath": ".//datatable-body-cell[1]/div/div[2]", "type": "text" }, { "name": "book_effective_date", "xpath": ".//datatable-body-cell[2]", "type": "text" } ] } } ] } ] }
-        }
-        with open(os.path.join('config', sitemap_for_testing), 'w') as f:
-            json.dump(sitemap_content, f)
-
         run_crawler(parent_url_id_for_testing, sitemap_for_testing, destination_table_for_testing)
