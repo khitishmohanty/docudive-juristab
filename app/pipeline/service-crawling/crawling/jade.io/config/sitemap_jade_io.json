@@ -29,7 +29,7 @@
           {
             "action": "navigation_loop",
             "description": "Iterate through each jurisdiction button under Case Law.",
-            "target_xpath": "//div[@id='quick-nav-case-law-grid']//button",
+            "target_xpath": "//h3[normalize-space()='Case Law']/following-sibling::div[1]//button",
             "loop_steps": [
               {
                 "action": "process_and_paginate",
@@ -42,17 +42,17 @@
                   "columns": [
                     {
                       "name": "book_name",
-                      "xpath": ".//h2/a[contains(@class, 'hyperlink-history')]",
+                      "xpath": ".//h2[@class='doctitle']/a",
                       "type": "text"
                     },
                     {
                       "name": "book_url",
-                      "xpath": ".//h2/a[contains(@class, 'hyperlink-history')]",
+                      "xpath": ".//h2[@class='doctitle']/a",
                       "type": "href"
                     },
                     {
                       "name": "book_context",
-                      "xpath": ".//h2/following-sibling::div/span",
+                      "xpath": ".//h2[@class='doctitle']/a/span[contains(@class, 'font-grey')]",
                       "type": "text"
                     }
                   ],
