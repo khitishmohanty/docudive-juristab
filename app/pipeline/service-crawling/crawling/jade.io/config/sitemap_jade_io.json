@@ -1,0 +1,84 @@
+{
+  "crawler_config": {
+    "journeys": [
+      {
+        "journey_id": "scrape_jade_case_law",
+        "description": "Scrapes case law from jade.io by iterating through jurisdictions and paginating through results.",
+        "steps": [
+          {
+            "action": "click",
+            "description": "Click the 'No thanks' link on the login popup.",
+            "target": {
+              "type": "xpath",
+              "value": "//a[contains(text(), 'No thanks')]"
+            }
+          },
+          {
+            "action": "click",
+            "description": "Click the 'Got it' button on the cookie banner.",
+            "target": {
+              "type": "xpath",
+              "value": "//a[contains(text(), 'Got it')]"
+            }
+          },
+          {
+            "action": "pause",
+            "description": "Pause for 2 seconds to allow the page to settle after dismissing overlays.",
+            "duration": 2
+          },
+          {
+            "action": "navigation_loop",
+            "description": "Iterate through each jurisdiction button under Case Law.",
+            "target_xpath": "//div[@id='quick-nav-case-law-grid']//button",
+            "loop_steps": [
+              {
+                "action": "process_and_paginate",
+                "description": "Scrape all results for the selected jurisdiction, handling pagination.",
+                "next_page_xpath": "//a[contains(@title, 'Next page') and not(contains(@class, 'disabled'))]",
+                "scraping_config": {
+                  "row_xpath": "//div[contains(@class, 'result-document')]",
+                  "destination_table": "l2_scan_jade_io",
+                  "s3_bucket": "legal-store",
+                  "columns": [
+                    {
+                      "name": "book_name",
+                      "xpath": ".//h2/a[contains(@class, 'hyperlink-history')]",
+                      "type": "text"
+                    },
+                    {
+                      "name": "book_url",
+                      "xpath": ".//h2/a[contains(@class, 'hyperlink-history')]",
+                      "type": "href"
+                    },
+                    {
+                      "name": "book_context",
+                      "xpath": ".//h2/following-sibling::div/span",
+                      "type": "text"
+                    }
+                  ],
+                  "content_tabs": {
+                    "tabs": [
+                      {
+                        "name": "Excerpt",
+                        "click_xpath": ".//div[contains(@class, 'result-actions')]//a[normalize-space()='Excerpt']"
+                      },
+                      {
+                        "name": "Summary",
+                        "click_xpath": ".//div[contains(@class, 'result-actions')]//a[normalize-space()='Summary']"
+                      },
+                      {
+                        "name": "Miniviewer",
+                        "click_xpath": ".//div[contains(@class, 'result-actions')]//a[normalize-space()='Miniviewer']"
+                      }
+                    ],
+                    "content_container_xpath": ".//div[contains(@class, 'result-details')]"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
