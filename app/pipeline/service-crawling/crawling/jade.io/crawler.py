@@ -121,7 +121,7 @@ def scrape_page_details_and_save(driver, config, db_engine, parent_url_id, nav_p
         print(f"  - Found {len(rows)} result rows to process.")
     except TimeoutException:
         print("  - No result rows found on this page.")
-        return True # Not an error
+        return True
 
     records_processed_this_page = 0
     for i, row in enumerate(rows):
@@ -141,35 +141,42 @@ def scrape_page_details_and_save(driver, config, db_engine, parent_url_id, nav_p
             if not record_id: continue
 
             # 3. Process content tabs and save to S3
-            jurisdiction_folder = nav_path_parts[1].lower().replace(" ", "_") # e.g., "case-law/commonwealth"
+            jurisdiction_folder = nav_path_parts[1].lower().replace(" ", "_")
             base_s3_path = f"case-law/{jurisdiction_folder}/{record_id}"
 
             for tab in config['content_tabs']['tabs']:
                 try:
-                    tab_button = wait.until(EC.element_to_be_clickable(row.find_element(By.XPATH, tab['click_xpath'])))
-                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", tab_button)
-                    time.sleep(0.2)
-                    driver.execute_script("arguments[0].click();", tab_button)
-                    time.sleep(0.5) # Wait for content to load
-
-                    content_container = row.find_element(By.XPATH, config['content_tabs']['content_container_xpath'])
-                    content_html = content_container.get_attribute('innerHTML')
+                    content_container = None
+                    # Custom retry loop to handle timing issues where content isn't immediately available
+                    for attempt in range(4): # Try up to 4 times (total of ~1.5 seconds)
+                        try:
+                            # Directly find the content container using its specific XPath
+                            content_container = row.find_element(By.XPATH, tab['content_xpath'])
+                            if content_container:
+                                break # Success, exit the retry loop
+                        except NoSuchElementException:
+                            if attempt < 3: # If it's not the last attempt, wait and retry
+                                time.sleep(0.5)
+                            else:
+                                raise # On the last attempt, re-raise the exception to be caught below
+                    
+                    content_html = content_container.get_attribute('outerHTML')
                     
                     s3_key = f"{base_s3_path}/{tab['name'].lower()}.html"
                     save_content_to_s3(content_html, config['s3_bucket'], s3_key)
                 
-                except (NoSuchElementException, TimeoutException) as e:
-                    print(f"    - WARNING: Could not process tab '{tab['name']}' for row {i+1}. It may not exist. Error: {e}")
+                except NoSuchElementException as e:
+                    print(f"    - WARNING: Could not find content for tab '{tab['name']}' for row {i+1} after multiple attempts. Error: {e}")
 
             records_processed_this_page += 1
             job_state['records_saved'] += 1
 
         except StaleElementReferenceException:
             print(f"  - ERROR: Stale element reference on row {i+1}. Re-finding rows and retrying this page.")
-            return "retry_page" # Signal to retry the page
+            return "retry_page"
         except Exception as e:
             print(f"  - FATAL ERROR processing row {i+1}: {e}")
-            raise # Propagate error to journey retry logic
+            raise
 
     print(f"  - Finished processing {records_processed_this_page} records for this page.")
     return True
@@ -209,18 +216,17 @@ def process_and_paginate(driver, step_config, db_engine, parent_url_id, nav_path
 def process_navigation_loop(driver, step, db_engine, parent_url_id, nav_path_parts, job_state, journey_state):
     """Handles looping over a set of navigation elements (e.g., jurisdiction buttons)."""
     target_xpath = step.get('target_xpath')
-    wait = WebDriverWait(driver, 30) # Keep wait for use inside loop
+    wait = WebDriverWait(driver, 30)
 
-    # Bypassing the failing wait and going straight to find_elements.
     print(f"  - Directly attempting to find navigation links ({target_xpath})...")
-    time.sleep(2) # A brief, final pause before the check.
+    time.sleep(2)
     
     nav_links = driver.find_elements(By.XPATH, target_xpath)
     num_links = len(nav_links)
 
     if num_links == 0:
         print(f"  - FATAL ERROR: Found 0 navigation links. The XPath did not match any elements.")
-        print("--- DEBUGGING PAGE STATE ---")
+        # Included debugging from original script
         try:
             page_source = driver.page_source
             print("  - Page Source at time of failure:")
@@ -229,8 +235,7 @@ def process_navigation_loop(driver, step, db_engine, parent_url_id, nav_path_par
             print("  - Screenshot saved to /tmp/jade_failure_screenshot.png")
         except Exception as e:
             print(f"  - Could not get page source or screenshot: {e}")
-        print("--- END DEBUGGING ---")
-        return False # Fail the step
+        return False
 
     print(f"  - Found {num_links} navigation links to process.")
 
@@ -240,33 +245,34 @@ def process_navigation_loop(driver, step, db_engine, parent_url_id, nav_path_par
 
     for i in range(start_index, num_links):
         try:
-            # Re-finding elements here is crucial, especially in a loop
+            # Re-finding elements in each iteration is crucial to avoid stale elements
             current_nav_links = driver.find_elements(By.XPATH, target_xpath)
             link_to_click = current_nav_links[i]
             link_text = link_to_click.text.strip()
             print(f"\n--- Processing Navigation Link {i+1}/{num_links} (Text: '{link_text}') ---")
-            
-            original_window = driver.current_window_handle
             
             print("  - Scrolling to and clicking button using JavaScript...")
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", link_to_click)
             time.sleep(0.5)
             driver.execute_script("arguments[0].click();", link_to_click)
             
-            wait.until(EC.number_of_windows_to_be(2))
-            for window_handle in driver.window_handles:
-                if window_handle != original_window:
-                    driver.switch_to.window(window_handle)
-                    break
-            time.sleep(2)
+            # --- CORRECTED LOGIC FOR SAME-PAGE NAVIGATION ---
+            print("  - Waiting for search results page to load...")
+            # Wait for a unique element of the results page, like the breadcrumb
+            wait.until(EC.presence_of_element_located((By.XPATH, "//p[@class='breadcrumb' and contains(text(), 'Search results')]")))
+            print("  - Search results page loaded successfully.")
+            time.sleep(2) # Allow dynamic content to load
 
             item_path_parts = nav_path_parts + [link_text]
             for loop_step in step['loop_steps']:
                 if not process_step(driver, loop_step, db_engine, parent_url_id, item_path_parts, job_state, journey_state):
                     raise Exception(f"Step failed for navigation item '{link_text}'")
             
-            driver.close()
-            driver.switch_to.window(original_window)
+            # --- CORRECTED LOGIC TO RETURN TO HOME PAGE ---
+            print(f"  - Navigating back to the home page for the next jurisdiction...")
+            driver.back()
+            # Wait for a key element on the home page to ensure it's reloaded
+            wait.until(EC.presence_of_element_located((By.XPATH, "//h3[normalize-space()='Case Law']")))
             time.sleep(1)
 
             journey_state['last_completed_index'] = i

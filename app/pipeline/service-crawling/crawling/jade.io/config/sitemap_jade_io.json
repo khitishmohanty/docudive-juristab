@@ -34,25 +34,25 @@
               {
                 "action": "process_and_paginate",
                 "description": "Scrape all results for the selected jurisdiction, handling pagination.",
-                "next_page_xpath": "//a[contains(@title, 'Next page') and not(contains(@class, 'disabled'))]",
+                "next_page_xpath": "//a[contains(@class, 'b-next-page') and not(contains(@class, 'disabled'))]",
                 "scraping_config": {
-                  "row_xpath": "//div[contains(@class, 'result-document')]",
+                  "row_xpath": "//div[contains(@class, 'result no-alt')]",
                   "destination_table": "l2_scan_jade_io",
-                  "s3_bucket": "legal-store",
+                  "s3_bucket": "legal_store",
                   "columns": [
                     {
                       "name": "book_name",
-                      "xpath": ".//h2[@class='doctitle']/a",
+                      "xpath": ".//div[@class='title']/h2/a",
                       "type": "text"
                     },
                     {
                       "name": "book_url",
-                      "xpath": ".//h2[@class='doctitle']/a",
+                      "xpath": ".//div[@class='title']/h2/a",
                       "type": "href"
                     },
                     {
                       "name": "book_context",
-                      "xpath": ".//h2[@class='doctitle']/a/span[contains(@class, 'font-grey')]",
+                      "xpath": ".//span[@class='font-grey']",
                       "type": "text"
                     }
                   ],
@@ -60,18 +60,20 @@
                     "tabs": [
                       {
                         "name": "Excerpt",
-                        "click_xpath": ".//div[contains(@class, 'result-actions')]//a[normalize-space()='Excerpt']"
+                        "click_xpath": ".//div[contains(@class, 'gwt-TabBar')]//a[contains(text(), 'Excerpt')]",
+                        "content_xpath": ".//div[contains(@class, 'gwt-TabPanelBottom')]/div[1]//div[contains(@class, 'article-text')]"
                       },
                       {
                         "name": "Summary",
-                        "click_xpath": ".//div[contains(@class, 'result-actions')]//a[normalize-space()='Summary']"
+                        "click_xpath": ".//div[contains(@class, 'gwt-TabBar')]//a[contains(text(), 'Summary')]",
+                        "content_xpath": ".//div[contains(@class, 'gwt-TabPanelBottom')]/div[2]//div[contains(@class, 'article-text')]"
                       },
                       {
                         "name": "Miniviewer",
-                        "click_xpath": ".//div[contains(@class, 'result-actions')]//a[normalize-space()='Miniviewer']"
+                        "click_xpath": ".//div[contains(@class, 'gwt-TabBar')]//a[contains(text(), 'Miniviewer')]",
+                        "content_xpath": ".//div[contains(@class, 'gwt-TabPanelBottom')]/div[3]//div[contains(@class, 'article-text')]"
                       }
-                    ],
-                    "content_container_xpath": ".//div[contains(@class, 'result-details')]"
+                    ]
                   }
                 }
               }
