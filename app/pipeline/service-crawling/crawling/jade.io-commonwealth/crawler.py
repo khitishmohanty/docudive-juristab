@@ -87,30 +87,55 @@ def save_content_to_s3(content, bucket, key):
         raise
 
 def save_record_and_get_id(engine, data, parent_url_id, navigation_path, table):
-    """Saves a single record to the database and returns the new UUID."""
-    record_id = str(uuid.uuid4())
-    print(f"  - Inserting record for '{data.get('book_name')}' into table '{table}'")
+    """
+    Checks if a record with the same book_name and book_context exists.
+    If not, saves a new record and returns the new UUID. If it exists, returns None.
+    """
+    book_name_to_check = data.get('book_name')
+    book_context_to_check = data.get('book_context')
+
+    # A book name is required to check for duplicates.
+    if not book_name_to_check:
+        print("    - WARNING: Book name is missing, cannot check for duplicates or insert.")
+        return None
+
     try:
         with engine.connect() as connection:
             with connection.begin():
-                query = text(f"""
-                    INSERT INTO {table} (id, parent_url_id, book_name, book_context, book_url, navigation_path, date_collected, is_active)
-                    VALUES (:id, :parent_url_id, :book_name, :book_context, :book_url, :navigation_path, :date_collected, 1)
-                """)
-                params = {
-                    "id": record_id,
-                    "parent_url_id": parent_url_id,
-                    "book_name": data.get('book_name'),
-                    "book_context": data.get('book_context'),
-                    "book_url": data.get('book_url'),
-                    "navigation_path": navigation_path,
-                    "date_collected": datetime.now()
-                }
-                connection.execute(query, params)
-        print(f"    - DB insert successful. New record ID: {record_id}")
-        return record_id
+                # Step 1: Check for an existing record with the same name and context.
+                find_query = text(f"SELECT id FROM {table} WHERE book_name = :book_name AND book_context = :book_context")
+                params_find = {"book_name": book_name_to_check, "book_context": book_context_to_check}
+                existing_record = connection.execute(find_query, params_find).fetchone()
+
+                if existing_record:
+                    # Step 2a: If the record exists, print a message and return None to skip processing.
+                    print(f"  - Record for '{book_name_to_check}' already exists. Skipping.")
+                    return None
+                else:
+                    # Step 2b: If the record does not exist, proceed with inserting a new one.
+                    record_id = str(uuid.uuid4())
+                    print(f"  - Inserting new record for '{book_name_to_check}' into table '{table}'")
+
+                    insert_query = text(f"""
+                        INSERT INTO {table} (id, parent_url_id, book_name, book_context, book_url, navigation_path, date_collected, is_active)
+                        VALUES (:id, :parent_url_id, :book_name, :book_context, :book_url, :navigation_path, :date_collected, 1)
+                    """)
+                    params_insert = {
+                        "id": record_id,
+                        "parent_url_id": parent_url_id,
+                        "book_name": book_name_to_check,
+                        "book_context": book_context_to_check,
+                        "book_url": data.get('book_url'),
+                        "navigation_path": navigation_path,
+                        "date_collected": datetime.now()
+                    }
+                    connection.execute(insert_query, params_insert)
+                    
+                    print(f"    - DB insert successful. New record ID: {record_id}")
+                    return record_id
+
     except Exception as e:
-        print(f"    - FATAL ERROR during database insert: {e}")
+        print(f"    - FATAL ERROR during database check or insert: {e}")
         raise
 
 def scrape_page_details_and_save(driver, config, db_engine, parent_url_id, nav_path_parts, job_state):
@@ -141,32 +166,52 @@ def scrape_page_details_and_save(driver, config, db_engine, parent_url_id, nav_p
             if not record_id: continue
 
             # 3. Process content tabs and save to S3
-            jurisdiction_folder = nav_path_parts[1].lower().replace(" ", "_")
-            base_s3_path = f"case-law/{jurisdiction_folder}/{record_id}"
+            jurisdiction_folder = nav_path_parts[2].lower().replace(" ", "_")
+            base_s3_path = f"case-laws/{jurisdiction_folder}/{record_id}"
 
             for tab in config['content_tabs']['tabs']:
                 try:
-                    content_container = None
-                    # Custom retry loop to handle timing issues where content isn't immediately available
-                    for attempt in range(4): # Try up to 4 times (total of ~1.5 seconds)
-                        try:
-                            # Directly find the content container using its specific XPath
-                            content_container = row.find_element(By.XPATH, tab['content_xpath'])
-                            if content_container:
-                                break # Success, exit the retry loop
-                        except NoSuchElementException:
-                            if attempt < 3: # If it's not the last attempt, wait and retry
-                                time.sleep(0.5)
-                            else:
-                                raise # On the last attempt, re-raise the exception to be caught below
+                    # STEP 1: Find and click the tab to make its content visible
+                    print(f"    - Locating tab: '{tab['name']}'")
+                    tab_button = row.find_element(By.XPATH, tab['click_xpath'])
                     
+                    print(f"    - Found tab, clicking now...")
+                    driver.execute_script("arguments[0].click();", tab_button)
+                    
+                    # STEP 2: Wait for the tab content to load dynamically
+                    # INCREASED WAIT TIME to give AJAX content more time to appear.
+                    time.sleep(3) 
+
+                    # STEP 3: Find the content container for the now-active tab
+                    # This is the likely point of failure if the wait is too short or the XPath is wrong.
+                    content_container = row.find_element(By.XPATH, tab['content_xpath'])
+                    
+                    # STEP 4: Get the Outer HTML of the content, print it, and save it
                     content_html = content_container.get_attribute('outerHTML')
                     
+                    # Print the Outer HTML of the content as requested
+                    #print("\n    -----------------------------------------")
+                    #print(f"    Outer HTML for '{tab['name']}' content:")
+                    #print(content_html)
+                    #print("    -----------------------------------------\n")
+
                     s3_key = f"{base_s3_path}/{tab['name'].lower()}.html"
                     save_content_to_s3(content_html, config['s3_bucket'], s3_key)
                 
-                except NoSuchElementException as e:
-                    print(f"    - WARNING: Could not find content for tab '{tab['name']}' for row {i+1} after multiple attempts. Error: {e}")
+                except NoSuchElementException:
+                    # If the tab button OR content isn't found, print a warning and the HTML of the entire row for debugging.
+                    print(f"    - WARNING: Could not find tab button or content for '{tab['name']}' in row {i+1}. Skipping.")
+                    print("    - DEBUG: Printing the outer HTML of the entire row to help find the correct XPath.")
+                    try:
+                        # This will show you the exact HTML Selenium is seeing for the row.
+                        row_html = row.get_attribute('outerHTML')
+                        print(row_html)
+                    except Exception as e:
+                        print(f"    - DEBUG: Could not get row HTML. It might be stale. Error: {e}")
+
+                except Exception as e:
+                    print(f"    - ERROR: An unexpected error occurred while processing tab '{tab['name']}': {e}")
+
 
             records_processed_this_page += 1
             job_state['records_saved'] += 1
