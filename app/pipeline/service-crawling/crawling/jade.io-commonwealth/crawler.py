@@ -431,24 +431,23 @@ def run_crawler(parent_url_id, sitemap_file_name, destination_table=None): # des
     update_audit_log_entry(db_engine, audit_log_id, final_status, message)
     print("\nAll journeys finished.")
 
-# --- Lambda Handler & Local Test ---
-def lambda_handler(event, context):
-    parent_url_id = event.get('parent_url_id')
-    sitemap_file_name = event.get('sitemap_file_name')
-    if not all([parent_url_id, sitemap_file_name]):
-        return {'statusCode': 400, 'body': json.dumps('Error: parent_url_id and sitemap_file_name are required.')}
-    
-    run_crawler(parent_url_id, sitemap_file_name)
-    return {'statusCode': 200, 'body': json.dumps(f'Successfully completed crawling for {parent_url_id}')}
-
 if __name__ == "__main__":
-    # The parent_url_id for 'https://jade.io/t/home'
-    parent_url_id_for_testing = "dde888c6-7b5a-4731-b627-502f9404f910" # <--- IMPORTANT: REPLACE with the actual ID from your DB
-    sitemap_for_testing = "sitemap_jade_io.json"
-    
-    print(f"--- Running in local test mode for parent_url_id: {parent_url_id_for_testing} ---")
-    
-    if "your_jade_io_parent_url_id_here" in parent_url_id_for_testing:
-        print("\nWARNING: Please replace 'your_jade_io_parent_url_id_here' with a valid ID from your database.")
-    else:
-        run_crawler(parent_url_id_for_testing, sitemap_for_testing)
+    # In Fargate, we get configuration from environment variables, not a Lambda event.
+    parent_url_id = os.getenv("PARENT_URL_ID")
+    sitemap_file_name = os.getenv("SITEMAP_FILE_NAME")
+
+    # Basic validation to ensure the container is configured correctly
+    if not all([parent_url_id, sitemap_file_name]):
+        print("FATAL ERROR: Environment variables PARENT_URL_ID and SITEMAP_FILE_NAME must be set.")
+        # Exit with a non-zero status code to indicate failure to Fargate
+        exit(1)
+
+    print(f"--- Running crawler from Docker container ---")
+    print(f"--- Target Parent URL ID: {parent_url_id} ---")
+    print(f"--- Target Sitemap: {sitemap_file_name} ---")
+
+    # The parent_url_id from your test is now passed as an environment variable
+    # parent_url_id_for_testing = "dde888c6-7b5a-4731-b627-502f9404f910"
+    # sitemap_for_testing = "sitemap_jade_io.json"
+
+    run_crawler(parent_url_id, sitemap_file_name)
