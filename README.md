@@ -1,2 +1,0 @@
-# docudive-juristab
-Lawyers platform
