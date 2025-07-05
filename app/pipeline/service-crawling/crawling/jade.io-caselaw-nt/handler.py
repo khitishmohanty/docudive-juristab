@@ -38,7 +38,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException, ElementClickInterceptedException, ElementNotInteractableException
 import json
 import time
 import re  # <-- MODIFICATION: Imported 're' for regular expressions
@@ -252,41 +252,31 @@ def process_and_paginate(driver, step_config, db_engine, parent_url_id, nav_path
         print(f"\n--- Processing Page {page_num} ---")
         page_nav_path = nav_path_parts + [f"Page-{page_num}"]
         
-        # Scrape the current page's details
         result = scrape_page_details_and_save(driver, scraping_config, db_engine, parent_url_id, page_nav_path, job_state)
         
-        # If a StaleElementReferenceException occurred, retry the page
         if result == "retry_page":
             time.sleep(2)
             continue
 
         try:
-            # **FIX START**
-            # Get the current URL before trying to navigate to the next page.
             last_url = driver.current_url
-            # **FIX END**
 
-            # Locate and click the 'Next' button
             next_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, step_config['next_page_xpath'])))
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", next_button)
             time.sleep(0.5)
             driver.execute_script("arguments[0].click();", next_button)
             
-            # Wait for the next page to load
             time.sleep(2) 
 
-            # **FIX START**
-            # If the URL hasn't changed, we've reached the end. Break the loop.
             if driver.current_url == last_url:
                 print("  - URL did not change after clicking 'Next'. Reached the end of pagination.")
                 break
-            # **FIX END**
 
             page_num += 1
 
-        except TimeoutException:
-            # This original logic correctly handles cases where the button disappears
-            print("  - 'Next' button not found or not clickable. Reached the end of pagination.")
+        except (TimeoutException, StaleElementReferenceException, ElementClickInterceptedException, ElementNotInteractableException):
+            # **FIX**: This now catches the most common click-related errors and ends pagination gracefully.
+            print("  - 'Next' button not found or interaction failed. Reached the end of pagination.")
             break
             
     return True
