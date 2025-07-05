@@ -251,19 +251,44 @@ def process_and_paginate(driver, step_config, db_engine, parent_url_id, nav_path
     while True:
         print(f"\n--- Processing Page {page_num} ---")
         page_nav_path = nav_path_parts + [f"Page-{page_num}"]
+        
+        # Scrape the current page's details
         result = scrape_page_details_and_save(driver, scraping_config, db_engine, parent_url_id, page_nav_path, job_state)
+        
+        # If a StaleElementReferenceException occurred, retry the page
         if result == "retry_page":
             time.sleep(2)
             continue
+
         try:
+            # **FIX START**
+            # Get the current URL before trying to navigate to the next page.
+            last_url = driver.current_url
+            # **FIX END**
+
+            # Locate and click the 'Next' button
             next_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, step_config['next_page_xpath'])))
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", next_button)
             time.sleep(0.5)
             driver.execute_script("arguments[0].click();", next_button)
+            
+            # Wait for the next page to load
+            time.sleep(2) 
+
+            # **FIX START**
+            # If the URL hasn't changed, we've reached the end. Break the loop.
+            if driver.current_url == last_url:
+                print("  - URL did not change after clicking 'Next'. Reached the end of pagination.")
+                break
+            # **FIX END**
+
             page_num += 1
-            time.sleep(2)
+
         except TimeoutException:
+            # This original logic correctly handles cases where the button disappears
+            print("  - 'Next' button not found or not clickable. Reached the end of pagination.")
             break
+            
     return True
 
 def process_navigation_loop(driver, step, db_engine, parent_url_id, nav_path_parts, job_state, journey_state):
