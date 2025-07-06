@@ -209,7 +209,8 @@ def scrape_page_details_and_save(driver, config, db_engine, parent_url_id, nav_p
             human_readable_path = "/".join(nav_path_parts)
             record_id = save_record_and_get_id(db_engine, row_data, parent_url_id, human_readable_path, config['destination_table'])
             if not record_id: continue
-            jurisdiction_folder = nav_path_parts[2].lower().replace(" ", "_")
+            jurisdiction_folder = config.get("jurisdiction_folder_name", "unknown_jurisdiction")
+            #jurisdiction_folder = nav_path_parts[2].lower().replace(" ", "_")
             base_s3_path = f"case-laws/{jurisdiction_folder}/{record_id}"
             for tab in config['content_tabs']['tabs']:
                 try:
