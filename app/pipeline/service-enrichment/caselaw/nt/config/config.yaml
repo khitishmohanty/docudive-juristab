@@ -1,0 +1,46 @@
+# -- Google cloud project details --
+google_cloud:
+    project_id: "juristab"
+    region: "us"
+    processor_id: "c60807664382dc8" 
+
+# -- Database connection details --
+database:
+    source:
+        dialect: "mysql"
+        driver: "mysqlconnector"
+        host: "juris-data.crkmq80swpic.ap-southeast-2.rds.amazonaws.com"
+        port: "3306"
+        name: "legal_source"
+
+    destination:
+        dialect: "mysql"
+        driver: "mysqlconnector"
+        host: "juris-data.crkmq80swpic.ap-southeast-2.rds.amazonaws.com"
+        port: "3306"
+        name: "legal_store"
+
+# -- AWS connection details --
+aws:
+    default_region: "ap-southeast-2"
+    s3:
+        bucket_name: "legal-store"
+        dest_folder: "case_laws/nt/"
+    
+# -- AI model configuration --
+models:
+    deepseek:
+        model: "deepseek-r1:671b"
+    
+    gemini:
+        model: "models/gemini-2.5-pro-preview-05-06"
+        base_url: "https://generativelanguage.googleapis.com/v1beta"
+        pricing:
+            input_per_million: 1.25
+            output_per_million: 10.00
+    
+    openai:
+        model_name: "gpt-4o"
+        pricing:
+        input_per_million: 2.00
+        output_per_million: 8.00
