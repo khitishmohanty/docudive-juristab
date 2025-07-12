@@ -1,9 +1,11 @@
 #DB
 mysql-connector-python
+PyMySQL
 SQLAlchemy
 
 #AWS
 boto3
+botocore
 
 #Unittest
 pytest
@@ -12,7 +14,9 @@ python-dotenv
 
 #GCP
 google-cloud-documentai
+google-generativeai
 
 #Application-logic
 beautifulsoup4
 pyyaml
+pandas

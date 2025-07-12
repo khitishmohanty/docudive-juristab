@@ -46,5 +46,11 @@ models:
             output_per_million: 8.00
 
 # List of tables to be read by the connector
+tables:
     tables_to_read:
-      - "12_scan_jade_io_caselaw_nt"
+      - database: legal_source
+        table: l2_scan_jade_io_caselaw_nt   
+
+    tables_to_write:
+      - database: legal_store
+        table: caselaw_enrichment_status
