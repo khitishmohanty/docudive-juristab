@@ -7,3 +7,8 @@ SQLAlchemy
 beautifulsoup4
 pyyaml
 pandas
+
+#Unittest
+pytest
+pytest-mock
+python-dotenv

@@ -49,6 +49,10 @@ tables:
       - database: legal_store
         table: caselaw_registry
 
+    audit_log_table:
+      - database: legal_store
+        table: audit_log
+
 # Source file paths
 filepath: s3://legal-store/case-laws/nt/
 
