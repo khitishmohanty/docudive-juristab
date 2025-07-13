@@ -1,0 +1,9 @@
+#DB
+mysql-connector-python
+PyMySQL
+SQLAlchemy
+
+#Application-logic
+beautifulsoup4
+pyyaml
+pandas

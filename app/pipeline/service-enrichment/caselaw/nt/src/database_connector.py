@@ -1,9 +1,10 @@
 import os
 import pandas as pd
 import uuid
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, Row
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
+from typing import Optional
 
 class DatabaseConnector:
     """Handles all database interactions."""
@@ -53,23 +54,39 @@ class DatabaseConnector:
             print(f"Error executing query: {e}")
             raise
 
-    def insert_initial_status(self, table_name: str, source_id: str) -> str:
+    def get_status_by_source_id(self, table_name: str, source_id: str) -> Optional[Row]:
         """
-        Inserts a new record into the status table with a 'not started' status.
+        Retrieves the status record for a given source_id.
 
         Args:
             table_name (str): The name of the status table.
-            source_id (str): The UUID of the source record.
+            source_id (str): The source record's UUID.
 
         Returns:
-            str: The new UUID of the created status record.
+            A SQLAlchemy Row object with the status record, or None if not found.
+        """
+        session = self.Session()
+        try:
+            stmt = text(f"SELECT * FROM {table_name} WHERE source_id = :source_id LIMIT 1")
+            result = session.execute(stmt, {"source_id": source_id}).fetchone()
+            return result
+        except Exception as e:
+            print(f"Error getting status for source_id {source_id}: {e}")
+            raise
+        finally:
+            session.close()
+
+    def insert_initial_status(self, table_name: str, source_id: str) -> str:
+        """
+        Inserts a new record into the status table with 'not started' status and 0 duration.
         """
         session = self.Session()
         try:
             new_id = str(uuid.uuid4())
+            # NOTE: Updated to include new duration columns with an initial value of 0.
             stmt = text(f"""
-                INSERT INTO {table_name} (id, source_id, status_json_valid, status_text_extract)
-                VALUES (:id, :source_id, 'not started', 'not started')
+                INSERT INTO {table_name} (id, source_id, status_json_valid, duration_file_jurismap_json, status_text_extract, duration_file_miniviewer_text)
+                VALUES (:id, :source_id, 'not started', 0, 'not started', 0)
             """)
             session.execute(stmt, {"id": new_id, "source_id": source_id})
             session.commit()
@@ -82,31 +99,42 @@ class DatabaseConnector:
         finally:
             session.close()
 
-    def update_status(self, table_name: str, source_id: str, column: str, status: str):
+    def update_step_result(self, table_name: str, source_id: str, step: str, status: str, duration: float):
         """
-        Updates a status column for a given source_id.
+        Updates the status and duration for a specific processing step.
 
         Args:
             table_name (str): The name of the status table.
             source_id (str): The source record's UUID.
-            column (str): The column to update (e.g., 'status_text_extract').
+            step (str): The processing step ('text_extract' or 'json_valid').
             status (str): The new status ('pass' or 'failed').
+            duration (float): The time taken for the step in seconds.
         """
         session = self.Session()
-        if column not in ['status_json_valid', 'status_text_extract']:
-            raise ValueError("Invalid column name for status update.")
+        
+        if step == 'text_extract':
+            status_col = 'status_text_extract'
+            duration_col = 'duration_file_miniviewer_text'
+        elif step == 'json_valid':
+            status_col = 'status_json_valid'
+            duration_col = 'duration_file_jurismap_json'
+        else:
+            raise ValueError("Invalid step name provided.")
+
         if status not in ['pass', 'failed']:
-             raise ValueError("Invalid status value. Must be 'pass' or 'failed'.")
+            raise ValueError("Invalid status value. Must be 'pass' or 'failed'.")
 
         try:
             stmt = text(f"""
-                UPDATE {table_name} SET {column} = :status WHERE source_id = :source_id
+                UPDATE {table_name} 
+                SET {status_col} = :status, {duration_col} = :duration 
+                WHERE source_id = :source_id
             """)
-            session.execute(stmt, {"status": status, "source_id": source_id})
+            session.execute(stmt, {"status": status, "duration": duration, "source_id": source_id})
             session.commit()
-            print(f"Updated {column} to '{status}' for source_id: {source_id}")
+            print(f"Updated {step} to '{status}' with duration {duration:.2f}s for source_id: {source_id}")
         except Exception as e:
-            print(f"Error updating status for source_id {source_id}: {e}")
+            print(f"Error updating step result for source_id {source_id}: {e}")
             session.rollback()
             raise
         finally:

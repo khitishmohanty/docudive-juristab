@@ -1,0 +1,54 @@
+# -- Database connection details --
+database:
+    source:
+        dialect: "mysql"
+        driver: "mysqlconnector"
+        host: "juris-data.crkmq80swpic.ap-southeast-2.rds.amazonaws.com"
+        port: "3306"
+        name: "legal_source"
+
+    destination:
+        dialect: "mysql"
+        driver: "mysqlconnector"
+        host: "juris-data.crkmq80swpic.ap-southeast-2.rds.amazonaws.com"
+        port: "3306"
+        name: "legal_store"
+
+# List of tables to be read by the connector
+tables:
+    tables_to_read:
+        - database: legal_source
+          table: l2_scan_jade_io_caselaw_nt
+          jurisdiction: NT
+        - database: legal_source
+          table: l2_scan_jade_io_caselaw_nsw
+          jurisdiction: NSW
+        - database: legal_source
+          table: l2_scan_jade_io_caselaw_vic
+          jurisdiction: V
+        - database: legal_source
+          table: l2_scan_jade_io_caselaw_qld
+          jurisdiction: Q
+        - database: legal_source
+          table: l2_scan_jade_io_caselaw_act
+          jurisdiction: ACT
+        - database: legal_source
+          table: l2_scan_jade_io_caselaw_commonwealth
+          jurisdiction: Fed
+        - database: legal_source
+          table: l2_scan_jade_io_caselaw_sa
+          jurisdiction: SA
+        - database: legal_source
+          table: l2_scan_jade_io_caselaw_wa
+          jurisdiction: WA
+        - database: legal_source
+          table: l2_scan_jade_io_caselaw_tas
+          jurisdiction: TAS
+
+    tables_to_write:
+      - database: legal_store
+        table: caselaw_registry
+
+# Source file paths
+filepath: s3://legal-store/case-laws/nt/
+
