@@ -47,13 +47,17 @@ models:
 
 # List of tables to be read by the connector
 tables:
-    tables_to_read:
-      - database: legal_source
-        table: l2_scan_jade_io_caselaw_nt   
+  tables_to_read:
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_nt
+  tables_to_write:
+    - database: legal_store
+      table: caselaw_enrichment_status
+  audit_log_table:
+    - database: legal_store
+      table: audit_log
+      job_name: "caselaw_enrichment_nt" # <-- Add this line
 
-    tables_to_write:
-      - database: legal_store
-        table: caselaw_enrichment_status
 
 # -- File naming conventions for the enrichment service --
 enrichment_filenames:
