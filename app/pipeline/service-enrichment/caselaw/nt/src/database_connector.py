@@ -10,18 +10,11 @@ class DatabaseConnector:
     """Handles all database interactions."""
     
     def __init__(self, db_config: dict):
-        """
-        Initializes the connector with database configuration.
-        
-        Args:
-            db_config: A dictionary containing database connection details.
-        """
         self.db_config = db_config
         self.engine = self._create_db_engine()
         self.Session = sessionmaker(bind=self.engine)
         
     def _create_db_engine(self):
-        """Creates a SQLAlchemy engine from the configuration."""
         try:
             connection_url = URL.create(
                 drivername=f"{self.db_config['dialect']}+{self.db_config['driver']}",
@@ -38,15 +31,6 @@ class DatabaseConnector:
             raise
     
     def read_sql(self, query: str) -> pd.DataFrame:
-        """
-        Reads data from the database using a SQL query into a pandas DataFrame.
-
-        Args:
-            query: The SQL query to execute.
-
-        Returns:
-            A pandas DataFrame containing the query's result.
-        """
         print(f"Executing query...")
         try:
             return pd.read_sql_query(query, self.engine)
@@ -55,16 +39,6 @@ class DatabaseConnector:
             raise
 
     def get_status_by_source_id(self, table_name: str, source_id: str) -> Optional[Row]:
-        """
-        Retrieves the status record for a given source_id.
-
-        Args:
-            table_name (str): The name of the status table.
-            source_id (str): The source record's UUID.
-
-        Returns:
-            A SQLAlchemy Row object with the status record, or None if not found.
-        """
         session = self.Session()
         try:
             stmt = text(f"SELECT * FROM {table_name} WHERE source_id = :source_id LIMIT 1")
@@ -77,16 +51,17 @@ class DatabaseConnector:
             session.close()
 
     def insert_initial_status(self, table_name: str, source_id: str) -> str:
-        """
-        Inserts a new record into the status table with 'not started' status and 0 duration.
-        """
         session = self.Session()
         try:
             new_id = str(uuid.uuid4())
-            # NOTE: Updated to include new duration columns with an initial value of 0.
             stmt = text(f"""
-                INSERT INTO {table_name} (id, source_id, status_json_valid, duration_file_jurismap_json, status_text_extract, duration_file_miniviewer_text)
-                VALUES (:id, :source_id, 'not started', 0, 'not started', 0)
+                INSERT INTO {table_name} (
+                    id, source_id, 
+                    status_text_extract, duration_file_miniviewer_text,
+                    status_json_valid, duration_file_jurismap_json,
+                    status_jurismap_html, duration_jurismap_html
+                )
+                VALUES (:id, :source_id, 'not started', 0, 'not started', 0, 'not started', 0)
             """)
             session.execute(stmt, {"id": new_id, "source_id": source_id})
             session.commit()
@@ -100,26 +75,19 @@ class DatabaseConnector:
             session.close()
 
     def update_step_result(self, table_name: str, source_id: str, step: str, status: str, duration: float):
-        """
-        Updates the status and duration for a specific processing step.
-
-        Args:
-            table_name (str): The name of the status table.
-            source_id (str): The source record's UUID.
-            step (str): The processing step ('text_extract' or 'json_valid').
-            status (str): The new status ('pass' or 'failed').
-            duration (float): The time taken for the step in seconds.
-        """
         session = self.Session()
         
-        if step == 'text_extract':
-            status_col = 'status_text_extract'
-            duration_col = 'duration_file_miniviewer_text'
-        elif step == 'json_valid':
-            status_col = 'status_json_valid'
-            duration_col = 'duration_file_jurismap_json'
-        else:
-            raise ValueError("Invalid step name provided.")
+        # FIX: Added 'jurismap_html' as a valid step
+        step_to_columns = {
+            'text_extract': ('status_text_extract', 'duration_file_miniviewer_text'),
+            'json_valid': ('status_json_valid', 'duration_file_jurismap_json'),
+            'jurismap_html': ('status_jurismap_html', 'duration_jurismap_html')
+        }
+
+        if step not in step_to_columns:
+            raise ValueError(f"Invalid step name provided: {step}")
+        
+        status_col, duration_col = step_to_columns[step]
 
         if status not in ['pass', 'failed']:
             raise ValueError("Invalid status value. Must be 'pass' or 'failed'.")

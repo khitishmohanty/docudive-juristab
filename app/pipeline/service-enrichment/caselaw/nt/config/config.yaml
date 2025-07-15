@@ -56,7 +56,7 @@ tables:
   audit_log_table:
     - database: legal_store
       table: audit_log
-      job_name: "caselaw_enrichment_nt" # <-- Add this line
+      job_name: "caselaw_enrichment_nt"
 
 
 # -- File naming conventions for the enrichment service --
@@ -64,3 +64,4 @@ enrichment_filenames:
   source_html: "miniviewer.html"
   extracted_text: "miniviewer.txt"
   jurismap_json: "jurismap.json"
+  jurismap_html: "jurismap.html"

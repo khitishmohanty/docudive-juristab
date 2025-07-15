@@ -91,7 +91,9 @@ class AuditLogger:
             
             job_duration = None
             if result and result.start_time:
-                duration_delta = end_time - result.start_time
+                # FIX: Ensure the start_time from DB is timezone-aware (UTC) before subtraction
+                start_time_aware = result.start_time.replace(tzinfo=timezone.utc)
+                duration_delta = end_time - start_time_aware
                 job_duration = duration_delta.total_seconds()
 
             # Now, update the record

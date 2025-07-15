@@ -25,20 +25,20 @@ def main():
     # --- Audit Logger Setup ---
     log_id = None
     try:
-        # --- START DEBUGGING BLOCK ---
-        # Let's see what keys are actually in the 'tables' dictionary
-        if 'tables' in config:
-            print(f"DEBUG: Found 'tables' section. Keys are: {list(config['tables'].keys())}")
-        else:
-            print("DEBUG: 'tables' section not found in config.")
-        # --- END DEBUGGING BLOCK ---
-
         # Read the audit config from the nested structure
         audit_config = config['tables']['audit_log_table'][0]
         
-        # The audit logger needs the connection details for the database it writes to
+        # --- FIX: Find the correct database configuration by its 'name' property ---
         audit_db_name = audit_config['database']
-        audit_db_config = config['database'][audit_db_name]
+        audit_db_config = None
+        for db_key, db_properties in config['database'].items():
+            if db_properties.get('name') == audit_db_name:
+                audit_db_config = db_properties
+                break
+        
+        if audit_db_config is None:
+            raise KeyError(f"Database configuration for '{audit_db_name}' not found under the 'database' section.")
+        # --- END FIX ---
         
         logger = AuditLogger(
             db_config=audit_db_config,
@@ -47,8 +47,8 @@ def main():
         # Get the job name from the audit config
         log_id = logger.log_start(job_name=audit_config['job_name'])
 
-    except KeyError:
-         print(f"FATAL: 'audit_log_table' or 'job_name' not found in the config's 'tables' section. Aborting.")
+    except KeyError as e:
+         print(f"FATAL: A required key was not found in the configuration. Please check config.yaml. Details: {e}")
          sys.exit(1)
     except Exception as e:
         # If logging fails to start, print error and exit.
@@ -72,3 +72,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
