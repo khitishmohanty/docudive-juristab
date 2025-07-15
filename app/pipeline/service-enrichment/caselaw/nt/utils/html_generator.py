@@ -85,10 +85,8 @@ class HtmlGenerator:
             margin-right: 10px;
         }}
         .node {{
-             cursor: grab;
-        }}
-        .node.dragging {{
-             cursor: grabbing;
+             /* FIX: Changed cursor from 'grab' to 'pointer' */
+             cursor: pointer;
         }}
         .node rect {{
             stroke: #fff;
@@ -124,18 +122,6 @@ class HtmlGenerator:
         }}
         .link-group:hover .link {{
             stroke: #343a40;
-        }}
-        .link-group:hover .link-label {{
-            opacity: 1;
-        }}
-        .link-group .link-label {{
-            fill: #6c757d;
-            font-size: 9px;
-            font-weight: 500;
-            text-anchor: middle;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
         }}
         .level-label {{
             font-size: 12px;
@@ -173,6 +159,7 @@ class HtmlGenerator:
 
     <script>
         const data = {json_string_for_html};
+        const defaultDetailsText = "Select a person or relationship on the map to see more details here.";
 
         const colorMap = {{
             'Judiciary': '#6f42c1', 'Prosecution': '#fd7e14', 'Plaintiff': '#fd7e14',
@@ -196,7 +183,7 @@ class HtmlGenerator:
         svg.append('defs').append('marker')
             .attr('id', 'arrowhead')
             .attr('viewBox', '-0 -5 10 10')
-            .attr('refX', 5) // Position at the tip of the line
+            .attr('refX', 5)
             .attr('refY', 0)
             .attr('orient', 'auto')
             .attr('markerWidth', 6)
@@ -211,8 +198,8 @@ class HtmlGenerator:
         const nodes = [];
         const nodeMap = new Map();
         const levelInfo = new Map();
-        const nodeWidth = 80; // Smaller node
-        const nodeHeight = 30; // Smaller node
+        const nodeWidth = 80;
+        const nodeHeight = 30;
         const nodesPerRow = Math.floor(width / (nodeWidth + 30));
 
         let yPos = 120;
@@ -220,7 +207,7 @@ class HtmlGenerator:
         data.levels.forEach(level => {{
             const numNodes = level.parties.length;
             const numRows = Math.ceil(numNodes / nodesPerRow);
-            const levelHeight = Math.max(140, numRows * (nodeHeight + 50));
+            const levelHeight = Math.max(120, numRows * (nodeHeight + 60));
 
             levelInfo.set(level.level_number, {{ y: yPos, height: levelHeight }});
             
@@ -254,27 +241,34 @@ class HtmlGenerator:
             .force("collide", d3.forceCollide().radius(nodeWidth / 2 + 10).strength(1))
             .force("x", d3.forceX(width / 2).strength(0.05));
 
+        const linkGroup = g.append("g").selectAll("g").data(links).join("g")
+            .attr("class", "link-group")
+            .on("mouseover", function(event, d) {{
+                d3.select(this).raise();
+                document.getElementById('details-text').textContent = d.relationship;
+            }})
+            .on("mouseout", function() {{
+                document.getElementById('details-text').textContent = defaultDetailsText;
+            }});
+
         const node = g.append("g").selectAll("g").data(nodes).join("g")
             .attr("class", "node")
             .on("click", (event, d) => {{
-                document.getElementById('details-text').textContent = d.description;
+                // FIX: This check prevents the click event from firing if a drag has occurred.
+                if (!event.defaultPrevented) {{
+                    document.getElementById('details-text').textContent = d.description;
+                }}
             }})
             .call(drag(simulation));
             
-        const linkGroup = g.append("g").selectAll("g").data(links).join("g")
-            .attr("class", "link-group")
-            .on("mouseover", function() {{ d3.select(this).raise(); }});
-
         const getPath = d => {{
+            const startPoint = getIntersectionPoint(d.target, d.source, nodeWidth, nodeHeight);
             const endPoint = getIntersectionPoint(d.source, d.target, nodeWidth, nodeHeight);
-            return `M${{d.source.x}},${{d.source.y}} C ${{d.source.x}},${{(d.source.y + endPoint.y) / 2}} ${{endPoint.x}},${{(d.source.y + endPoint.y) / 2}} ${{endPoint.x}},${{endPoint.y}}`;
+            return `M${{startPoint.x}},${{startPoint.y}} C ${{startPoint.x}},${{(startPoint.y + endPoint.y) / 2}} ${{endPoint.x}},${{(startPoint.y + endPoint.y) / 2}} ${{endPoint.x}},${{endPoint.y}}`;
         }};
         
         linkGroup.append("path").attr("class", "link-hitbox").attr("d", getPath);
         const visibleLink = linkGroup.append("path").attr("class", "link").attr('marker-end','url(#arrowhead)').attr("d", getPath);
-        const linkLabel = linkGroup.append("text").attr("class", "link-label")
-            .attr("dy", "-5px")
-            .text(d => d.relationship);
         
         node.append("rect")
             .attr("x", -nodeWidth / 2).attr("y", -nodeHeight / 2)
@@ -291,7 +285,7 @@ class HtmlGenerator:
         simulation.on("tick", () => {{
             nodes.forEach(d => {{
                 const levelData = levelInfo.get(d.level);
-                const padding = 15;
+                const padding = 20;
                 const upper_bound = levelData.y - 30 + (nodeHeight / 2) + padding;
                 const lower_bound = levelData.y + levelData.height - 40 - (nodeHeight / 2) - padding;
                 d.y = Math.max(upper_bound, Math.min(lower_bound, d.y));
@@ -299,9 +293,6 @@ class HtmlGenerator:
         
             visibleLink.attr("d", getPath);
             linkGroup.selectAll(".link-hitbox").attr("d", getPath);
-            linkLabel
-                .attr("x", d => (d.source.x + d.target.x) / 2)
-                .attr("y", d => (d.source.y + d.target.y) / 2);
             node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
             nameLabel.call(wrap, nodeWidth - 8);
         }});
@@ -315,18 +306,14 @@ class HtmlGenerator:
             const rectAngle = Math.atan2(h, w);
             
             let x, y;
-            if (angle > -rectAngle && angle < rectAngle) {{ // Right side
-                x = target.x - w;
-                y = target.y - w * Math.tan(angle);
-            }} else if (angle > rectAngle && angle < Math.PI - rectAngle) {{ // Bottom side
-                x = target.x - h / Math.tan(angle);
-                y = target.y - h;
-            }} else if (angle < -rectAngle && angle > -Math.PI + rectAngle) {{ // Top side
-                x = target.x + h / Math.tan(angle);
-                y = target.y + h;
-            }} else {{ // Left side
-                x = target.x + w;
-                y = target.y + w * Math.tan(angle);
+            if (angle > -rectAngle && angle < rectAngle) {{
+                x = target.x - w; y = target.y - w * Math.tan(angle);
+            }} else if (angle > rectAngle && angle < Math.PI - rectAngle) {{
+                x = target.x - h / Math.tan(angle); y = target.y - h;
+            }} else if (angle < -rectAngle && angle > -Math.PI + rectAngle) {{
+                x = target.x + h / Math.tan(angle); y = target.y + h;
+            }} else {{
+                x = target.x + w; y = target.y + w * Math.tan(angle);
             }}
             return {{x, y}};
         }}
