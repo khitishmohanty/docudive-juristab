@@ -66,8 +66,8 @@ tables:
 enrichment_filenames:
   source_html: "miniviewer.html"
   extracted_text: "miniviewer.txt"
-  jurismap_json: "jurismap.json"
-  jurismap_html: "jurismap.html"
+  jurismap_json: "juristree.json"
+  jurismap_html: "juristree.html"
 
 # -- Audit log configuration --
 audit_log:

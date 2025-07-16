@@ -1,394 +1,422 @@
 import json
+import html
+import re
 
 class HtmlGenerator:
     """
-    Generates an interactive HTML tree visualization from a JurisMap JSON object.
+    Generates an interactive HTML flowchart from a JuriTree JSON object.
+    The generated HTML uses TailwindCSS for styling and is fully self-contained.
     """
+
+    def _format_tooltip_text(self, text: str) -> str:
+        """
+        Finds patterns like 'Reason 1:', 'What:', etc., and makes them bold.
+        
+        Args:
+            text (str): The text content from the tooltip.
+
+        Returns:
+            str: The formatted text with HTML strong tags.
+        """
+        # This regex finds words like 'What', 'Who', 'Why', or 'Reason' followed by a number and a colon,
+        # and wraps them in <strong> tags.
+        pattern = r'\b(What|Who|Why|Reason\s*\d*):'
+        # Use a function for replacement to handle HTML escaping correctly
+        def bold_match(match):
+            return f"<strong>{html.escape(match.group(0))}</strong>"
+        
+        # We process the text line by line to apply the bolding
+        lines = text.splitlines()
+        formatted_lines = []
+        for line in lines:
+            # Escape the whole line first, then apply bolding
+            escaped_line = html.escape(line)
+            # The regex replacement for bolding is applied on the unescaped line,
+            # but we will replace on the escaped line to avoid double escaping.
+            # A simpler approach is to just bold the specific keywords.
+            # Let's refine this. The existing HTML already bolds What/Who/Why labels.
+            # The user wants to bold text *within* the description.
+            
+        # A better approach for the user's request:
+        # The user wants "Reason 1:" etc. inside the text to be bold.
+        # The What/Who/Why are already handled by the HTML structure.
+        
+        # Let's process the 'why' text specifically if that's where reasons appear.
+        # The prompt is generic, so let's apply it to all tooltip text.
+        
+        # Final approach: A simple regex on the final text content.
+        # We will apply this to the 'what', 'who', and 'why' fields.
+        
+        # The HTML structure is already <div class="tooltip-item"><strong>What:</strong> {tooltip_what}</div>
+        # So we only need to process the content of tooltip_what, tooltip_who, tooltip_why
+        
+        # Let's apply a regex to bold "Reason X:" within the text.
+        text = html.escape(text) # Escape the whole string first
+        # Then, find and replace the unescaped pattern with the bolded version.
+        text = re.sub(r'(Reason\s*\d*:)', r'<strong>\1</strong>', text, flags=re.IGNORECASE)
+        return text
+
+
+    def _render_node_html(self, node: dict) -> str:
+        """
+        Renders a single flowchart node into an HTML string.
+
+        Args:
+            node (dict): A dictionary representing a single node from the JSON data.
+
+        Returns:
+            str: The HTML string for the node.
+        """
+        if not node:
+            return ""
+
+        node_type = html.escape(node.get('type', ''))
+        node_title = html.escape(node.get('title', ''))
+        
+        tooltip_data = node.get('tooltip', {})
+        # Apply formatting to bold "Reason X:"
+        tooltip_what = self._format_tooltip_text(tooltip_data.get('what', ''))
+        tooltip_who = self._format_tooltip_text(tooltip_data.get('who', ''))
+        tooltip_why = self._format_tooltip_text(tooltip_data.get('why', ''))
+
+        reference_data = node.get('reference', {})
+        ref_text = html.escape(reference_data.get('refText', ''))
+        ref_popup_text = html.escape(reference_data.get('refPopupText', ''))
+
+        children_html = self._render_children_html(node.get('children', []))
+
+        return f"""
+        <div class="flowchart-node {node_type} w-full">
+            <span>{node_title}</span>
+            <div class="tooltip">
+                <div class="tooltip-item"><strong>What:</strong> {tooltip_what}</div>
+                <div class="tooltip-item"><strong>Who:</strong> {tooltip_who}</div>
+                <div class="tooltip-item"><strong>Why:</strong> {tooltip_why}</div>
+                <span class="tooltip-ref">
+                    {ref_text}
+                    <div class="ref-popup">{ref_popup_text}</div>
+                </span>
+            </div>
+        </div>
+        {children_html}
+        """
+
+    def _render_children_html(self, children: list) -> str:
+        """
+        Renders the children of a node, handling the layout and connectors.
+        """
+        if not children:
+            return ""
+
+        if len(children) > 1:
+            branch_container_class = "flex flex-col md:flex-row gap-8 w-full" 
+            child_wrapper_class = "flex-1 flex flex-col items-center gap-8"
+        else:
+            branch_container_class = "flex flex-col items-center gap-8 w-full"
+            child_wrapper_class = "w-full"
+
+        child_branches = []
+        for child in children:
+            branch_content = self._render_node_html(child)
+            child_branches.append(f'<div class="{child_wrapper_class}">{branch_content}</div>')
+
+        return f"""
+        <div class="w-px h-8 bg-gray-400"></div>
+        <div class="{branch_container_class}">
+            {''.join(child_branches)}
+        </div>
+        """
+
+    def _render_branch_html(self, node: dict) -> str:
+        """
+        Renders a complete sub-branch, starting from a given node.
+        """
+        content = self._render_node_html(node)
+        return f"""
+        <div class="flowchart-sub-branch">
+            {content}
+        </div>
+        """
 
     def generate_html_tree(self, json_data: dict) -> str:
         """
-        Takes a dictionary parsed from the JurisMap JSON and returns a complete
-        HTML string for the interactive tree visualization with updated styles and animations.
-
-        Args:
-            json_data (dict): The case data parsed from a JSON file.
-
-        Returns:
-            str: A self-contained HTML document as a string.
+        Takes a dictionary parsed from the JuriTree JSON and returns a complete
+        HTML string for the interactive flowchart.
         """
-        json_string_for_html = json.dumps(json_data)
+        flowchart_data = json_data.get('flowchart', {})
+        title = html.escape(flowchart_data.get('title', 'JuriTree Flowchart'))
+        subtitle = html.escape(flowchart_data.get('subtitle', ''))
+        root_node = flowchart_data.get('rootNode')
+        final_outcome = flowchart_data.get('finalOutcome')
 
-        html_template = f"""
+        main_branches_html = ""
+        if root_node and root_node.get('children'):
+            branches = [self._render_branch_html(child) for child in root_node['children']]
+            main_branches_html = ''.join(branches)
+
+        return f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JurisMap Visualization</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <title>{title}: {subtitle}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {{
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            overflow: hidden;
-        }}
-        .chart-container {{
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            gap: 40px;
-            width: 100%;
-            max-width: 1800px;
-            margin: auto;
-        }}
-        .tree-container {{
-            flex-grow: 1;
-            position: relative;
-        }}
-        .sidebar {{
-            width: 300px;
-            flex-shrink: 0;
-        }}
-        .details-panel, .legend-panel {{
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }}
-        .details-panel h3, .legend-panel h3 {{
-            margin-top: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: transparent;
             color: black;
-            font-weight: normal;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 10px;
+            overflow: auto;
         }}
-        .details-panel p {{
-            color: #7A7171;
-            font-size: 14px;
-            line-height: 1.5;
+        .viewport {{
+            width: 100%;
+            min-height: 100vh;
+            cursor: grab;
+            padding: 2rem;
         }}
-        .legend-item {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 12px;
-            color: #7A7171;
+        .zoom-container {{
+            transition: transform 0.2s ease-out;
+            transform-origin: center center;
         }}
-        .legend-color {{
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            margin-right: 10px;
-        }}
-        .node {{
-             cursor: pointer;
-        }}
-        .node rect {{
-            stroke: none;
-            transition: transform 0.2s ease-in-out;
-        }}
-        .node:hover rect {{
-            transform: scale(1.05);
-        }}
-        .node text {{
-            font-size: 8px;
-            text-anchor: middle;
-            fill: #333;
-            pointer-events: none;
-        }}
-        .node .type-label {{
-            font-size: 11px;
-            font-weight: 500;
-            fill: white;
-            text-anchor: middle;
-            pointer-events: none;
-        }}
-        .link-group .link {{
-            fill: none;
-            stroke: #ccc;
-            stroke-width: 1.5px;
-        }}
-        .link-group .link-hitbox {{
-            fill: none;
-            stroke: transparent;
-            stroke-width: 15px;
+        .flowchart-node {{
+            border: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+            border-radius: 50px;
+            padding: 0.75rem 1.25rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
             cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            user-select: text;
+            color: black;
         }}
-        .link-group:hover .link {{
-            stroke: #343a40;
+        .flowchart-node.is-active {{
+            z-index: 40;
         }}
-        .level-label {{
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            fill: #7A7171;
+        .flowchart-node:hover {{
+            border-color: #9ca3af;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }}
-        .level-line {{
-            stroke: #adb5bd;
-            stroke-dasharray: 4, 4;
+        
+        .node-main-issue {{ background-color: #fecaca; border-color: #f87171; }}
+        .node-primary-branch {{ background-color: #ADD8E6; border-color: #82c2d9; }}
+        .node-question {{ background-color: #CF9FFF; border-color: #b380ff; transform: rotate(-2deg); }}
+        .node-question:hover {{ transform: rotate(0deg) translateY(-4px); }}
+        .node-finding-no {{ background-color: #fed7aa; border-color: #fb923c; }}
+        .node-fact {{ background-color: #bfdbfe; border-color: #93c5fd; }}
+
+        .tooltip {{
+            visibility: hidden; opacity: 0;
+            width: 320px;
+            background-color: #4b5563;
+            color: white;
+            text-align: left; padding: 1rem; border-radius: 0.5rem;
+            position: absolute; z-index: 50;
+            bottom: 125%; left: 50%; margin-left: -160px;
+            transition: opacity 0.3s, visibility 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            user-select: text;
         }}
-        #arrowhead path {{
-            fill: #ccc;
+        .tooltip.is-visible {{
+            visibility: visible; opacity: 1;
+            pointer-events: auto;
         }}
-        .link-group:hover #arrowhead path {{
-            fill: #343a40;
+        .tooltip::after {{
+            content: ""; position: absolute;
+            top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid;
+            border-color: #4b5563 transparent transparent transparent;
+        }}
+        
+        .tooltip.tooltip-below {{
+            bottom: auto;
+            top: 125%;
+        }}
+        .tooltip.tooltip-below::after {{
+            top: auto;
+            bottom: 100%;
+            border-color: transparent transparent #4b5563 transparent;
+        }}
+
+        .tooltip-item {{ margin-bottom: 0.5rem; }}
+        .tooltip-item strong {{ color: #93c5fd; display: block; font-weight: 600; margin-bottom: 0.25rem;}}
+        .tooltip-item > strong {{ color: white; }} /* Make What/Who/Why labels white */
+
+        
+        .tooltip-ref {{
+            display: block; margin-top: 0.75rem; padding-top: 0.5rem;
+            border-top: 1px solid #6b7280;
+            font-style: italic;
+            color: #d1d5db; font-size: 0.75rem; position: relative;
+            cursor: help;
+        }}
+        
+        .ref-popup {{
+            visibility: hidden; opacity: 0;
+            width: 350px;
+            background-color: #111827; color: #d1d5db;
+            border: 1px solid #60a5fa;
+            text-align: left; padding: 1rem; border-radius: 0.375rem;
+            position: absolute; z-index: 60;
+            bottom: 0; left: 105%;
+            transition: opacity 0.3s, visibility 0.3s;
+            font-size: 0.8rem; line-height: 1.4; font-style: normal;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            pointer-events: none;
+            user-select: text;
+        }}
+        .ref-popup.is-visible {{
+            visibility: visible; opacity: 1;
+            pointer-events: auto;
+        }}
+
+        .flowchart-sub-branch {{
+             border-color: #d1d5db;
+             gap: 2rem;
+        }}
+        
+        @keyframes fadeIn {{
+            from {{ opacity: 0; }}
+            to {{ opacity: 1; }}
+        }}
+        .animate-on-load {{
+            animation: fadeIn 0.8s ease-out;
         }}
     </style>
 </head>
 <body>
-    <div class="chart-container">
-        <div class="tree-container">
-            <svg id="tree-svg"></svg>
-        </div>
-        <div class="sidebar">
-            <div class="details-panel" id="details-panel">
-                <h3>Details</h3>
-                <p id="details-text">Select a person or relationship on the map to see more details here.</p>
-            </div>
-            <div class="legend-panel" id="legend-panel">
-                <h3>Legends</h3>
+    <div id="viewport" class="viewport">
+        <div id="zoom-container" class="zoom-container">
+            <div class="flowchart-container animate-on-load">
+                <div class="flowchart-level">
+                    <div class="max-w-lg">
+                        {self._render_node_html(root_node) if root_node else ''}
+                    </div>
+                </div>
+                {"<div class='w-px h-16 bg-gray-400'></div>" if main_branches_html else ""}
+                <div class="flowchart-level">
+                    <div class="flowchart-branch w-full max-w-7xl">{main_branches_html}</div>
+                </div>
+                {"<div class='w-px h-16 bg-gray-400'></div>" if final_outcome else ""}
+                <div class="flowchart-level">
+                    <div class="max-w-lg">
+                        {self._render_node_html(final_outcome) if final_outcome else ''}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const data = {json_string_for_html};
-        const defaultDetailsText = "Select a person or relationship on the map to see more details here.";
+        document.addEventListener('DOMContentLoaded', () => {{{{
+            const viewport = document.getElementById('viewport');
+            const zoomContainer = document.getElementById('zoom-container');
+            const allNodes = document.querySelectorAll('.flowchart-node');
+            const allTooltips = document.querySelectorAll('.tooltip');
+            const allRefPopups = document.querySelectorAll('.ref-popup');
 
-        const colorMap = {{
-            'Judiciary': '#6f42c1', 'Prosecution': '#fd7e14', 'Plaintiff': '#fd7e14',
-            'Defendant': '#0d6efd', 'Accused': '#0d6efd', 'Victim': '#20c997',
-            'Co-offender': '#dc3545', 'Third Party': '#ffc107', 'Insurer': '#6610f2',
-            'Intervener': '#17a2b8', 'Legal Representative': '#0dcaf0', 'Legal Firm': '#0dcaf0',
-            'Other parties': '#6c757d'
-        }};
-        
-        // FIX: Create a dynamic legend based on types present in the data
-        const presentTypes = new Set(data.levels.flatMap(l => l.parties.map(p => p.type)));
-        
-        const legendData = Object.entries(colorMap).reduce((acc, [type, color]) => {{
-            if (presentTypes.has(type)) {{
-                if (!acc[color]) {{
-                    acc[color] = [];
+            let scale = 1;
+            let panX = 0;
+            let panY = 0;
+            let isPanning = false;
+            let startX = 0;
+            let startY = 0;
+
+            const updateTransform = () => {{{{
+                zoomContainer.style.transform = `translate(${{panX}}px, ${{panY}}px) scale(${{scale}})`;
+            }}}};
+
+            const closeAllPopups = () => {{{{
+                allNodes.forEach(n => n.classList.remove('is-active'));
+                allTooltips.forEach(t => t.classList.remove('is-visible', 'tooltip-below'));
+                allRefPopups.forEach(p => p.classList.remove('is-visible'));
+            }}}};
+
+            viewport.addEventListener('wheel', (event) => {{{{
+                if (!event.ctrlKey) return;
+                event.preventDefault();
+                const delta = event.deltaY > 0 ? -0.05 : 0.05;
+                scale = Math.max(0.2, Math.min(3, scale + delta));
+                updateTransform();
+            }}}});
+
+            viewport.addEventListener('mousedown', (event) => {{{{
+                if (event.button !== 0 || event.target.closest('.flowchart-node, .tooltip, .ref-popup')) return;
+                isPanning = true;
+                viewport.style.cursor = 'grabbing';
+                startX = event.clientX - panX;
+                startY = event.clientY - panY;
+            }}}});
+
+            viewport.addEventListener('mousemove', (event) => {{{{
+                if (!isPanning) return;
+                panX = event.clientX - startX;
+                panY = event.clientY - startY;
+                updateTransform();
+            }}}});
+
+            window.addEventListener('mouseup', (event) => {{{{
+                // If a selection was made, don't close the popups.
+                if (window.getSelection().toString().length > 0) {{
+                    // Check if the mouseup is outside the popup, if so, we can still close.
+                    // This is tricky, so for now, we just prevent closing on any selection release.
+                    // A more robust solution might be needed if this causes issues.
+                }} else if (!event.target.closest('.flowchart-node, .tooltip, .ref-popup')) {{
+                    closeAllPopups();
                 }}
-                acc[color].push(type);
-            }}
-            return acc;
-        }}, {{}});
-
-        const legendPanel = document.getElementById('legend-panel');
-        Object.entries(legendData).forEach(([color, types]) => {{
-            const item = document.createElement('div');
-            item.className = 'legend-item';
-            const label = types.join(' / ');
-            item.innerHTML = `<div class="legend-color" style="background-color: ${{color}};"></div><span>${{label}}</span>`;
-            legendPanel.appendChild(item);
-        }});
-
-        const width = document.querySelector('.tree-container').clientWidth;
-        const svg = d3.select("#tree-svg").attr("width", width);
-        
-        const defs = svg.append('defs');
-        defs.append('marker')
-            .attr('id', 'arrowhead')
-            .attr('viewBox', '-0 -5 10 10')
-            .attr('refX', 5).attr('refY', 0)
-            .attr('orient', 'auto')
-            .attr('markerWidth', 6).attr('markerHeight', 6)
-            .append('svg:path')
-            .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-            .attr('fill', '#ccc');
-
-        defs.append('marker')
-            .attr('id', 'arrowhead-hover')
-            .attr('viewBox', '-0 -5 10 10')
-            .attr('refX', 5).attr('refY', 0)
-            .attr('orient', 'auto')
-            .attr('markerWidth', 6).attr('markerHeight', 6)
-            .append('svg:path')
-            .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-            .attr('fill', '#343a40');
-
-
-        const g = svg.append("g");
-        const zoom = d3.zoom().on("zoom", (event) => g.attr("transform", event.transform));
-        svg.call(zoom);
-
-        const nodes = [];
-        const nodeMap = new Map();
-        const levelInfo = new Map();
-        const nodeWidth = 70;
-        const nodeHeight = 28;
-        const nodesPerRow = Math.floor(width / (nodeWidth + 25));
-
-        let yPos = 120;
-
-        data.levels.forEach(level => {{
-            const numNodes = level.parties.length;
-            const numRows = Math.ceil(numNodes / nodesPerRow);
-            const levelHeight = Math.max(120, numRows * (nodeHeight + 50));
-
-            levelInfo.set(level.level_number, {{ y: yPos, height: levelHeight }});
-            
-            level.parties.forEach(party => {{
-                nodes.push({{ 
-                    id: party.name, ...party, 
-                    level: level.level_number
-                }});
-                nodeMap.set(party.name, nodes[nodes.length - 1]);
-            }});
-            yPos += levelHeight;
-        }});
-        
-        svg.attr("height", yPos);
-
-        const links = data.connections.map(d => ({{ 
-            source: nodeMap.get(d.source), 
-            target: nodeMap.get(d.target),
-            relationship: d.relationship 
-        }})).filter(l => l.source && l.target);
-
-        levelInfo.forEach((info, levelNumber) => {{
-            const levelData = data.levels.find(l => l.level_number === levelNumber);
-            g.append("text").attr("x", 50).attr("y", info.y - 40).attr("class", "level-label").text(levelData.level_description);
-            g.append("line").attr("x1", 50).attr("x2", width - 50).attr("y1", info.y - 30).attr("y2", info.y - 30).attr("class", "level-line");
-        }});
-
-        const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.6))
-            .force("charge", d3.forceManyBody().strength(-150))
-            .force("collide", d3.forceCollide().radius(nodeWidth / 2 + 10).strength(1))
-            .force("x", d3.forceX(width / 2).strength(0.05));
-
-        const linkGroup = g.append("g").selectAll("g").data(links).join("g")
-            .attr("class", "link-group")
-            .on("mouseover", function(event, d) {{
-                const currentLink = d3.select(this);
-                currentLink.raise();
-                currentLink.select('.link').attr('marker-end', 'url(#arrowhead-hover)');
-                const relationshipHTML = `
-                    <span>${{d.source.id}}</span>
-                    <strong style="color: black;">${{d.relationship}}</strong>
-                    <span>${{d.target.id}}</span>
-                `;
-                document.getElementById('details-text').innerHTML = relationshipHTML;
-            }})
-            .on("mouseout", function() {{
-                const currentLink = d3.select(this);
-                currentLink.select('.link').attr('marker-end', 'url(#arrowhead)');
-                document.getElementById('details-text').innerHTML = defaultDetailsText;
-            }});
-
-        const node = g.append("g").selectAll("g").data(nodes).join("g")
-            .attr("class", "node")
-            .call(drag(simulation));
-            
-        const getPath = d => {{
-            const startPoint = getIntersectionPoint(d.target, d.source, nodeWidth, nodeHeight);
-            const endPoint = getIntersectionPoint(d.source, d.target, nodeWidth, nodeHeight);
-            return `M${{startPoint.x}},${{startPoint.y}} C ${{startPoint.x}},${{(startPoint.y + endPoint.y) / 2}} ${{endPoint.x}},${{(startPoint.y + endPoint.y) / 2}} ${{endPoint.x}},${{endPoint.y}}`;
-        }};
-        
-        linkGroup.append("path").attr("class", "link-hitbox").attr("d", getPath);
-        const visibleLink = linkGroup.append("path").attr("class", "link").attr('marker-end','url(#arrowhead)').attr("d", getPath);
-        
-        node.append("rect")
-            .attr("x", -nodeWidth / 2).attr("y", -nodeHeight / 2)
-            .attr("width", nodeWidth).attr("height", nodeHeight)
-            .attr("rx", 15).attr("ry", 15)
-            .attr("fill", d => colorMap[d.type] || colorMap['Other parties']);
-        
-        node.append("text").attr("class", "type-label").attr("dy", "0.3em").text(d => d.type.substring(0, 1));
-        const nameLabel = node.append("text").attr("y", nodeHeight / 2 + 3).attr("dy", "0.5em").text(d => d.name);
-
-        node.style("opacity", 0).transition().duration(700).delay((d, i) => i * 15).style("opacity", 1);
-        linkGroup.style("opacity", 0).transition().duration(700).delay(200).style("opacity", 1);
-
-        simulation.on("tick", () => {{
-            nodes.forEach(d => {{
-                const levelData = levelInfo.get(d.level);
-                const padding = 20;
-                const upper_bound = levelData.y - 30 + (nodeHeight / 2) + padding;
-                const lower_bound = levelData.y + levelData.height - 40 - (nodeHeight / 2) - padding;
-                d.y = Math.max(upper_bound, Math.min(lower_bound, d.y));
-            }});
-        
-            visibleLink.attr("d", getPath);
-            linkGroup.selectAll(".link-hitbox").attr("d", getPath);
-            node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
-            nameLabel.call(wrap, nodeWidth - 5);
-        }});
-        
-        function getIntersectionPoint(source, target, width, height) {{
-            const dx = target.x - source.x;
-            const dy = target.y - source.y;
-            const w = width / 2;
-            const h = height / 2;
-            const angle = Math.atan2(dy, dx);
-            const rectAngle = Math.atan2(h, w);
-            
-            let x, y;
-            if (angle > -rectAngle && angle < rectAngle) {{
-                x = target.x - w; y = target.y - w * Math.tan(angle);
-            }} else if (angle > rectAngle && angle < Math.PI - rectAngle) {{
-                x = target.x - h / Math.tan(angle); y = target.y - h;
-            }} else if (angle < -rectAngle && angle > -Math.PI + rectAngle) {{
-                x = target.x + h / Math.tan(angle); y = target.y + h;
-            }} else {{
-                x = target.x + w; y = target.y + w * Math.tan(angle);
-            }}
-            return {{x, y}};
-        }}
-
-        function drag(simulation) {{
-            let dragstarted_x, dragstarted_y;
-
-            function dragstarted(event, d) {{
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = event.x; d.fy = event.y;
-                dragstarted_x = event.x;
-                dragstarted_y = event.y;
-                d3.select(this).raise();
-            }}
-            function dragged(event, d) {{
-                d.fx = event.x; d.fy = event.y;
-            }}
-            function dragended(event, d) {{
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null; d.fy = null;
                 
-                const dist = Math.sqrt(Math.pow(event.x - dragstarted_x, 2) + Math.pow(event.y - dragstarted_y, 2));
-                if (dist < 3) {{
-                    document.getElementById('details-text').textContent = d.description;
+                if(isPanning) {{
+                    isPanning = false;
+                    viewport.style.cursor = 'grab';
                 }}
-            }}
-            return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
-        }}
+            }}}});
 
-        function wrap(text, width) {{
-            text.each(function() {{
-                var text = d3.select(this), words = text.text().split(/\\s+/).reverse(), word, line = [],
-                    lineNumber = 0, lineHeight = 1.1, y = text.attr("y"), dy = parseFloat(text.attr("dy")),
-                    tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
-                while (word = words.pop()) {{
-                    line.push(word);
-                    tspan.text(line.join(" "));
-                    if (tspan.node().getComputedTextLength() > width) {{
-                        line.pop();
-                        tspan.text(line.join(" "));
-                        line = [word];
-                        tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-                    }}
+            allNodes.forEach(node => {{{{
+                node.addEventListener('click', (event) => {{{{
+                    event.stopPropagation();
+                    const tooltip = node.querySelector('.tooltip');
+                    const isActive = tooltip.classList.contains('is-visible');
+                    
+                    closeAllPopups();
+
+                    if (!isActive) {{{{
+                        node.classList.add('is-active');
+                        tooltip.classList.add('is-visible');
+
+                        const rect = tooltip.getBoundingClientRect();
+                        if (rect.top < 0) {{{{
+                            tooltip.classList.add('tooltip-below');
+                        }}}}
+                    }}}}
+                }}}});
+            }}}});
+
+            document.querySelectorAll('.tooltip-ref').forEach(ref => {{{{
+                ref.addEventListener('click', (event) => {{{{
+                    event.stopPropagation();
+                    const refPopup = ref.querySelector('.ref-popup');
+                    if (refPopup) refPopup.classList.toggle('is-visible');
+                }}}});
+            }}}});
+
+            // This listener is a fallback. The main logic is now on mouseup.
+            document.addEventListener('click', (event) => {{{{
+                 if (!event.target.closest('.flowchart-node, .tooltip, .ref-popup')) {{
+                    closeAllPopups();
                 }}
-            }});
-        }}
+            }}}})
+
+        }}}});
     </script>
 </body>
 </html>
         """
-        return html_template

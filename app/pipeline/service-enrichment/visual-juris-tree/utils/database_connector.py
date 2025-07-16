@@ -52,9 +52,9 @@ class DatabaseConnector:
 
     def get_records_for_ai_processing(self, table_name: str, column_config: Dict[str, str]) -> pd.DataFrame:
         """
-        Queries the status table for records that are ready for AI processing.
+        Queries the status table for records ready for AI processing.
         A record is ready if text extraction has passed, but either the JSON
-        or HTML steps have not passed.
+        or HTML steps are in a 'not started', 'failed', or NULL state.
         """
         print(f"Querying for records ready for AI processing in table: {table_name}")
         try:
@@ -63,11 +63,19 @@ class DatabaseConnector:
             json_status_col = column_config['json_valid_status']
             html_status_col = column_config['jurismap_html_status']
             
+            # UPDATED: The WHERE clause is now more specific. It explicitly checks for 'not started' or 'failed' states,
+            # and also includes records where the status might be NULL, which is the correct interpretation
+            # of "not 'pass'".
             query = text(f"""
                 SELECT source_id, {json_status_col}, {html_status_col}
                 FROM {table_name}
-                WHERE {text_status_col} = 'pass' 
-                AND ({json_status_col} != 'pass' OR {html_status_col} != 'pass')
+                WHERE 
+                    {text_status_col} = 'pass' 
+                    AND (
+                        ({json_status_col} IN ('not started', 'failed')) OR {json_status_col} IS NULL
+                        OR
+                        ({html_status_col} IN ('not started', 'failed')) OR {html_status_col} IS NULL
+                    )
             """)
             return pd.read_sql_query(query, self.engine)
         except Exception as e:
@@ -102,7 +110,6 @@ class DatabaseConnector:
     def update_step_result(self, table_name: str, source_id: str, step: str, status: str, duration: float, column_config: Dict[str, str]):
         session = self.Session()
         
-        # Map step names to the keys in the column_config dictionary
         step_to_config_keys = {
             'text_extract': ('text_extract_status', 'text_extract_duration'),
             'json_valid': ('json_valid_status', 'json_valid_duration'),
