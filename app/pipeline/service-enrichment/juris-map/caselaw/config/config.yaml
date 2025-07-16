@@ -61,7 +61,6 @@ tables:
 
 # -- File naming conventions for the enrichment service --
 enrichment_filenames:
-  source_html: "miniviewer.html"
   extracted_text: "miniviewer.txt"
-  jurismap_json: "jurismap.json"
-  jurismap_html: "jurismap.html"
+  juristree_json: "juristree.json"
+  juristree_html: "juristree.html"
