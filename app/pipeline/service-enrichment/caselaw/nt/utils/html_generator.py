@@ -32,7 +32,6 @@ class HtmlGenerator:
     <style>
         body {{
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f8f9fa;
             margin: 0;
             padding: 20px;
             overflow: hidden;
@@ -69,7 +68,7 @@ class HtmlGenerator:
             padding-bottom: 10px;
         }}
         .details-panel p {{
-            color: #6c757d;
+            color: #7A7171;
             font-size: 14px;
             line-height: 1.5;
         }}
@@ -77,6 +76,8 @@ class HtmlGenerator:
             display: flex;
             align-items: center;
             margin-bottom: 10px;
+            font-size: 12px;
+            color: #7A7171;
         }}
         .legend-color {{
             width: 20px;
@@ -85,25 +86,23 @@ class HtmlGenerator:
             margin-right: 10px;
         }}
         .node {{
-             /* FIX: Changed cursor from 'grab' to 'pointer' */
              cursor: pointer;
         }}
         .node rect {{
-            stroke: #fff;
-            stroke-width: 2px;
+            stroke: none;
             transition: transform 0.2s ease-in-out;
         }}
         .node:hover rect {{
             transform: scale(1.05);
         }}
         .node text {{
-            font-size: 9px;
+            font-size: 8px;
             text-anchor: middle;
             fill: #333;
             pointer-events: none;
         }}
         .node .type-label {{
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             fill: white;
             text-anchor: middle;
@@ -127,7 +126,7 @@ class HtmlGenerator:
             font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
-            fill: #adb5bd;
+            fill: #7A7171;
         }}
         .level-line {{
             stroke: #adb5bd;
@@ -152,7 +151,7 @@ class HtmlGenerator:
                 <p id="details-text">Select a person or relationship on the map to see more details here.</p>
             </div>
             <div class="legend-panel" id="legend-panel">
-                <h3>Colour Legends</h3>
+                <h3>Legends</h3>
             </div>
         </div>
     </div>
@@ -169,27 +168,52 @@ class HtmlGenerator:
             'Other parties': '#6c757d'
         }};
         
+        // FIX: Create a dynamic legend based on types present in the data
+        const presentTypes = new Set(data.levels.flatMap(l => l.parties.map(p => p.type)));
+        
+        const legendData = Object.entries(colorMap).reduce((acc, [type, color]) => {{
+            if (presentTypes.has(type)) {{
+                if (!acc[color]) {{
+                    acc[color] = [];
+                }}
+                acc[color].push(type);
+            }}
+            return acc;
+        }}, {{}});
+
         const legendPanel = document.getElementById('legend-panel');
-        Object.entries(colorMap).forEach(([type, color]) => {{
+        Object.entries(legendData).forEach(([color, types]) => {{
             const item = document.createElement('div');
             item.className = 'legend-item';
-            item.innerHTML = `<div class="legend-color" style="background-color: ${{color}};"></div><span>${{type}}</span>`;
+            const label = types.join(' / ');
+            item.innerHTML = `<div class="legend-color" style="background-color: ${{color}};"></div><span>${{label}}</span>`;
             legendPanel.appendChild(item);
         }});
 
         const width = document.querySelector('.tree-container').clientWidth;
         const svg = d3.select("#tree-svg").attr("width", width);
         
-        svg.append('defs').append('marker')
+        const defs = svg.append('defs');
+        defs.append('marker')
             .attr('id', 'arrowhead')
             .attr('viewBox', '-0 -5 10 10')
-            .attr('refX', 5)
-            .attr('refY', 0)
+            .attr('refX', 5).attr('refY', 0)
             .attr('orient', 'auto')
-            .attr('markerWidth', 6)
-            .attr('markerHeight', 6)
+            .attr('markerWidth', 6).attr('markerHeight', 6)
             .append('svg:path')
-            .attr('d', 'M 0,-5 L 10 ,0 L 0,5');
+            .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+            .attr('fill', '#ccc');
+
+        defs.append('marker')
+            .attr('id', 'arrowhead-hover')
+            .attr('viewBox', '-0 -5 10 10')
+            .attr('refX', 5).attr('refY', 0)
+            .attr('orient', 'auto')
+            .attr('markerWidth', 6).attr('markerHeight', 6)
+            .append('svg:path')
+            .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+            .attr('fill', '#343a40');
+
 
         const g = svg.append("g");
         const zoom = d3.zoom().on("zoom", (event) => g.attr("transform", event.transform));
@@ -198,16 +222,16 @@ class HtmlGenerator:
         const nodes = [];
         const nodeMap = new Map();
         const levelInfo = new Map();
-        const nodeWidth = 80;
-        const nodeHeight = 30;
-        const nodesPerRow = Math.floor(width / (nodeWidth + 30));
+        const nodeWidth = 70;
+        const nodeHeight = 28;
+        const nodesPerRow = Math.floor(width / (nodeWidth + 25));
 
         let yPos = 120;
 
         data.levels.forEach(level => {{
             const numNodes = level.parties.length;
             const numRows = Math.ceil(numNodes / nodesPerRow);
-            const levelHeight = Math.max(120, numRows * (nodeHeight + 60));
+            const levelHeight = Math.max(120, numRows * (nodeHeight + 50));
 
             levelInfo.set(level.level_number, {{ y: yPos, height: levelHeight }});
             
@@ -237,28 +261,31 @@ class HtmlGenerator:
 
         const simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.6))
-            .force("charge", d3.forceManyBody().strength(-180))
+            .force("charge", d3.forceManyBody().strength(-150))
             .force("collide", d3.forceCollide().radius(nodeWidth / 2 + 10).strength(1))
             .force("x", d3.forceX(width / 2).strength(0.05));
 
         const linkGroup = g.append("g").selectAll("g").data(links).join("g")
             .attr("class", "link-group")
             .on("mouseover", function(event, d) {{
-                d3.select(this).raise();
-                document.getElementById('details-text').textContent = d.relationship;
+                const currentLink = d3.select(this);
+                currentLink.raise();
+                currentLink.select('.link').attr('marker-end', 'url(#arrowhead-hover)');
+                const relationshipHTML = `
+                    <span>${{d.source.id}}</span>
+                    <strong style="color: black;">${{d.relationship}}</strong>
+                    <span>${{d.target.id}}</span>
+                `;
+                document.getElementById('details-text').innerHTML = relationshipHTML;
             }})
             .on("mouseout", function() {{
-                document.getElementById('details-text').textContent = defaultDetailsText;
+                const currentLink = d3.select(this);
+                currentLink.select('.link').attr('marker-end', 'url(#arrowhead)');
+                document.getElementById('details-text').innerHTML = defaultDetailsText;
             }});
 
         const node = g.append("g").selectAll("g").data(nodes).join("g")
             .attr("class", "node")
-            .on("click", (event, d) => {{
-                // FIX: This check prevents the click event from firing if a drag has occurred.
-                if (!event.defaultPrevented) {{
-                    document.getElementById('details-text').textContent = d.description;
-                }}
-            }})
             .call(drag(simulation));
             
         const getPath = d => {{
@@ -273,7 +300,7 @@ class HtmlGenerator:
         node.append("rect")
             .attr("x", -nodeWidth / 2).attr("y", -nodeHeight / 2)
             .attr("width", nodeWidth).attr("height", nodeHeight)
-            .attr("rx", 10).attr("ry", 10)
+            .attr("rx", 15).attr("ry", 15)
             .attr("fill", d => colorMap[d.type] || colorMap['Other parties']);
         
         node.append("text").attr("class", "type-label").attr("dy", "0.3em").text(d => d.type.substring(0, 1));
@@ -294,7 +321,7 @@ class HtmlGenerator:
             visibleLink.attr("d", getPath);
             linkGroup.selectAll(".link-hitbox").attr("d", getPath);
             node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
-            nameLabel.call(wrap, nodeWidth - 8);
+            nameLabel.call(wrap, nodeWidth - 5);
         }});
         
         function getIntersectionPoint(source, target, width, height) {{
@@ -319,10 +346,14 @@ class HtmlGenerator:
         }}
 
         function drag(simulation) {{
+            let dragstarted_x, dragstarted_y;
+
             function dragstarted(event, d) {{
                 if (!event.active) simulation.alphaTarget(0.3).restart();
                 d.fx = event.x; d.fy = event.y;
-                d3.select(this).classed("dragging", true).raise();
+                dragstarted_x = event.x;
+                dragstarted_y = event.y;
+                d3.select(this).raise();
             }}
             function dragged(event, d) {{
                 d.fx = event.x; d.fy = event.y;
@@ -330,7 +361,11 @@ class HtmlGenerator:
             function dragended(event, d) {{
                 if (!event.active) simulation.alphaTarget(0);
                 d.fx = null; d.fy = null;
-                d3.select(this).classed("dragging", false);
+                
+                const dist = Math.sqrt(Math.pow(event.x - dragstarted_x, 2) + Math.pow(event.y - dragstarted_y, 2));
+                if (dist < 3) {{
+                    document.getElementById('details-text').textContent = d.description;
+                }}
             }}
             return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
         }}
@@ -338,7 +373,7 @@ class HtmlGenerator:
         function wrap(text, width) {{
             text.each(function() {{
                 var text = d3.select(this), words = text.text().split(/\\s+/).reverse(), word, line = [],
-                    lineNumber = 0, lineHeight = 1.0, y = text.attr("y"), dy = parseFloat(text.attr("dy")),
+                    lineNumber = 0, lineHeight = 1.1, y = text.attr("y"), dy = parseFloat(text.attr("dy")),
                     tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
                 while (word = words.pop()) {{
                     line.push(word);
