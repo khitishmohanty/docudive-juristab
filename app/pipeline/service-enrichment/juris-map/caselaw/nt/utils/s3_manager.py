@@ -76,19 +76,3 @@ class S3Manager:
             print(f"An S3 client error occurred while saving file: {e}")
             raise
 
-    def save_json_file(self, bucket_name: str, file_key: str, data: str):
-        """
-        Saves a string of JSON data to a file in an S3 bucket.
-
-        Args:
-            bucket_name (str): The name of the S3 bucket.
-            file_key (str): The full path (key) where the file will be saved.
-            data (str): The JSON string data to save.
-        """
-        try:
-            print(f"Attempting to save JSON file: s3://{bucket_name}/{file_key}")
-            self.s3_client.put_object(Bucket=bucket_name, Key=file_key, Body=data, ContentType='application/json')
-            print(f"Successfully saved JSON file: s3://{bucket_name}/{file_key}")
-        except ClientError as e:
-            print(f"An S3 client error occurred while saving JSON file: {e}")
-            raise
