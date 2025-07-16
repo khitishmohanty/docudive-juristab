@@ -76,4 +76,3 @@ class GeminiClient:
         except json.JSONDecodeError:
             print("JSON validation failed.")
             return False
-

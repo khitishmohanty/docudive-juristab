@@ -53,14 +53,29 @@ tables:
   tables_to_write:
     - database: legal_store
       table: caselaw_enrichment_status
-  audit_log_table:
-    - database: legal_store
-      table: audit_log
-      job_name: "caselaw_enrichment_juristree__nt"
-
+      # Add this new section to define column names
+      columns:
+        text_extract_status: "status_text_extract"
+        text_extract_duration: "duration_file_miniviewer_text"
+        json_valid_status: "status_jurismap_json"
+        json_valid_duration: "duration_jurismap_json"
+        jurismap_html_status: "status_jurismap_html"
+        jurismap_html_duration: "duration_jurismap_html"
 
 # -- File naming conventions for the enrichment service --
 enrichment_filenames:
+  source_html: "miniviewer.html"
   extracted_text: "miniviewer.txt"
-  juristree_json: "juristree.json"
-  juristree_html: "juristree.html"
+  jurismap_json: "jurismap.json"
+  jurismap_html: "jurismap.html"
+
+# -- Audit log configuration --
+audit_log:
+  text_extraction_job:
+    database: "legal_store"
+    table: "audit_log"
+    job_name: "text_extraction_service_nt"
+  ai_enrichment_job:
+    database: "legal_store"
+    table: "audit_log"
+    job_name: "ai_enrichment_service_jurismap_nt"

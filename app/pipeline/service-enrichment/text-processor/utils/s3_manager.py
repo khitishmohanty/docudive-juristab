@@ -75,4 +75,3 @@ class S3Manager:
         except ClientError as e:
             print(f"An S3 client error occurred while saving file: {e}")
             raise
-

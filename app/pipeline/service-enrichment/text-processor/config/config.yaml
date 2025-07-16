@@ -56,11 +56,23 @@ tables:
   audit_log_table:
     - database: legal_store
       table: audit_log
-      job_name: "caselaw_enrichment_juristree__nt"
+      job_name: "caselaw_enrichment_nt"
 
 
 # -- File naming conventions for the enrichment service --
 enrichment_filenames:
+  source_html: "miniviewer.html"
   extracted_text: "miniviewer.txt"
-  juristree_json: "juristree.json"
-  juristree_html: "juristree.html"
+  jurismap_json: "jurismap.json"
+  jurismap_html: "jurismap.html"
+
+# -- Audit log configuration --
+audit_log:
+  text_extraction_job:
+    database: "legal_store"
+    table: "audit_log"
+    job_name: "text_extraction_service_nt"
+  ai_enrichment_job:
+    database: "legal_store"
+    table: "audit_log"
+    job_name: "ai_enrichment_service_nt"
