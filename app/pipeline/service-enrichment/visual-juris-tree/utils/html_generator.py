@@ -8,64 +8,30 @@ class HtmlGenerator:
     The generated HTML uses TailwindCSS for styling and is fully self-contained.
     """
 
+    def __init__(self):
+        """Initializes the generator with a color palette."""
+        # Define the bright color palette
+        self.color_palette = {
+            'node-main-issue': {'bg': '#FFA500', 'border': '#E69500'},
+            'node-primary-branch': {'bg': '#87CEFA', 'border': '#79B8E1'},
+            'node-question': {'bg': '#CF9FFF', 'border': '#BCA6E6'},
+            'node-fact': {'bg': '#26F7FD', 'border': '#23DFE4'},
+            'node-finding-no': {'bg': '#90EE90', 'border': '#82D682'},
+            'default': {'bg': '#FFFFC5', 'border': '#E6E6B2'}
+        }
+
     def _format_tooltip_text(self, text: str) -> str:
         """
-        Finds patterns like 'Reason 1:', 'What:', etc., and makes them bold.
-        
-        Args:
-            text (str): The text content from the tooltip.
-
-        Returns:
-            str: The formatted text with HTML strong tags.
+        Finds patterns like 'Reason 1:' and makes them bold.
         """
-        # This regex finds words like 'What', 'Who', 'Why', or 'Reason' followed by a number and a colon,
-        # and wraps them in <strong> tags.
-        pattern = r'\b(What|Who|Why|Reason\s*\d*):'
-        # Use a function for replacement to handle HTML escaping correctly
-        def bold_match(match):
-            return f"<strong>{html.escape(match.group(0))}</strong>"
-        
-        # We process the text line by line to apply the bolding
-        lines = text.splitlines()
-        formatted_lines = []
-        for line in lines:
-            # Escape the whole line first, then apply bolding
-            escaped_line = html.escape(line)
-            # The regex replacement for bolding is applied on the unescaped line,
-            # but we will replace on the escaped line to avoid double escaping.
-            # A simpler approach is to just bold the specific keywords.
-            # Let's refine this. The existing HTML already bolds What/Who/Why labels.
-            # The user wants to bold text *within* the description.
-            
-        # A better approach for the user's request:
-        # The user wants "Reason 1:" etc. inside the text to be bold.
-        # The What/Who/Why are already handled by the HTML structure.
-        
-        # Let's process the 'why' text specifically if that's where reasons appear.
-        # The prompt is generic, so let's apply it to all tooltip text.
-        
-        # Final approach: A simple regex on the final text content.
-        # We will apply this to the 'what', 'who', and 'why' fields.
-        
-        # The HTML structure is already <div class="tooltip-item"><strong>What:</strong> {tooltip_what}</div>
-        # So we only need to process the content of tooltip_what, tooltip_who, tooltip_why
-        
-        # Let's apply a regex to bold "Reason X:" within the text.
-        text = html.escape(text) # Escape the whole string first
-        # Then, find and replace the unescaped pattern with the bolded version.
-        text = re.sub(r'(Reason\s*\d*:)', r'<strong>\1</strong>', text, flags=re.IGNORECASE)
-        return text
+        escaped_text = html.escape(text)
+        formatted_text = re.sub(r'(Reason\s*\d*:)', r'<strong>\1</strong>', escaped_text, flags=re.IGNORECASE)
+        return formatted_text
 
 
     def _render_node_html(self, node: dict) -> str:
         """
         Renders a single flowchart node into an HTML string.
-
-        Args:
-            node (dict): A dictionary representing a single node from the JSON data.
-
-        Returns:
-            str: The HTML string for the node.
         """
         if not node:
             return ""
@@ -74,7 +40,6 @@ class HtmlGenerator:
         node_title = html.escape(node.get('title', ''))
         
         tooltip_data = node.get('tooltip', {})
-        # Apply formatting to bold "Reason X:"
         tooltip_what = self._format_tooltip_text(tooltip_data.get('what', ''))
         tooltip_who = self._format_tooltip_text(tooltip_data.get('who', ''))
         tooltip_why = self._format_tooltip_text(tooltip_data.get('why', ''))
@@ -89,9 +54,9 @@ class HtmlGenerator:
         <div class="flowchart-node {node_type} w-full">
             <span>{node_title}</span>
             <div class="tooltip">
-                <div class="tooltip-item"><strong>What:</strong> {tooltip_what}</div>
-                <div class="tooltip-item"><strong>Who:</strong> {tooltip_who}</div>
-                <div class="tooltip-item"><strong>Why:</strong> {tooltip_why}</div>
+                <div class="tooltip-item"><strong>What:</strong><br>{tooltip_what}</div>
+                <div class="tooltip-item"><strong>Who:</strong><br>{tooltip_who}</div>
+                <div class="tooltip-item"><strong>Why:</strong><br>{tooltip_why}</div>
                 <span class="tooltip-ref">
                     {ref_text}
                     <div class="ref-popup">{ref_popup_text}</div>
@@ -109,10 +74,10 @@ class HtmlGenerator:
             return ""
 
         if len(children) > 1:
-            branch_container_class = "flex flex-col md:flex-row gap-8 w-full" 
-            child_wrapper_class = "flex-1 flex flex-col items-center gap-8"
+            branch_container_class = "flex flex-col md:flex-row gap-16 w-full" 
+            child_wrapper_class = "flex-1 flex flex-col items-center gap-10"
         else:
-            branch_container_class = "flex flex-col items-center gap-8 w-full"
+            branch_container_class = "flex flex-col items-center gap-10 w-full"
             child_wrapper_class = "w-full"
 
         child_branches = []
@@ -121,7 +86,7 @@ class HtmlGenerator:
             child_branches.append(f'<div class="{child_wrapper_class}">{branch_content}</div>')
 
         return f"""
-        <div class="w-px h-8 bg-gray-400"></div>
+        <div class="w-px h-16 bg-gray-400"></div>
         <div class="{branch_container_class}">
             {''.join(child_branches)}
         </div>
@@ -154,6 +119,12 @@ class HtmlGenerator:
             branches = [self._render_branch_html(child) for child in root_node['children']]
             main_branches_html = ''.join(branches)
 
+        # Generate CSS rules for each node type from the color palette
+        node_style_rules = ""
+        for node_type, colors in self.color_palette.items():
+            if node_type != 'default':
+                node_style_rules += f".{node_type} {{ background-color: {colors['bg']}; border-color: {colors['border']}; }}\n"
+
         return f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -184,7 +155,6 @@ class HtmlGenerator:
         }}
         .flowchart-node {{
             border: 1px solid #e5e7eb;
-            background-color: #f9fafb;
             border-radius: 50px;
             padding: 0.75rem 1.25rem;
             text-align: center;
@@ -206,18 +176,16 @@ class HtmlGenerator:
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }}
         
-        .node-main-issue {{ background-color: #fecaca; border-color: #f87171; }}
-        .node-primary-branch {{ background-color: #ADD8E6; border-color: #82c2d9; }}
-        .node-question {{ background-color: #CF9FFF; border-color: #b380ff; transform: rotate(-2deg); }}
+        {node_style_rules}
+
+        .node-question {{ transform: rotate(-2deg); }}
         .node-question:hover {{ transform: rotate(0deg) translateY(-4px); }}
-        .node-finding-no {{ background-color: #fed7aa; border-color: #fb923c; }}
-        .node-fact {{ background-color: #bfdbfe; border-color: #93c5fd; }}
 
         .tooltip {{
             visibility: hidden; opacity: 0;
             width: 320px;
-            background-color: #4b5563;
-            color: white;
+            background-color: #D3D3D3;
+            color: black;
             text-align: left; padding: 1rem; border-radius: 0.5rem;
             position: absolute; z-index: 50;
             bottom: 125%; left: 50%; margin-left: -160px;
@@ -234,7 +202,7 @@ class HtmlGenerator:
             content: ""; position: absolute;
             top: 100%; left: 50%; margin-left: -5px;
             border-width: 5px; border-style: solid;
-            border-color: #4b5563 transparent transparent transparent;
+            border-color: #D3D3D3 transparent transparent transparent;
         }}
         
         .tooltip.tooltip-below {{
@@ -244,27 +212,28 @@ class HtmlGenerator:
         .tooltip.tooltip-below::after {{
             top: auto;
             bottom: 100%;
-            border-color: transparent transparent #4b5563 transparent;
+            border-color: transparent transparent #D3D3D3 transparent;
         }}
 
-        .tooltip-item {{ margin-bottom: 0.5rem; }}
-        .tooltip-item strong {{ color: #93c5fd; display: block; font-weight: 600; margin-bottom: 0.25rem;}}
-        .tooltip-item > strong {{ color: white; }} /* Make What/Who/Why labels white */
+        .tooltip-item {{ margin-bottom: 0.75rem; }}
+        .tooltip-item strong {{ font-weight: 600; color: #1f2937; }}
+        .tooltip-item > strong {{ color: #111827; }}
+        .tooltip-item div > strong {{ color: #4b5563; }}
 
         
         .tooltip-ref {{
-            display: block; margin-top: 0.75rem; padding-top: 0.5rem;
-            border-top: 1px solid #6b7280;
+            display: block; margin-top: 0.75rem; padding-top: 0.75rem;
+            border-top: 1px solid #9ca3af;
             font-style: italic;
-            color: #d1d5db; font-size: 0.75rem; position: relative;
+            color: #4b5563; font-size: 0.75rem; position: relative;
             cursor: help;
         }}
         
         .ref-popup {{
             visibility: hidden; opacity: 0;
             width: 350px;
-            background-color: #111827; color: #d1d5db;
-            border: 1px solid #60a5fa;
+            background-color: #1f2937; color: #d1d5db;
+            border: 1px solid #93c5fd;
             text-align: left; padding: 1rem; border-radius: 0.375rem;
             position: absolute; z-index: 60;
             bottom: 0; left: 105%;
@@ -281,22 +250,28 @@ class HtmlGenerator:
 
         .flowchart-sub-branch {{
              border-color: #d1d5db;
-             gap: 2rem;
+             gap: 4rem;
         }}
         
+        .animate-in {{
+            animation: fadeIn 1.2s ease-out forwards, slideUp 1.2s ease-out forwards;
+        }}
         @keyframes fadeIn {{
-            from {{ opacity: 0; }}
             to {{ opacity: 1; }}
         }}
-        .animate-on-load {{
-            animation: fadeIn 0.8s ease-out;
+        @keyframes slideUp {{
+            from {{ transform: translateY(30px); }}
+            to {{ transform: translateY(0); }}
+        }}
+        .flowchart-container > * {{
+            opacity: 0;
         }}
     </style>
 </head>
 <body>
     <div id="viewport" class="viewport">
         <div id="zoom-container" class="zoom-container">
-            <div class="flowchart-container animate-on-load">
+            <div class="flowchart-container">
                 <div class="flowchart-level">
                     <div class="max-w-lg">
                         {self._render_node_html(root_node) if root_node else ''}
@@ -344,7 +319,7 @@ class HtmlGenerator:
             viewport.addEventListener('wheel', (event) => {{{{
                 if (!event.ctrlKey) return;
                 event.preventDefault();
-                const delta = event.deltaY > 0 ? -0.05 : 0.05;
+                const delta = event.deltaY > 0 ? -0.02 : 0.02;
                 scale = Math.max(0.2, Math.min(3, scale + delta));
                 updateTransform();
             }}}});
@@ -364,16 +339,7 @@ class HtmlGenerator:
                 updateTransform();
             }}}});
 
-            window.addEventListener('mouseup', (event) => {{{{
-                // If a selection was made, don't close the popups.
-                if (window.getSelection().toString().length > 0) {{
-                    // Check if the mouseup is outside the popup, if so, we can still close.
-                    // This is tricky, so for now, we just prevent closing on any selection release.
-                    // A more robust solution might be needed if this causes issues.
-                }} else if (!event.target.closest('.flowchart-node, .tooltip, .ref-popup')) {{
-                    closeAllPopups();
-                }}
-                
+            window.addEventListener('mouseup', () => {{{{
                 if(isPanning) {{
                     isPanning = false;
                     viewport.style.cursor = 'grab';
@@ -408,12 +374,17 @@ class HtmlGenerator:
                 }}}});
             }}}});
 
-            // This listener is a fallback. The main logic is now on mouseup.
-            document.addEventListener('click', (event) => {{{{
+            document.addEventListener('mousedown', (event) => {{{{
                  if (!event.target.closest('.flowchart-node, .tooltip, .ref-popup')) {{
                     closeAllPopups();
                 }}
-            }}}})
+            }}}});
+
+            const elementsToAnimate = document.querySelectorAll('.flowchart-container > *');
+            elementsToAnimate.forEach((el, index) => {{{{
+                el.style.animationDelay = `${{index * 0.2}}s`;
+                el.classList.add('animate-in');
+            }}}});
 
         }}}});
     </script>
