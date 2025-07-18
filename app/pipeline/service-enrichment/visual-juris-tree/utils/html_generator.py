@@ -9,15 +9,11 @@ class HtmlGenerator:
     """
 
     def __init__(self):
-        """Initializes the generator with a color palette for borders."""
-        self.color_palette = {
-            'node-main-issue': {'border': '#FFA500'},
-            'node-primary-branch': {'border': '#87CEFA'},
-            'node-question': {'border': '#CF9FFF'},
-            'node-fact': {'border': '#26F7FD'},
-            'node-finding-no': {'border': '#90EE90'},
-            'default': {'border': '#b0b0b0'}
-        }
+        """Initializes the generator with a color palette for tags."""
+        self.tag_color_palette = [
+            '#FF969A', '#DFCC37', '#99C792', '#83CDB9',
+            '#94A8FF', '#D986EC', '#A3C16C', '#F88A62'
+        ]
 
     def _get_text_color_for_bg(self, hex_color: str) -> str:
         """Determines if text should be black or white for good contrast."""
@@ -25,14 +21,14 @@ class HtmlGenerator:
             hex_color = hex_color.lstrip('#')
             r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
             luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-            return 'black' if luminance > 0.6 else 'white'
+            return 'black' if luminance > 0.65 else 'white'
         except Exception:
             return 'black'
 
     def _format_tooltip_text(self, text: str) -> str:
         """Finds patterns like 'Reason 1:' and makes them bold."""
         escaped_text = html.escape(text)
-        formatted_text = re.sub(r'(Reason\s*\d*:)', r'<strong>\1</strong>', escaped_text, flags=re.IGNORECASE)
+        formatted_text = re.sub(r'(Reason\s*\d*:)', r'<strong>\\1</strong>', escaped_text, flags=re.IGNORECASE)
         return formatted_text
 
     def _render_node_html(self, node: dict, is_root: bool = False) -> str:
@@ -43,7 +39,7 @@ class HtmlGenerator:
         node_id = html.escape(node.get('id', ''))
         node_type = html.escape(node.get('type', ''))
         raw_title = node.get('title', '')
-        
+
         tag_html = ""
         display_title = html.escape(raw_title)
 
@@ -52,17 +48,20 @@ class HtmlGenerator:
             if len(parts) == 2 and parts[0] and parts[1]:
                 tag_text, title_text = parts
                 display_title = html.escape(title_text)
-                colors = self.color_palette.get(node_type, self.color_palette['default'])
-                bg_color = colors['border']
-                text_color = self._get_text_color_for_bg(bg_color)
-                tag_html = f'<div class="node-tag" style="background-color: {bg_color}; color: {text_color};">{html.escape(tag_text)}</div>'
-        
+
+                hash_val = sum(ord(c) for c in tag_text)
+                color_index = hash_val % len(self.tag_color_palette)
+                tag_bg_color = self.tag_color_palette[color_index]
+
+                tag_text_color = self._get_text_color_for_bg(tag_bg_color)
+                tag_html = f'<div class="node-tag" style="background-color: {tag_bg_color}; color: {tag_text_color};">{html.escape(tag_text)}</div>'
+
         expander_html = ""
         children_html = ""
         if node.get('children'):
             expander_html = f'<div class="node-expander" data-node-id="{node_id}">+</div>'
             children_html = self._render_children_html(node.get('children', []), node.get('id', ''))
-        
+
         wrapper_id = 'id="root-node-wrapper"' if is_root else ''
 
         tooltip_data = node.get('tooltip', {})
@@ -79,14 +78,14 @@ class HtmlGenerator:
             <div class="flowchart-node {node_type}" data-node-id="{node_id}">
                 {tag_html}
                 <span>{display_title}</span>
-                <div class="tooltip">
+                <div class="tooltip" data-parent-node-id="{node_id}">
                     <div class="popup-close-btn">&times;</div>
                     <div class="tooltip-item"><strong>What:</strong><div class="tooltip-content">{tooltip_what}</div></div>
                     <div class="tooltip-item"><strong>Who:</strong><div class="tooltip-content">{tooltip_who}</div></div>
                     <div class="tooltip-item"><strong>Why:</strong><div class="tooltip-content">{tooltip_why}</div></div>
                     <span class="tooltip-ref">
                         {ref_text}
-                        <div class="ref-popup">
+                        <div class="ref-popup" data-parent-node-id="{node_id}">
                             <div class="popup-close-btn">&times;</div>
                             {ref_popup_text}
                         </div>
@@ -107,10 +106,10 @@ class HtmlGenerator:
         branch_container_class = "flex flex-row gap-16 w-full flowchart-branch" if is_main_branch else \
                                  ("flex flex-col md:flex-row gap-16 w-full" if len(children) > 1 else "flex flex-col items-center gap-10 w-full")
 
-        child_wrapper_class = "flex-1 flex flex-col items-center gap-10" if len(children) > 1 else "w-full"
+        child_wrapper_class = "flex-1 flex flex-col items-center gap-10 flowchart-column" if len(children) > 1 else "w-full"
 
         child_branches = [f'<div class="{child_wrapper_class}">{self._render_node_html(child)}</div>' for child in children]
-        
+
         return f"""
         <div class="node-children-container" id="children-of-{parent_id}">
             <div class="children-content">
@@ -130,53 +129,143 @@ class HtmlGenerator:
         root_node = flowchart_data.get('rootNode')
         final_outcome = flowchart_data.get('finalOutcome')
 
-        root_html = self._render_node_html(root_node, is_root=True) if root_node else ''
-        final_outcome_html = self._render_node_html(final_outcome) if final_outcome else ''
-        
+        root_html = self._render_node_html(root_node, is_root=True)
+        final_outcome_html = self._render_node_html(final_outcome)
+
         interstitial_connector = '<div class="w-px h-16 bg-gray-400 mx-auto"></div>' if root_html and final_outcome_html else ''
 
-        node_style_rules = "".join([f".{node_type} {{ border-color: {colors['border']}; }}\n" for node_type, colors in self.color_palette.items()])
-        
-        # --- MODIFICATION: Separated JS into its own string to avoid f-string parsing errors ---
         javascript_code = """
         document.addEventListener('DOMContentLoaded', () => {
             const viewport = document.getElementById('viewport');
             const zoomContainer = document.getElementById('zoom-container');
             const expandAllToggle = document.getElementById('expand-all-toggle');
-            const controlsContainer = document.getElementById('controls-container');
+            let activeNodePopup = null;
+            let activeRefPopup = null;
+
+            const debounce = (func, delay) => {
+                let timeoutId;
+                return (...args) => {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => {
+                        func.apply(this, args);
+                    }, delay);
+                };
+            };
+
+            // Move all popups to the body to ensure they are in the top-level stacking context
+            document.querySelectorAll('.tooltip, .ref-popup').forEach(popup => {
+                document.body.appendChild(popup);
+            });
 
             const closeAllPopups = () => {
-                document.querySelectorAll('.tooltip').forEach(t => {
-                    t.classList.remove('is-visible', 'tooltip-below');
-                    t.style.left = ''; t.style.right = ''; t.style.transform = '';
-                });
-                document.querySelectorAll('.ref-popup.is-visible').forEach(p => p.classList.remove('is-visible'));
-                document.querySelectorAll('.overflow-visible-temp').forEach(el => el.classList.remove('overflow-visible-temp'));
+                if (activeRefPopup) {
+                    activeRefPopup.classList.remove('is-visible');
+                    activeRefPopup = null;
+                }
+                if (activeNodePopup) {
+                    activeNodePopup.classList.remove('is-visible');
+                    activeNodePopup = null;
+                }
                 document.querySelectorAll('.is-active-node').forEach(n => n.classList.remove('is-active-node'));
             };
-            
-            const positionControls = () => {
-                const rootNodeWrapper = document.getElementById('root-node-wrapper');
-                if (!rootNodeWrapper || !controlsContainer) return;
-                
-                const rootRect = rootNodeWrapper.getBoundingClientRect();
-                const viewportRect = viewport.getBoundingClientRect();
-                
-                const top = rootRect.top + (rootRect.height / 2) - (controlsContainer.offsetHeight / 2) - viewportRect.top;
-                const left = rootRect.right + 15 - viewportRect.left;
 
-                controlsContainer.style.top = `${top}px`;
-                controlsContainer.style.left = `${left}px`;
-                controlsContainer.classList.add('is-visible');
-            };
+            document.querySelectorAll('.flowchart-node').forEach(node => {
+                const nodeId = node.dataset.nodeId;
+                const tooltip = document.querySelector(`.tooltip[data-parent-node-id="${nodeId}"]`);
+                if (!tooltip) return;
+
+                node.addEventListener('click', (event) => {
+                    if (event.target.closest('.node-expander, .tooltip-ref, .popup-close-btn')) return;
+                    if (tooltip.classList.contains('is-visible')) return;
+                    
+                    closeAllPopups();
+                    activeNodePopup = tooltip;
+
+                    const nodeRect = node.getBoundingClientRect();
+                    tooltip.classList.add('is-visible');
+                    const tooltipRect = tooltip.getBoundingClientRect();
+
+                    let top = nodeRect.top - tooltipRect.height - 10;
+                    if (top < 5) {
+                        top = nodeRect.bottom + 10;
+                    }
+                    let left = nodeRect.left + (nodeRect.width / 2) - (tooltipRect.width / 2);
+                    if (left < 5) { left = 5; }
+                    if (left + tooltipRect.width > window.innerWidth) { left = window.innerWidth - tooltipRect.width - 5; }
+                    
+                    tooltip.style.top = `${top}px`;
+                    tooltip.style.left = `${left}px`;
+                    
+                    node.closest('.flowchart-node-wrapper').classList.add('is-active-node');
+                });
+            });
+
+            document.querySelectorAll('.tooltip-ref').forEach(ref => {
+                const parentTooltip = ref.closest('.tooltip');
+                if (!parentTooltip) return;
+
+                const nodeId = parentTooltip.dataset.parentNodeId;
+                const refPopup = document.querySelector(`.ref-popup[data-parent-node-id="${nodeId}"]`);
+                if (!refPopup) return;
+                
+                ref.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (refPopup.classList.contains('is-visible')) {
+                        refPopup.classList.remove('is-visible');
+                        activeRefPopup = null;
+                        return;
+                    }
+
+                    if(activeRefPopup) activeRefPopup.classList.remove('is-visible');
+                    activeRefPopup = refPopup;
+
+                    const refRect = ref.getBoundingClientRect();
+                    refPopup.classList.add('is-visible');
+                    const popupRect = refPopup.getBoundingClientRect();
+
+                    // Horizontal positioning
+                    let left = refRect.right + 10;
+                    if (left + popupRect.width > window.innerWidth) {
+                        left = refRect.left - popupRect.width - 10;
+                    }
+                    
+                    // Vertical positioning with screen boundary check
+                    let top = refRect.top;
+                    if (top + popupRect.height > window.innerHeight) {
+                        top = window.innerHeight - popupRect.height - 10;
+                    }
+                     if (top < 0) {
+                        top = 5;
+                    }
+                    
+                    refPopup.style.top = `${top}px`;
+                    refPopup.style.left = `${left}px`;
+                });
+            });
 
             document.querySelectorAll('.popup-close-btn').forEach(btn => {
-                btn.addEventListener('click', (event) => { event.stopPropagation(); closeAllPopups(); });
+                btn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const parentRefPopup = btn.closest('.ref-popup');
+                    if (parentRefPopup) {
+                        parentRefPopup.classList.remove('is-visible');
+                        activeRefPopup = null;
+                    } else {
+                        closeAllPopups();
+                    }
+                });
+            });
+            
+            document.addEventListener('mousedown', (event) => {
+                if (!event.target.closest('.flowchart-node-wrapper, .tooltip, .ref-popup')) {
+                    closeAllPopups();
+                }
             });
 
             document.querySelectorAll('.node-expander').forEach(expander => {
                 expander.addEventListener('click', (event) => {
                     event.stopPropagation();
+                    closeAllPopups();
                     const nodeId = expander.getAttribute('data-node-id');
                     const childrenContainer = document.getElementById(`children-of-${nodeId}`);
                     if (childrenContainer) {
@@ -185,73 +274,34 @@ class HtmlGenerator:
                     }
                 });
             });
-
-            document.querySelectorAll('.flowchart-node').forEach(node => {
-                node.addEventListener('click', (event) => {
-                    if (event.target.closest('.node-expander, .tooltip-ref, .popup-close-btn')) return;
-                    const tooltip = node.querySelector(':scope > .tooltip');
-                    if (tooltip.classList.contains('is-visible')) return;
-                    closeAllPopups();
-                    tooltip.classList.add('is-visible');
-                    const rect = tooltip.getBoundingClientRect();
-                    const viewportWidth = window.innerWidth;
-                    if (rect.top < 0) tooltip.classList.add('tooltip-below');
-                    if (rect.right > viewportWidth) {
-                        tooltip.style.left = 'auto'; tooltip.style.right = '5px'; tooltip.style.transform = 'none';
-                    } else if (rect.left < 0) {
-                        tooltip.style.left = '5px'; tooltip.style.transform = 'none';
-                    }
-                    node.closest('.flowchart-node-wrapper').classList.add('is-active-node');
-                    let parent = tooltip.parentElement;
-                    while(parent) {
-                        if (window.getComputedStyle(parent).overflow === 'hidden') parent.classList.add('overflow-visible-temp');
-                        if (parent.id === 'zoom-container') break;
-                        parent = parent.parentElement;
-                    }
-                });
-            });
-
-            document.querySelectorAll('.tooltip-ref').forEach(ref => {
-                 ref.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    const refPopup = ref.querySelector('.ref-popup');
-                    if (refPopup) refPopup.classList.toggle('is-visible');
-                 });
-            });
-            
-            document.querySelectorAll('.ref-popup').forEach(popup => {
-                popup.addEventListener('click', (event) => { event.stopPropagation(); });
-            });
             
             expandAllToggle.addEventListener('change', () => {
                 const isExpanded = expandAllToggle.checked;
                 document.querySelectorAll('.node-children-container').forEach(c => c.classList.toggle('is-expanded', isExpanded));
                 document.querySelectorAll('.node-expander').forEach(e => e.textContent = isExpanded ? '−' : '+');
             });
-            
+
             const setFlowchartWidth = () => {
                 const contentContainer = document.getElementById('flowchart-content');
                 const mainBranchContainer = contentContainer.querySelector('.flowchart-branch');
                 if(mainBranchContainer) {
+                    contentContainer.style.minWidth = '0px';
                     const fullWidth = mainBranchContainer.scrollWidth;
                     contentContainer.style.minWidth = (fullWidth + 50) + 'px';
                 }
             };
+            const debouncedSetFlowchartWidth = debounce(setFlowchartWidth, 150);
             setFlowchartWidth();
-            window.addEventListener('resize', () => {
-                setFlowchartWidth();
-                positionControls();
-            });
-            
-            setTimeout(positionControls, 100);
+            window.addEventListener('resize', debouncedSetFlowchartWidth);
 
-            let scale = 1, panX = 0, panY = 0, isPanning = false, startX = 0, startY = 0;
-            const updateTransform = () => { 
-                zoomContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; 
-                requestAnimationFrame(positionControls);
+            let scale = 0.8, panX = 0, panY = 0, isPanning = false, startX = 0, startY = 0;
+            const updateTransform = () => {
+                zoomContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
             };
+            updateTransform();
+
             viewport.addEventListener('mousedown', (event) => {
-                if (event.button !== 0 || event.target.closest('.flowchart-node-wrapper, .tooltip, #controls-container')) return;
+                if (event.button !== 0 || event.target.closest('.flowchart-node-wrapper, .tooltip, .ref-popup, #controls-container')) return;
                 isPanning = true; viewport.style.cursor = 'grabbing';
                 startX = event.clientX - panX; startY = event.clientY - panY;
             });
@@ -260,10 +310,18 @@ class HtmlGenerator:
             viewport.addEventListener('wheel', (event) => {
                 if (event.ctrlKey) {
                     event.preventDefault();
-                    scale += event.deltaY > 0 ? -0.05 : 0.05; scale = Math.max(0.2, Math.min(2, scale)); updateTransform();
+                    closeAllPopups();
+                    scale += event.deltaY > 0 ? -0.02 : 0.02;
+                    scale = Math.max(0.2, Math.min(2, scale));
+                    updateTransform();
                 }
             });
-            document.addEventListener('mousedown', (event) => { if (!event.target.closest('.flowchart-node-wrapper, .tooltip, #controls-container')) closeAllPopups(); });
+            
+            const elementsToAnimate = document.querySelectorAll('#flowchart-content > div');
+            elementsToAnimate.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.2}s`;
+                el.classList.add('animate-in');
+            });
         });
         """
 
@@ -280,25 +338,26 @@ class HtmlGenerator:
         html, body {{
             width: 100%; height: 100%; margin: 0; padding: 0;
         }}
-        body {{ font-family: 'Poppins', sans-serif; background-color: #f0f2f5; color: black; }}
+        body {{ font-family: 'Poppins', sans-serif; background-color: #FFFFFF; color: black; }}
         .viewport {{ width: 100%; height: 100%; cursor: grab; overflow: auto; }}
-        .zoom-container {{ display: inline-block; transition: transform 0.2s ease-out; transform-origin: top left; padding: 2rem; }}
+        .zoom-container {{ display: inline-block; transform-origin: top left; padding: 2rem; }}
         #flowchart-content {{ display: flex; flex-direction: column; align-items: center; width: 100%; }}
+        #flowchart-content > div {{ opacity: 0; }}
+        .flowchart-column {{ overflow: visible; }}
         .flowchart-node-wrapper {{ position: relative; margin-top: 20px; width: 100%; display: flex; justify-content: center;}}
         .flowchart-node-wrapper.is-active-node {{ z-index: 100; }}
         .flowchart-node {{
-            border: 2px solid #b0b0b0; border-radius: 50px; padding: 0.75rem 1.25rem;
-            text-align: center; position: relative; transition: all 0.3s ease; max-width: 500px;
+            border: 2px solid #b0b0b0; border-radius: 50px; padding: 0.5rem 1.25rem;
+            text-align: center; position: relative; transition: box-shadow 0.3s ease; max-width: 500px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); cursor: pointer;
             font-size: 0.875rem; font-weight: 500; user-select: none;
-            color: black; background-color: transparent; padding-bottom: 2rem;
+            color: black; background-color: transparent; padding-bottom: 1.5rem;
         }}
-        .flowchart-node:hover {{ transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07); }}
-        {node_style_rules}
+        .flowchart-node:hover {{ box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07); }}
         .node-tag {{
             position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
             padding: 0.25rem 0.85rem; border-radius: 9999px; font-size: 0.8rem;
-            font-weight: 600; z-index: 5; white-space: nowrap; border: 1px solid rgba(0,0,0,0.1);
+            font-weight: 600; z-index: 5; white-space: nowrap; border: 1px solid rgba(0,0,0,0.07);
         }}
         .node-expander {{
             position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
@@ -313,27 +372,24 @@ class HtmlGenerator:
         .node-expander:hover {{ background-color: #2d3748; }}
         .node-children-container {{ display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s ease-in-out; overflow: hidden; }}
         .node-children-container.is-expanded {{ grid-template-rows: 1fr; }}
-        .children-content {{ min-height: 0; opacity: 0; transition: opacity 0.4s ease-in-out 0.1s; padding-top: 40px; }}
+        .children-content {{ min-height: 0; opacity: 0; transition: opacity 0.4s ease-in-out 0.1s; padding-top: 80px; }}
         .node-children-container.is-expanded .children-content {{ opacity: 1; }}
-        .tooltip {{
-            visibility: hidden; opacity: 0; width: 320px;
+        .tooltip, .ref-popup {{
+            visibility: hidden; opacity: 0;
+            position: fixed;
+            width: 320px;
             background-color: #F2F2F4; color: black;
             text-align: left; padding: 1rem; border-radius: 0.5rem;
-            position: absolute; z-index: 50;
-            bottom: 125%; left: 50%; transform: translateX(-50%);
-            transition: opacity 0.3s; pointer-events: none;
+            transition: opacity 0.3s;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.1);
             border: none; font-size: 0.8rem;
             user-select: text;
         }}
-        .tooltip.tooltip-below {{ bottom: auto; top: 125%; }}
-        .tooltip.is-visible {{ visibility: visible; opacity: 1; pointer-events: auto; }}
-        .tooltip::after {{
-            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
-            border-width: 5px; border-style: solid;
-            border-color: #F2F2F4 transparent transparent transparent;
+        .tooltip {{ z-index: 2000; }}
+        .ref-popup {{ z-index: 2001; width: 350px; color: #958D8D; }}
+        .tooltip.is-visible, .ref-popup.is-visible {{
+            visibility: visible; opacity: 1; pointer-events: auto;
         }}
-        .tooltip.tooltip-below::after {{ top: auto; bottom: 100%; border-color: transparent transparent #F2F2F4 transparent; }}
         .tooltip-item {{ margin-bottom: 0.75rem; }}
         .tooltip-item:last-of-type {{ margin-bottom: 0; }}
         .tooltip-item > strong {{ display: block; margin-bottom: 0.35rem; font-weight: 600; color: #1f2937; }}
@@ -343,15 +399,6 @@ class HtmlGenerator:
             border-top: 1px solid #d1d5db; font-style: italic; color: #6B7280;
             position: relative; cursor: help;
         }}
-        .ref-popup {{
-             visibility: hidden; opacity: 0; width: 350px;
-             background-color: #F2F2F4; color: #958D8D;
-             border: none; box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-             text-align: left; padding: 1rem; border-radius: 0.375rem;
-             position: absolute; z-index: 60; bottom: 0; left: 105%;
-             transition: opacity 0.3s; font-size: 0.8rem; user-select: text;
-        }}
-        .ref-popup.is-visible {{ visibility: visible; opacity: 1; pointer-events: auto; }}
         .popup-close-btn {{
             position: absolute; top: 5px; right: 10px; width: 20px; height: 20px;
             font-size: 1.5rem; line-height: 20px; color: #aaa; text-align: center;
@@ -360,31 +407,33 @@ class HtmlGenerator:
         .popup-close-btn:hover {{ color: #333; }}
         .overflow-visible-temp {{ overflow: visible !important; }}
         #controls-container {{
-            position: absolute;
-            top: -9999px; left: -9999px;
+            position: fixed; top: 20px; left: 20px;
             z-index: 1000; display: flex; align-items: center; gap: 10px;
-            transition: opacity 0.3s; opacity: 0;
+            background-color: transparent;
+            padding: 8px 12px;
         }}
-        #controls-container.is-visible {{ opacity: 1; }}
-        .toggle-switch-label {{ font-size: 14px; font-weight: 500; color: #808080; }}
-        .toggle-switch {{ position: relative; display: inline-block; width: 50px; height: 28px; }}
+        .toggle-switch-label {{ font-size: 14px; font-weight: 400; color: #808080; }}
+        .toggle-switch {{ position: relative; display: inline-block; width: 44px; height: 24px; }}
         .toggle-switch input {{ opacity: 0; width: 0; height: 0; }}
         .slider {{
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc; transition: .4s; border-radius: 28px;
+            background-color: #ccc; transition: .4s; border-radius: 24px;
         }}
         .slider:before {{
-            position: absolute; content: ""; height: 20px; width: 20px;
-            left: 4px; bottom: 4px; background-color: white;
+            position: absolute; content: ""; height: 18px; width: 18px;
+            left: 3px; bottom: 3px; background-color: white;
             transition: .4s; border-radius: 50%;
         }}
         input:checked + .slider {{ background-color: #48BB78; }}
-        input:checked + .slider:before {{ transform: translateX(22px); }}
+        input:checked + .slider:before {{ transform: translateX(20px); }}
+        .animate-in {{ animation: fadeIn 0.8s ease-out forwards, slideUp 0.8s ease-out forwards; }}
+        @keyframes fadeIn {{ to {{ opacity: 1; }} }}
+        @keyframes slideUp {{ from {{ transform: translateY(20px); }} to {{ transform: translateY(0); }} }}
     </style>
 </head>
 <body>
     <div id="controls-container">
-        <label class="toggle-switch-label" for="expand-all-toggle">Expand All</label>
+        <label class="toggle-switch-label">Expand All</label>
         <label class="toggle-switch">
             <input type="checkbox" id="expand-all-toggle">
             <span class="slider"></span>
