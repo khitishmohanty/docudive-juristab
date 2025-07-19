@@ -11,24 +11,18 @@ class HtmlGenerator:
     def __init__(self):
         """Initializes the generator with a color palette for tags."""
         self.tag_color_palette = [
-            '#FF969A', '#DFCC37', '#99C792', '#83CDB9',
-            '#94A8FF', '#D986EC', '#A3C16C', '#F88A62'
+            '#E96822', '#405FAE', '#96A428', '#CD54E3',
+            '#964FE2', '#E7C027', '#40AE5B', '#388EAD'
         ]
 
     def _get_text_color_for_bg(self, hex_color: str) -> str:
-        """Determines if text should be black or white for good contrast."""
-        try:
-            hex_color = hex_color.lstrip('#')
-            r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-            luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-            return 'black' if luminance > 0.65 else 'white'
-        except Exception:
-            return 'black'
+        """Sets the text color for the tags to white."""
+        return 'white'
 
     def _format_tooltip_text(self, text: str) -> str:
         """Finds patterns like 'Reason 1:' and makes them bold."""
         escaped_text = html.escape(text)
-        formatted_text = re.sub(r'(Reason\s*\d*:)', r'<strong>\\1</strong>', escaped_text, flags=re.IGNORECASE)
+        formatted_text = re.sub(r'(Reason\s*\d*:)', r'<strong>\1</strong>', escaped_text, flags=re.IGNORECASE)
         return formatted_text
 
     def _render_node_html(self, node: dict, is_root: bool = False) -> str:
@@ -102,18 +96,61 @@ class HtmlGenerator:
         if not children:
             return ""
 
-        is_main_branch = any(child.get('type') == 'node-primary-branch' for child in children)
-        branch_container_class = "flex flex-row gap-16 w-full flowchart-branch" if is_main_branch else \
-                                 ("flex flex-col md:flex-row gap-16 w-full" if len(children) > 1 else "flex flex-col items-center gap-10 w-full")
+        # Default connector for a single child is a simple vertical line.
+        connector_html = '<div class="w-px h-12 bg-gray-300 mx-auto"></div>'
 
-        child_wrapper_class = "flex-1 flex flex-col items-center gap-10 flowchart-column" if len(children) > 1 else "w-full"
+        # For multiple children, generate an SVG for a T-junction with rounded corners.
+        if len(children) > 1:
+            num_children = len(children)
+            viewbox_width = 1000
+            viewbox_height = 50
+            h_bar_y = 25
+            radius = 10
+
+            x_coords = [((i + 0.5) / num_children) * viewbox_width for i in range(num_children)]
+            x_min = min(x_coords)
+            x_max = max(x_coords)
+            center_x = viewbox_width / 2
+            
+            path_commands = []
+            
+            rake_path = f"M {x_min} {viewbox_height} V {h_bar_y + radius} "
+            rake_path += f"A {radius} {radius} 0 0 1 {x_min + radius} {h_bar_y} "
+            rake_path += f"H {x_max - radius} "
+            rake_path += f"A {radius} {radius} 0 0 1 {x_max} {h_bar_y + radius} "
+            rake_path += f"V {viewbox_height}"
+            path_commands.append(rake_path)
+            
+            for x in x_coords[1:-1]:
+                path_commands.append(f"M {x} {h_bar_y} V {viewbox_height}")
+
+            branch_midpoint_x = (x_min + x_max) / 2
+            path_commands.append(f"M {center_x} 0 V {h_bar_y}")
+            path_commands.append(f"M {center_x} {h_bar_y} H {branch_midpoint_x}")
+
+            final_path_d = " ".join(path_commands)
+
+            connector_html = f"""
+            <div class="connector-svg-container" style="height: {viewbox_height}px;">
+                <svg width="100%" height="{viewbox_height}" viewBox="0 0 {viewbox_width} {viewbox_height}" preserveAspectRatio="none">
+                    <path d="{final_path_d}" stroke="#d1d5db" stroke-width="1.5" fill="none" />
+                </svg>
+            </div>
+            """
+
+        is_main_branch = any(child.get('type') == 'node-primary-branch' for child in children)
+
+        branch_container_class = "flex flex-row gap-8 w-full flowchart-branch" if is_main_branch else \
+                                 ("flex flex-col md:flex-row gap-8 w-full" if len(children) > 1 else "flex flex-col items-center w-full")
+
+        child_wrapper_class = "flex-1 flex flex-col items-center flowchart-column" if len(children) > 1 else "w-full flowchart-column"
 
         child_branches = [f'<div class="{child_wrapper_class}">{self._render_node_html(child)}</div>' for child in children]
 
         return f"""
         <div class="node-children-container" id="children-of-{parent_id}">
             <div class="children-content">
-                <div class="w-px h-16 bg-gray-400 mx-auto"></div>
+                {connector_html}
                 <div class="{branch_container_class}">
                     {''.join(child_branches)}
                 </div>
@@ -132,7 +169,7 @@ class HtmlGenerator:
         root_html = self._render_node_html(root_node, is_root=True)
         final_outcome_html = self._render_node_html(final_outcome)
 
-        interstitial_connector = '<div class="w-px h-16 bg-gray-400 mx-auto"></div>' if root_html and final_outcome_html else ''
+        interstitial_connector = '<div class="w-px h-16 bg-gray-300 mx-auto"></div>' if root_html and final_outcome_html else ''
 
         javascript_code = """
         document.addEventListener('DOMContentLoaded', () => {
@@ -344,20 +381,20 @@ class HtmlGenerator:
         #flowchart-content {{ display: flex; flex-direction: column; align-items: center; width: 100%; }}
         #flowchart-content > div {{ opacity: 0; }}
         .flowchart-column {{ overflow: visible; }}
-        .flowchart-node-wrapper {{ position: relative; margin-top: 20px; width: 100%; display: flex; justify-content: center;}}
+        .flowchart-node-wrapper {{ position: relative; margin-top: 30px; width: 100%; display: flex; justify-content: center; padding-bottom: 15px;}}
         .flowchart-node-wrapper.is-active-node {{ z-index: 100; }}
         .flowchart-node {{
-            border: 2px solid #b0b0b0; border-radius: 50px; padding: 0.5rem 1.25rem;
-            text-align: center; position: relative; transition: box-shadow 0.3s ease; max-width: 500px;
+            border: 1px solid #E9E5E5; border-radius: 50px; padding: 1rem 1.25rem;
+            text-align: center; position: relative; transition: box-shadow 0.3s ease; max-width: 500px; min-width: 160px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); cursor: pointer;
             font-size: 0.875rem; font-weight: 500; user-select: none;
-            color: black; background-color: transparent; padding-bottom: 1.5rem;
+            color: black; background-color: white; padding-bottom: 1.5rem;
         }}
         .flowchart-node:hover {{ box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07); }}
         .node-tag {{
-            position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
             padding: 0.25rem 0.85rem; border-radius: 9999px; font-size: 0.8rem;
-            font-weight: 600; z-index: 5; white-space: nowrap; border: 1px solid rgba(0,0,0,0.07);
+            font-weight: 600; z-index: 5; white-space: nowrap; border: 5px solid white;
         }}
         .node-expander {{
             position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
@@ -372,28 +409,28 @@ class HtmlGenerator:
         .node-expander:hover {{ background-color: #2d3748; }}
         .node-children-container {{ display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s ease-in-out; overflow: hidden; }}
         .node-children-container.is-expanded {{ grid-template-rows: 1fr; }}
-        .children-content {{ min-height: 0; opacity: 0; transition: opacity 0.4s ease-in-out 0.1s; padding-top: 80px; }}
+        .children-content {{ min-height: 0; opacity: 0; transition: opacity 0.4s ease-in-out 0.1s; }}
         .node-children-container.is-expanded .children-content {{ opacity: 1; }}
         .tooltip, .ref-popup {{
             visibility: hidden; opacity: 0;
             position: fixed;
             width: 320px;
-            background-color: #F2F2F4; color: black;
+            background-color: #FFFFFF; color: black;
             text-align: left; padding: 1rem; border-radius: 0.5rem;
             transition: opacity 0.3s;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.1);
-            border: none; font-size: 0.8rem;
+            border: 1px solid #e5e7eb; font-size: 0.8rem;
             user-select: text;
         }}
         .tooltip {{ z-index: 2000; }}
-        .ref-popup {{ z-index: 2001; width: 350px; color: #958D8D; }}
+        .ref-popup {{ z-index: 2001; width: 350px; color: #4B5563; }}
         .tooltip.is-visible, .ref-popup.is-visible {{
             visibility: visible; opacity: 1; pointer-events: auto;
         }}
         .tooltip-item {{ margin-bottom: 0.75rem; }}
         .tooltip-item:last-of-type {{ margin-bottom: 0; }}
         .tooltip-item > strong {{ display: block; margin-bottom: 0.35rem; font-weight: 600; color: #1f2937; }}
-        .tooltip-content {{ color: #958D8D; }}
+        .tooltip-content {{ color: #4B5563; }}
         .tooltip-ref {{
             display: block; margin-top: 0.75rem; padding-top: 0.75rem;
             border-top: 1px solid #d1d5db; font-style: italic; color: #6B7280;
