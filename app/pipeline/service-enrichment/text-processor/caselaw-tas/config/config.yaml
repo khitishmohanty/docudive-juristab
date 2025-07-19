@@ -1,0 +1,78 @@
+# -- Google cloud project details --
+google_cloud:
+    project_id: "juristab"
+    region: "us"
+    processor_id: "c60807664382dc8" 
+
+# -- Database connection details --
+database:
+    source:
+        dialect: "mysql"
+        driver: "mysqlconnector"
+        host: "juris-data.crkmq80swpic.ap-southeast-2.rds.amazonaws.com"
+        port: "3306"
+        name: "legal_source"
+
+    destination:
+        dialect: "mysql"
+        driver: "mysqlconnector"
+        host: "juris-data.crkmq80swpic.ap-southeast-2.rds.amazonaws.com"
+        port: "3306"
+        name: "legal_store"
+
+# -- AWS connection details --
+aws:
+    default_region: "ap-southeast-2"
+    s3:
+        bucket_name: "legal-store"
+        dest_folder: "case-laws/nt/"
+    
+# -- AI model configuration --
+models:
+    deepseek:
+        model: "deepseek-r1:671b"
+    
+    gemini:
+        model: "models/gemini-2.5-pro-preview-05-06"
+        base_url: "https://generativelanguage.googleapis.com/v1beta"
+        pricing:
+            input_per_million: 1.25
+            output_per_million: 10.00
+    
+    openai:
+        model_name: "gpt-4o"
+        pricing:
+            input_per_million: 2.00
+            output_per_million: 8.00
+
+# List of tables to be read by the connector
+tables:
+  tables_to_read:
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_nt
+  tables_to_write:
+    - database: legal_store
+      table: caselaw_enrichment_status
+  audit_log_table:
+    - database: legal_store
+      table: audit_log
+      job_name: "caselaw_enrichment_nt"
+
+
+# -- File naming conventions for the enrichment service --
+enrichment_filenames:
+  source_html: "miniviewer.html"
+  extracted_text: "miniviewer.txt"
+  jurismap_json: "jurismap.json"
+  jurismap_html: "jurismap.html"
+
+# -- Audit log configuration --
+audit_log:
+  text_extraction_job:
+    database: "legal_store"
+    table: "audit_log"
+    job_name: "text_extraction_service_nt"
+  ai_enrichment_job:
+    database: "legal_store"
+    table: "audit_log"
+    job_name: "ai_enrichment_service_nt"
