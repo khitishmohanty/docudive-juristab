@@ -55,8 +55,8 @@ tables:
       table: caselaw_enrichment_status
       # Add this new section to define column names
       columns:
-        text_extract_status: "status_text_extract"
-        text_extract_duration: "duration_file_miniviewer_text"
+        text_extract_status: "status_text_processor"
+        text_extract_duration: "duration_text_processor"
         json_valid_status: "status_jurissummary_json"
         json_valid_duration: "duration_jurissummary_json"
         html_status: "status_jurissummary_html"
