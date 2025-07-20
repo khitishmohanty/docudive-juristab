@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, text, Row
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
 from typing import Optional, Dict
+from datetime import datetime
 
 class DatabaseConnector:
     """Handles all database interactions."""
@@ -61,7 +62,7 @@ class DatabaseConnector:
             # Use column names from config
             text_status_col = column_config['text_extract_status']
             json_status_col = column_config['json_valid_status']
-            html_status_col = column_config['jurismap_html_status']
+            html_status_col = column_config['html_status']
             
             query = text(f"""
                 SELECT source_id, {json_status_col}, {html_status_col}
@@ -78,16 +79,23 @@ class DatabaseConnector:
         session = self.Session()
         try:
             new_id = str(uuid.uuid4())
-            # Dynamically build query with column names from config
             cols = column_config
+            # MODIFIED: Added new columns for prices and timestamps to the INSERT statement
             stmt = text(f"""
                 INSERT INTO {table_name} (
                     id, source_id, 
                     {cols['text_extract_status']}, {cols['text_extract_duration']},
                     {cols['json_valid_status']}, {cols['json_valid_duration']},
-                    {cols['jurismap_html_status']}, {cols['jurismap_html_duration']}
+                    {cols['html_status']}, {cols['html_duration']},
+                    {cols['token_input']}, {cols['token_output']},
+                    {cols['token_input_price']}, {cols['token_output_price']},
+                    {cols['start_time']}, {cols['end_time']}
                 )
-                VALUES (:id, :source_id, 'not started', 0, 'not started', 0, 'not started', 0)
+                VALUES (
+                    :id, :source_id, 
+                    'not started', 0, 'not started', 0, 'not started', 0, 
+                    0, 0, 0.0, 0.0, NULL, NULL
+                )
             """)
             session.execute(stmt, {"id": new_id, "source_id": source_id})
             session.commit()
@@ -99,33 +107,78 @@ class DatabaseConnector:
         finally:
             session.close()
 
-    def update_step_result(self, table_name: str, source_id: str, step: str, status: str, duration: float, column_config: Dict[str, str]):
+    def update_step_result(
+        self,
+        table_name: str,
+        source_id: str,
+        step: str,
+        status: str,
+        duration: float,
+        column_config: Dict[str, str],
+        token_input: Optional[int] = None,
+        token_output: Optional[int] = None,
+        # MODIFIED: Added new optional parameters for prices and timestamps
+        token_input_price: Optional[float] = None,
+        token_output_price: Optional[float] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ):
         session = self.Session()
         
-        # Map step names to the keys in the column_config dictionary
         step_to_config_keys = {
             'text_extract': ('text_extract_status', 'text_extract_duration'),
             'json_valid': ('json_valid_status', 'json_valid_duration'),
-            'jurismap_html': ('jurismap_html_status', 'jurismap_html_duration')
+            'jurismap_html': ('html_status', 'html_duration')
         }
 
         if step not in step_to_config_keys:
             raise ValueError(f"Invalid step name provided: {step}")
         
         status_key, duration_key = step_to_config_keys[step]
-        status_col = column_config[status_key]
-        duration_col = column_config[duration_key]
+        
+        set_clauses = [
+            f"{column_config[status_key]} = :status",
+            f"{column_config[duration_key]} = :duration"
+        ]
+        params = {"status": status, "duration": duration, "source_id": source_id}
+
+        # Conditionally add token and price data to the update query
+        if token_input is not None:
+            set_clauses.append(f"{column_config['token_input']} = :token_input")
+            params["token_input"] = token_input
+        
+        if token_output is not None:
+            set_clauses.append(f"{column_config['token_output']} = :token_output")
+            params["token_output"] = token_output
+
+        if token_input_price is not None:
+            set_clauses.append(f"{column_config['token_input_price']} = :token_input_price")
+            params["token_input_price"] = token_input_price
+
+        if token_output_price is not None:
+            set_clauses.append(f"{column_config['token_output_price']} = :token_output_price")
+            params["token_output_price"] = token_output_price
+
+        # Conditionally add timestamp data to the update query
+        if start_time is not None:
+            set_clauses.append(f"{column_config['start_time']} = :start_time")
+            params["start_time"] = start_time
+        
+        if end_time is not None:
+            set_clauses.append(f"{column_config['end_time']} = :end_time")
+            params["end_time"] = end_time
 
         if status not in ['pass', 'failed']:
             raise ValueError("Invalid status value. Must be 'pass' or 'failed'.")
 
         try:
+            # Construct and execute the final UPDATE statement
             stmt = text(f"""
                 UPDATE {table_name} 
-                SET {status_col} = :status, {duration_col} = :duration 
+                SET {', '.join(set_clauses)}
                 WHERE source_id = :source_id
             """)
-            session.execute(stmt, {"status": status, "duration": duration, "source_id": source_id})
+            session.execute(stmt, params)
             session.commit()
             print(f"Updated {step} to '{status}' with duration {duration:.2f}s for source_id: {source_id}")
         except Exception as e:

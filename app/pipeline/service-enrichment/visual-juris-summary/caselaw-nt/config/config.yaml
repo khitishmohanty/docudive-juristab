@@ -59,8 +59,14 @@ tables:
         text_extract_duration: "duration_file_miniviewer_text"
         json_valid_status: "status_jurissummary_json"
         json_valid_duration: "duration_jurissummary_json"
-        jurismap_html_status: "status_jurissummary_html"
-        jurismap_html_duration: "duration_jurissummary_html"
+        html_status: "status_jurissummary_html"
+        html_duration: "duration_jurissummary_html"
+        token_input: "token_input_jurissummary"
+        token_output: "token_output_jurissummary"
+        token_input_price: "token_input_price_jurissummary"
+        token_output_price: "token_output_price_jurissummary"
+        start_time: "start_time_jurissummary"
+        end_time: "end_time_jurissummary"
 
 # -- File naming conventions for the enrichment service --
 enrichment_filenames:
@@ -78,4 +84,4 @@ audit_log:
   ai_enrichment_job:
     database: "legal_store"
     table: "audit_log"
-    job_name: "ai_enrichment_service_jurismap_nt"
+    job_name: "ai_enrichment_service_jurissummary_nt"

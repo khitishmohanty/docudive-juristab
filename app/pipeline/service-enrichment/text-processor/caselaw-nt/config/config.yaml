@@ -53,6 +53,12 @@ tables:
   tables_to_write:
     - database: legal_store
       table: caselaw_enrichment_status
+      step_columns:
+        text_extract:
+          status: "status_text_processor"
+          duration: "duration_text_processor"
+          start_time: "start_time_text_processor"
+          end_time: "end_time_text_processor"
   audit_log_table:
     - database: legal_store
       table: audit_log
@@ -71,7 +77,7 @@ audit_log:
   text_extraction_job:
     database: "legal_store"
     table: "audit_log"
-    job_name: "text_extraction_service_nt"
+    job_name: "text_processor_service_nt"
   ai_enrichment_job:
     database: "legal_store"
     table: "audit_log"

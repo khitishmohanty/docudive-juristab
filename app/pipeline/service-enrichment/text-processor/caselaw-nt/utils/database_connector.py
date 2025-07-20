@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import uuid
+from datetime import datetime
 from sqlalchemy import create_engine, text, Row
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
@@ -57,11 +58,9 @@ class DatabaseConnector:
             stmt = text(f"""
                 INSERT INTO {table_name} (
                     id, source_id, 
-                    status_text_extract, duration_file_miniviewer_text,
-                    status_json_valid, duration_file_jurismap_json,
-                    status_jurismap_html, duration_jurismap_html
+                    status_text_processor, duration_text_processor
                 )
-                VALUES (:id, :source_id, 'not started', 0, 'not started', 0, 'not started', 0)
+                VALUES (:id, :source_id, 'not started', 0)
             """)
             session.execute(stmt, {"id": new_id, "source_id": source_id})
             session.commit()
@@ -74,20 +73,21 @@ class DatabaseConnector:
         finally:
             session.close()
 
-    def update_step_result(self, table_name: str, source_id: str, step: str, status: str, duration: float):
+    def update_step_result(self, table_name: str, source_id: str, step: str, status: str, duration: float, start_time: datetime, end_time: datetime, step_columns: dict):
+        """
+        Updates the status, duration, start time, and end time for a specific processing step.
+        The column names are dynamically read from the provided configuration.
+        """
         session = self.Session()
         
-        # FIX: Added 'jurismap_html' as a valid step
-        step_to_columns = {
-            'text_extract': ('status_text_extract', 'duration_file_miniviewer_text'),
-            'json_valid': ('status_json_valid', 'duration_file_jurismap_json'),
-            'jurismap_html': ('status_jurismap_html', 'duration_jurismap_html')
-        }
-
-        if step not in step_to_columns:
+        if step not in step_columns:
             raise ValueError(f"Invalid step name provided: {step}")
         
-        status_col, duration_col = step_to_columns[step]
+        step_config = step_columns[step]
+        status_col = step_config['status']
+        duration_col = step_config['duration']
+        start_time_col = step_config['start_time']
+        end_time_col = step_config['end_time']
 
         if status not in ['pass', 'failed']:
             raise ValueError("Invalid status value. Must be 'pass' or 'failed'.")
@@ -95,10 +95,19 @@ class DatabaseConnector:
         try:
             stmt = text(f"""
                 UPDATE {table_name} 
-                SET {status_col} = :status, {duration_col} = :duration 
+                SET {status_col} = :status, 
+                    {duration_col} = :duration,
+                    {start_time_col} = :start_time,
+                    {end_time_col} = :end_time
                 WHERE source_id = :source_id
             """)
-            session.execute(stmt, {"status": status, "duration": duration, "source_id": source_id})
+            session.execute(stmt, {
+                "status": status, 
+                "duration": duration, 
+                "start_time": start_time,
+                "end_time": end_time,
+                "source_id": source_id
+            })
             session.commit()
             print(f"Updated {step} to '{status}' with duration {duration:.2f}s for source_id: {source_id}")
         except Exception as e:

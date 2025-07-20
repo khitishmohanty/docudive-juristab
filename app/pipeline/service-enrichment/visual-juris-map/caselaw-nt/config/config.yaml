@@ -59,8 +59,14 @@ tables:
         text_extract_duration: "duration_file_miniviewer_text"
         json_valid_status: "status_jurismap_json"
         json_valid_duration: "duration_jurismap_json"
-        jurismap_html_status: "status_jurismap_html"
-        jurismap_html_duration: "duration_jurismap_html"
+        html_status: "status_jurismap_html"
+        html_duration: "duration_jurismap_html"
+        token_input: "token_input_jurismap"
+        token_output: "token_output_jurismap"
+        token_input_price: "token_input_price_jurismap"
+        token_output_price: "token_output_price_jurismap"
+        start_time: "start_time_jurismap"
+        end_time: "end_time_jurismap"
 
 # -- File naming conventions for the enrichment service --
 enrichment_filenames:
