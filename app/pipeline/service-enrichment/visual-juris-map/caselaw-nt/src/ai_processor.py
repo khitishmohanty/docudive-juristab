@@ -67,7 +67,7 @@ class AiProcessor:
                 print(f"Skipping HTML generation for {source_id} due to missing JSON content.")
                 continue
 
-            if getattr(row, column_config['jurismap_html_status']) != 'pass':
+            if getattr(row, column_config['html_status']) != 'pass':
                 print(f"HTML status is not 'pass'. Running process.")
                 self._generate_and_save_html_tree(json_content, s3_bucket, tree_html_file_key, dest_table, source_id, column_config)
             else:
