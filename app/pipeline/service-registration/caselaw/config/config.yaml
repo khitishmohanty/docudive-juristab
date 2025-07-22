@@ -20,30 +20,39 @@ tables:
         - database: legal_source
           table: l2_scan_jade_io_caselaw_nt
           jurisdiction: NT
+          storage_folder: nt
         - database: legal_source
           table: l2_scan_jade_io_caselaw_nsw
           jurisdiction: NSW
+          storage_folder: nsw
         - database: legal_source
           table: l2_scan_jade_io_caselaw_vic
-          jurisdiction: V
+          jurisdiction: VIC
+          storage_folder: vic
         - database: legal_source
           table: l2_scan_jade_io_caselaw_qld
-          jurisdiction: Q
+          jurisdiction: QLD
+          storage_folder: qld
         - database: legal_source
           table: l2_scan_jade_io_caselaw_act
           jurisdiction: ACT
+          storage_folder: act
         - database: legal_source
           table: l2_scan_jade_io_caselaw_commonwealth
-          jurisdiction: Fed
+          jurisdiction: FED
+          storage_folder: commonwealth
         - database: legal_source
           table: l2_scan_jade_io_caselaw_sa
           jurisdiction: SA
+          storage_folder: sa
         - database: legal_source
           table: l2_scan_jade_io_caselaw_wa
           jurisdiction: WA
+          storage_folder: wa
         - database: legal_source
           table: l2_scan_jade_io_caselaw_tas
           jurisdiction: TAS
+          storage_folder: tas
 
     tables_to_write:
       - database: legal_store
@@ -55,4 +64,8 @@ tables:
 
 # Source file paths
 filepath: s3://legal-store/case-laws/nt/
+
+#Audit trial log
+job_name: book_registration
+job_id: sr_1
 

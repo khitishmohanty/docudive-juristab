@@ -45,14 +45,6 @@ def parse_parties(book_name):
 def deconstruct_citation_code(combined_code, all_codes, jurisdiction_hint=None):
     """
     Deconstructs a combined code (e.g., 'NSWCATAP', 'WASAT') into its parts.
-
-    Args:
-        combined_code (str): The code to deconstruct.
-        all_codes (pd.DataFrame): DataFrame with all jurisdiction and tribunal codes.
-        jurisdiction_hint (str, optional): A hint for the jurisdiction code.
-
-    Returns:
-        dict: A dictionary with 'jurisdiction_code', 'tribunal_code', 'panel_or_division'.
     """
     code_details = {
         'jurisdiction_code': None,
@@ -68,7 +60,6 @@ def deconstruct_citation_code(combined_code, all_codes, jurisdiction_hint=None):
             remaining_code = remaining_code[len(jurisdiction_hint):]
     else:
         # Fallback to searching if no hint is provided.
-        # Sort by length (desc) to match longest codes first (e.g., 'Cth' before 'C').
         jurisdictions = all_codes[all_codes['type'] == 'jurisdiction'].copy()
         jurisdictions['code_len'] = jurisdictions['code'].str.len()
         jurisdictions = jurisdictions.sort_values(by='code_len', ascending=False)
@@ -98,39 +89,42 @@ def deconstruct_citation_code(combined_code, all_codes, jurisdiction_hint=None):
 def parse_citation(citation_str, all_codes, jurisdiction_hint=None):
     """
     Parses a legal citation string to extract structured data.
+    Now ignores the decision number as it's no longer needed.
     """
     details = {
         'year': None, 'jurisdiction_code': None, 'tribunal_code': None,
-        'panel_or_division': None, 'decision_number': None,
-        'decision_date': None, 'members': None
+        'panel_or_division': None, 'decision_date': None, 'members': None
+        # 'decision_number' has been removed.
     }
 
     if not citation_str:
         return details
 
+    # Updated pattern to match the decision number but not capture it.
     pattern = re.compile(
-        r'\[(\d{4})\]\s+'        # Year in brackets, e.g., [2025]
-        r'([A-Z]+)\s+'           # Combined code, e.g., NSWCATAP
-        r'(\d+)\s+'              # Decision number, e.g., 164
-        r'\((.*?)\)\s*'          # Decision date, e.g., (11 July 2025)
-        r'(?:\((.*?)\))?$'       # Optional members list, e.g., (M Deane...)
+        r'\[(\d{4})\]\s+'        # Group 1: Year in brackets, e.g., [2025]
+        r'([A-Z]+)\s+'           # Group 2: Combined code, e.g., NSWCATAP
+        r'\d+\s+'                # Decision number (matched, but not captured)
+        r'\((.*?)\)\s*'          # Group 3: Decision date, e.g., (11 July 2025)
+        r'(?:\((.*?)\))?$'       # Group 4: Optional members list, e.g., (M Deane...)
     )
     match = pattern.match(citation_str)
     if not match:
         logging.warning(f"Could not parse citation format: {citation_str}")
         return details
 
-    year_str, combined_code, num_str, date_str, members_str = match.groups()
+    # Unpack groups according to the new pattern
+    year_str, combined_code, date_str, members_str = match.groups()
 
     details['year'] = int(year_str)
-    details['decision_number'] = int(num_str)
+    # The line for 'decision_number' is removed.
     details['members'] = members_str.strip() if members_str else None
     try:
         details['decision_date'] = datetime.strptime(date_str.strip(), '%d %B %Y').date()
     except ValueError:
         logging.warning(f"Could not parse date '{date_str}' in citation: {citation_str}")
 
-    # --- Deconstruct the combined code using the new dedicated function ---
+    # Deconstruct the combined code
     code_details = deconstruct_citation_code(combined_code, all_codes, jurisdiction_hint)
     details.update(code_details)
             

@@ -7,7 +7,7 @@
     { "code": "TAS", "name": "Tasmania", "type": "jurisdiction" },
     { "code": "ACT", "name": "Australian Capital Territory", "type": "jurisdiction" },
     { "code": "NT", "name": "Northern Territory", "type": "jurisdiction" },
-    { "code": "Cth", "name": "Commonwealth", "type": "jurisdiction" },
+    { "code": "FED", "name": "Commonwealth", "type": "jurisdiction" },
     { "code": "HCA", "name": "High Court of Australia", "type": "tribunal" },
     { "code": "FCA", "name": "Federal Court of Australia", "type": "tribunal" },
     { "code": "AAT", "name": "Administrative Appeals Tribunal", "type": "tribunal" },
