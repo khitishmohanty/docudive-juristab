@@ -25,7 +25,6 @@ aws:
     default_region: "ap-southeast-2"
     s3:
         bucket_name: "legal-store"
-        dest_folder: "case-laws/nt/"
     
 # -- AI model configuration --
 models:
@@ -50,6 +49,40 @@ tables:
   tables_to_read:
     - database: legal_source
       table: l2_scan_jade_io_caselaw_nt
+      s3_dest_folder: "case-laws/nt/"
+      audit_job_name: "ai_enrichment_service_juristree_nt"
+    # - database: legal_source
+    #   table: l2_scan_jade_io_caselaw_tas
+    #   s3_dest_folder: "case-laws/tas/"
+    #   audit_job_name: "ai_enrichment_service_juristree_tas"
+    # - database: legal_source
+    #   table: l2_scan_jade_io_caselaw_vic
+    #   s3_dest_folder: "case-laws/vic/"
+    #   audit_job_name: "ai_enrichment_service_juristree_vic"
+    # - database: legal_source
+    #   table: l2_scan_jade_io_caselaw_nsw
+    #   s3_dest_folder: "case-laws/nsw/"
+    #   audit_job_name: "ai_enrichment_service_juristree_nsw"
+    # - database: legal_source
+    #   table: l2_scan_jade_io_caselaw_wa
+    #   s3_dest_folder: "case-laws/wa/"
+    #   audit_job_name: "ai_enrichment_service_juristree_wa"
+    # - database: legal_source
+    #   table: l2_scan_jade_io_caselaw_sa
+    #   s3_dest_folder: "case-laws/sa/"
+    #   audit_job_name: "ai_enrichment_service_juristree_sa"
+    # - database: legal_source
+    #   table: l2_scan_jade_io_caselaw_qld
+    #   s3_dest_folder: "case-laws/qld/"
+    #   audit_job_name: "ai_enrichment_service_juristree_qld"
+    # - database: legal_source
+    #   table: l2_scan_jade_io_caselaw_act
+    #   s3_dest_folder: "case-laws/act/"
+    #   audit_job_name: "ai_enrichment_service_juristree_act"
+    # - database: legal_source
+    #   table: l2_scan_jade_io_caselaw_commonwealth
+    #   s3_dest_folder: "case-laws/commonwealth/"
+    #   audit_job_name: "ai_enrichment_service_juristree_commonwealth"
   tables_to_write:
     - database: legal_store
       table: caselaw_enrichment_status
@@ -81,7 +114,3 @@ audit_log:
     database: "legal_store"
     table: "audit_log"
     job_name: "text_extraction_service_nt"
-  ai_enrichment_job:
-    database: "legal_store"
-    table: "audit_log"
-    job_name: "ai_enrichment_service_jurissummary_nt"

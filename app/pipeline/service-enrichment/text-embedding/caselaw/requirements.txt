@@ -1,0 +1,14 @@
+#Core ML and data handling
+sentence-transformers
+torch
+numpy
+tqdm
+
+#AWS and Database
+boto3
+SQLAlchemy
+mysql-connector-python
+
+#Configuration
+PyYAML
+python-dotenv

@@ -10,6 +10,7 @@ from src.ai_processor import AiProcessor
 def main():
     """
     Main entry point for the AI Enrichment & Visualization service.
+    MODIFIED: This function now iterates through each source table defined in the config.
     """
     print("Starting AI Enrichment Service...")
     
@@ -24,37 +25,40 @@ def main():
         print(f"FATAL: Failed to load configuration. Aborting. Error: {e}")
         sys.exit(1)
 
-    log_id = None
-    try:
-        audit_config = config['audit_log']['ai_enrichment_job']
-        
-        # FIX: Find the database configuration by its 'name' instead of using it as a key
-        audit_db_name = audit_config['database']
-        audit_db_config = None
-        for db_key, db_properties in config['database'].items():
-            if db_properties.get('name') == audit_db_name:
-                audit_db_config = db_properties
-                break
-        
-        if audit_db_config is None:
-            raise KeyError(f"Database configuration for '{audit_db_name}' not found.")
+    # --- MODIFIED: Loop through each source configuration ---
+    source_configs = config['tables'].get('tables_to_read', [])
+    if not source_configs:
+        print("No source tables found in the configuration. Exiting.")
+        sys.exit(0)
 
-        logger = AuditLogger(db_config=audit_db_config, table_name=audit_config['table'])
-        log_id = logger.log_start(job_name=audit_config['job_name'])
+    for source_info in source_configs:
+        log_id = None
+        job_name = source_info.get('audit_job_name', 'ai_enrichment_job_unnamed')
+        print(f"\n--- Starting processing for job: {job_name} ---")
 
-    except Exception as e:
-        print(f"FATAL: Could not start audit logger. Aborting. Error: {e}")
-        sys.exit(1)
+        try:
+            # Use the 'legal_store' database for audit logging
+            audit_db_config = config['database']['destination']
+            audit_table_name = config['audit_log']['text_extraction_job']['table'] # Assuming same table for all logs
+            
+            logger = AuditLogger(db_config=audit_db_config, table_name=audit_table_name)
+            log_id = logger.log_start(job_name=job_name)
 
-    try:
-        processor = AiProcessor(config=config, prompt_path=prompt_path)
-        processor.process_cases()
-        logger.log_end(log_id, status='completed', message='AI enrichment job finished successfully.')
-    except Exception as e:
-        error_message = f"Job failed due to an unhandled exception: {str(e)}"
-        print(error_message)
-        logger.log_end(log_id, status='failed', message=error_message)
-        sys.exit(1)
+        except Exception as e:
+            print(f"FATAL: Could not start audit logger for job {job_name}. Aborting this job. Error: {e}")
+            continue # Skip to the next job
+
+        try:
+            # Pass the specific source_info to the processor
+            processor = AiProcessor(config=config, prompt_path=prompt_path, source_info=source_info)
+            processor.process_cases()
+            logger.log_end(log_id, status='completed', message=f'{job_name} finished successfully.')
+        except Exception as e:
+            error_message = f"Job '{job_name}' failed due to an unhandled exception: {str(e)}"
+            print(error_message)
+            if log_id:
+                logger.log_end(log_id, status='failed', message=error_message)
+            continue # Continue to the next job in the list
 
 if __name__ == "__main__":
     main()

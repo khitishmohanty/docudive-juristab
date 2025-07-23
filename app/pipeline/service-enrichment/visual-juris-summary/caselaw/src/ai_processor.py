@@ -8,8 +8,10 @@ from utils.s3_manager import S3Manager
 from utils.html_generator import HtmlGenerator
 
 class AiProcessor:
-    def __init__(self, config: dict, prompt_path: str):
+    # MODIFIED: __init__ now accepts a 'source_info' dictionary
+    def __init__(self, config: dict, prompt_path: str, source_info: dict):
         self.config = config
+        self.source_info = source_info # Store the specific source config
         self.html_generator = HtmlGenerator()
         self.s3_manager = S3Manager(region_name=config['aws']['default_region'])
         self.gemini_client = GeminiClient(model_name=config['models']['gemini']['model'])
@@ -28,19 +30,22 @@ class AiProcessor:
     def process_cases(self):
         dest_table_info = self.config['tables']['tables_to_write'][0]
         dest_table = dest_table_info['table']
-        # Extract column config
         column_config = dest_table_info['columns']
         
-        # Pass column_config to the query method
-        cases_df = self.dest_db.get_records_for_ai_processing(dest_table, column_config)
-        print(f"Found {len(cases_df)} cases ready for AI enrichment and visualization.")
+        # MODIFIED: Pass the entire source_info dictionary to the database query for a robust JOIN.
+        cases_df = self.dest_db.get_records_for_ai_processing(dest_table, column_config, self.source_info)
+        
+        source_table_name = self.source_info['table'] # Keep this for logging
+        print(f"Found {len(cases_df)} cases from source '{source_table_name}' ready for AI enrichment.")
+
 
         for index, row in cases_df.iterrows():
             source_id = str(row['source_id'])
             print(f"\n--- Processing AI/HTML for case: {source_id} ---")
             
             s3_bucket = self.config['aws']['s3']['bucket_name']
-            s3_base_folder = self.config['aws']['s3']['dest_folder']
+            # MODIFIED: Use the destination folder from the specific source_info
+            s3_base_folder = self.source_info['s3_dest_folder']
             filenames = self.config['enrichment_filenames']
             
             case_folder = os.path.join(s3_base_folder, source_id)
@@ -73,7 +78,7 @@ class AiProcessor:
             else:
                 print("HTML tree already generated. Skipping.")
 
-        print("\n--- AI Enrichment check completed for all cases. ---")
+        print(f"\n--- AI Enrichment check completed for source: {source_table_name} ---")
 
     def _generate_and_save_json(self, text_content, bucket, json_key, status_table, source_id, column_config):
         # Record start time as a timezone-aware datetime object for the database
