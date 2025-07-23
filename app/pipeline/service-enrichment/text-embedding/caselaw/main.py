@@ -56,7 +56,6 @@ def main():
     source_text_filename = config['enrichment_filenames']['source_text']
     embedding_output_filename = config['enrichment_filenames']['embedding_output']
     
-    # Using tqdm for a progress bar
     for source_id in tqdm(source_ids_to_process, desc="Processing Cases"):
         start_time = time.time()
         
@@ -77,19 +76,24 @@ def main():
             # a. Get caselaw text from S3
             caselaw_text = s3_handler.get_caselaw_text(text_s3_key)
             
-            # b. Generate embedding
+            # b. Calculate counts and update metadata table
+            char_count = len(caselaw_text)
+            word_count = len(caselaw_text.split()) # Simple word count by splitting on whitespace
+            db_handler.update_metadata_counts(source_id, char_count, word_count)
+            
+            # c. Generate embedding
             embedding_vector = embedding_generator.generate_embedding_for_text(caselaw_text)
             
             if embedding_vector is None:
                 raise ValueError("Embedding generation resulted in None (likely empty text).")
 
-            # c. Save embedding to a bytes buffer
+            # d. Save embedding to a bytes buffer
             embedding_bytes = embedding_generator.save_embedding_to_bytes(embedding_vector)
             
-            # d. Upload embedding file to S3
+            # e. Upload embedding file to S3
             s3_handler.upload_embedding(embedding_s3_key, embedding_bytes)
             
-            # e. If all successful, update DB status to 'pass'
+            # f. If all successful, update DB status to 'pass'
             duration = time.time() - start_time
             db_handler.update_embedding_status(source_id, 'pass', duration)
             

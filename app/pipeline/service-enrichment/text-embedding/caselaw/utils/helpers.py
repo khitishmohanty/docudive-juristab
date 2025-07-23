@@ -36,11 +36,19 @@ class DatabaseHandler:
         )
         self.source_engine = create_engine(source_conn_str)
         
-        self.status_table = config['tables']['tables_to_write'][0]['table']
-        self.status_column = config['tables']['tables_to_write'][0]['columns']['processing_status']
-        self.duration_column = config['tables']['tables_to_write'][0]['columns']['processing_duration']
-        self.start_time_column = config['tables']['tables_to_write'][0]['columns']['start_time']
-        self.end_time_column = config['tables']['tables_to_write'][0]['columns']['end_time']
+        # Enrichment status table config
+        status_config = config['tables']['tables_to_write'][0]
+        self.status_table = status_config['table']
+        self.status_column = status_config['columns']['processing_status']
+        self.duration_column = status_config['columns']['processing_duration']
+        self.start_time_column = status_config['columns']['start_time']
+        self.end_time_column = status_config['columns']['end_time']
+
+        # Metadata table config
+        metadata_config = config['tables']['tables_to_write'][1]
+        self.metadata_table = metadata_config['table']
+        self.char_count_column = metadata_config['columns']['char_count']
+        self.word_count_column = metadata_config['columns']['word_count']
 
     def get_cases_to_process(self):
         """
@@ -72,7 +80,10 @@ class DatabaseHandler:
                 s3_folder = table_config['s3_folder']
                 
                 # Create a query to find which of our IDs exist in this table
+                # Ensure proper quoting for string IDs in the IN clause
                 id_list_str = ','.join([f"'{_id}'" for _id in source_ids])
+                if not id_list_str: continue
+
                 query = text(f"SELECT id FROM {table_name} WHERE id IN ({id_list_str})")
                 
                 result = connection.execute(query)
@@ -111,6 +122,26 @@ class DatabaseHandler:
             })
             connection.commit()
 
+    def update_metadata_counts(self, source_id, char_count, word_count):
+        """Inserts or updates the character and word counts in the metadata table."""
+        # This query will create a row if one doesn't exist for the source_id,
+        # or update the existing one. Assumes `source_id` is a PRIMARY or UNIQUE key.
+        query = text(f"""
+            INSERT INTO {self.metadata_table} (source_id, {self.char_count_column}, {self.word_count_column})
+            VALUES (:source_id, :char_count, :word_count)
+            ON DUPLICATE KEY UPDATE
+                {self.char_count_column} = :char_count,
+                {self.word_count_column} = :word_count
+        """)
+        
+        with self.engine.connect() as connection:
+            connection.execute(query, {
+                "source_id": source_id,
+                "char_count": char_count,
+                "word_count": word_count
+            })
+            connection.commit()
+
 
 class S3Handler:
     """Handles all S3 interactions."""
@@ -140,4 +171,3 @@ class S3Handler:
         except Exception as e:
             print(f"Error uploading to S3 key {s3_key}: {e}")
             raise
-
