@@ -27,42 +27,30 @@ def verify_content_files(s3_path, source_id):
     s3 = boto3.client('s3')
     files_to_check = ['excerpt.html', 'miniviewer.html', 'summary.html']
     
-    # Parse bucket and prefix from the S3 path
     parts = s3_path.replace('s3://', '').split('/')
     bucket_name = parts[0]
     base_prefix = '/'.join(parts[1:]) if len(parts) > 1 else ''
     
-    # Ensure base_prefix ends with a slash if it's not empty
     if base_prefix and not base_prefix.endswith('/'):
         base_prefix += '/'
 
     try:
         for file_name in files_to_check:
-            # Construct the full S3 key for the object
             s3_key = f"{base_prefix}{source_id}/{file_name}"
-            
             try:
-                # Use head_object to check for existence and size without downloading
                 response = s3.head_object(Bucket=bucket_name, Key=s3_key)
-                
-                # Check if the file is empty
                 if response['ContentLength'] == 0:
                     logging.warning(f"S3 file check failed for s3://{bucket_name}/{s3_key}. Object is empty.")
                     return 'fail'
-            
             except ClientError as e:
-                # If the error code is 404 (Not Found), the file is missing
                 if e.response['Error']['Code'] == '404':
                     logging.warning(f"S3 file check failed for s3://{bucket_name}/{s3_key}. Object is missing.")
                     return 'fail'
                 else:
-                    # Handle other potential AWS errors (e.g., permissions)
                     logging.error(f"An unexpected AWS error occurred checking {s3_key}: {e}")
                     raise
-
         logging.info(f"All content files verified in S3 for source_id {source_id}.")
         return 'pass'
-    
     except Exception as e:
         logging.error(f"Error during S3 file verification for source_id {source_id}. Error: {e}")
         return 'fail'
@@ -109,7 +97,6 @@ def process_caselaw_data():
             raise ConnectionError("Source database connection failed.")
             
         dest_table = config['tables']['tables_to_write'][0]['table']
-        
         filepath_from_config = config.get('filepath', 's3://legal-store/case-laws/')
         base_s3_path = "/".join(filepath_from_config.split('/')[:-2]) if 's3://' in filepath_from_config else filepath_from_config
         
@@ -150,7 +137,6 @@ def process_caselaw_data():
                     logging.info(f"{log_prefix}: Requires processing (Current Status: {result[0] if result else 'not started'}).")
                     
                     citation_details = parse_citation(row['book_context'], all_codes, jurisdiction_code)
-
                     file_path = f"{base_s3_path}/{storage_folder}/{source_id}"
                     storage_folder_s3_path = f"{base_s3_path}/{storage_folder}/"
                     content_download_status = verify_content_files(storage_folder_s3_path, source_id)
@@ -167,23 +153,31 @@ def process_caselaw_data():
                         'status_content_download': content_download_status,
                     }
 
+                    # FIX: Collect all failure reasons
+                    failure_reasons = []
+                    if content_download_status == 'fail':
+                        failure_reasons.append("Missing or empty content files")
+
                     mandatory_fields = ['neutral_citation', 'jurisdiction_code', 'year', 'decision_date', 'book_name']
                     missing_fields = [field for field in mandatory_fields if not record_data.get(field) and record_data.get(field) != 0]
+                    if missing_fields:
+                        failure_reasons.append(f"Missing mandatory fields: {', '.join(missing_fields)}")
                     
-                    if content_download_status == 'pass' and not missing_fields:
-                        final_status = 'pass'
-                    else:
+                    # Determine final status and failure reason
+                    if failure_reasons:
                         final_status = 'fail'
-                        if content_download_status == 'fail':
-                            logging.warning(f"{log_prefix}: Marking as 'fail' due to missing or empty content files.")
-                        if missing_fields:
-                            logging.warning(f"{log_prefix}: Marking as 'fail'. Missing mandatory fields: {missing_fields}")
+                        reason_for_failure = '; '.join(failure_reasons)
+                        logging.warning(f"{log_prefix}: Marking as 'fail'. Reason(s): {reason_for_failure}")
+                    else:
+                        final_status = 'pass'
+                        reason_for_failure = None # Set to None if registration is successful
                     
                     record_end_time = datetime.now(timezone.utc)
                     record_duration = (record_end_time - record_start_time).total_seconds()
 
                     record_data.update({
                         'status_registration': final_status,
+                        'reason_failed': reason_for_failure, # Add new column to data
                         'start_time_registration': program_start_time,
                         'end_time_registration': record_end_time,
                         'duration_registration': record_duration
