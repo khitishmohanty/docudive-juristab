@@ -1,8 +1,10 @@
 # -- Google cloud project details --
 google_cloud:
-    project_id: "juristab"
+    # project_id: "juristab"
+    # region: "us"
+    # processor_id: "c60807664382dc8" 
+    project_id: "skillhaus-466922"
     region: "us"
-    processor_id: "c60807664382dc8" 
 
 # -- Database connection details --
 database:
@@ -51,14 +53,14 @@ tables:
       table: l2_scan_jade_io_caselaw_nt
       s3_dest_folder: "case-laws/nt/"
       audit_job_name: "ai_enrichment_service_juristree_nt"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_tas
-    #   s3_dest_folder: "case-laws/tas/"
-    #   audit_job_name: "ai_enrichment_service_juristree_tas"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_vic
-    #   s3_dest_folder: "case-laws/vic/"
-    #   audit_job_name: "ai_enrichment_service_juristree_vic"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_tas
+      s3_dest_folder: "case-laws/tas/"
+      audit_job_name: "ai_enrichment_service_juristree_tas"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_vic
+      s3_dest_folder: "case-laws/vic/"
+      audit_job_name: "ai_enrichment_service_juristree_vic"
     # - database: legal_source
     #   table: l2_scan_jade_io_caselaw_nsw
     #   s3_dest_folder: "case-laws/nsw/"
