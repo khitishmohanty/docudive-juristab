@@ -116,26 +116,49 @@ def process_caselaw_data():
             source_df = pd.read_sql_table(source_table, source_engine)
             logging.info(f"Read {len(source_df)} records from {source_table}.")
 
-            total_records = len(source_df)
-            for index, row in source_df.iterrows():
+            # --- EFFICIENT CHANGE STARTS HERE ---
+            # 1. Get IDs of all records already marked as 'pass' in the destination table.
+            try:
+                with dest_engine.connect() as connection:
+                    query = text(f"SELECT source_id, status_registration FROM {dest_table} WHERE jurisdiction_code = :jurisdiction_code")
+                    dest_df = pd.read_sql(query, connection, params={'jurisdiction_code': jurisdiction_code})
+                
+                # Get IDs that are already successfully registered.
+                processed_ids = dest_df[dest_df['status_registration'] == 'pass']['source_id'].tolist()
+                # Get a mapping of existing records to check for updates later.
+                existing_records = dest_df.set_index('source_id').to_dict('index')
+
+            except Exception as e:
+                logging.error(f"Could not query destination table '{dest_table}' for existing records. Error: {e}")
+                processed_ids = []
+                existing_records = {}
+            
+            # 2. Filter the source DataFrame to exclude successfully processed records.
+            if processed_ids:
+                records_to_process_df = source_df[~source_df['id'].isin(processed_ids)].copy()
+            else:
+                records_to_process_df = source_df.copy()
+
+            total_to_process = len(records_to_process_df)
+            if total_to_process == 0:
+                logging.info(f"No new or failed records to process for {source_table}.")
+                continue
+            
+            logging.info(f"Found {total_to_process} records to process for {source_table}.")
+            # --- EFFICIENT CHANGE ENDS HERE ---
+
+            for index, row in records_to_process_df.iterrows():
                 record_num = index + 1
                 source_id = row['id']
-                log_prefix = f"Record {record_num}/{total_records} (ID: {source_id})"
+                log_prefix = f"Record {record_num}/{total_to_process} (ID: {source_id})"
                 
                 logging.info(f"{log_prefix}: Starting processing.")
                 record_start_time = datetime.now(timezone.utc)
                 
                 try:
-                    with dest_engine.connect() as connection:
-                        query = text(f"SELECT status_registration FROM {dest_table} WHERE source_id = :source_id")
-                        result = connection.execute(query, {'source_id': source_id}).fetchone()
+                    # Check if the record already exists (as 'fail' or another status) to decide between INSERT and UPDATE
+                    record_exists = source_id in existing_records
 
-                    if result and result[0] == 'pass':
-                        logging.info(f"{log_prefix}: Status is already 'pass'. Skipping.")
-                        continue
-
-                    logging.info(f"{log_prefix}: Requires processing (Current Status: {result[0] if result else 'not started'}).")
-                    
                     citation_details = parse_citation(row['book_context'], all_codes, jurisdiction_code)
                     file_path = f"{base_s3_path}/{storage_folder}/{source_id}"
                     storage_folder_s3_path = f"{base_s3_path}/{storage_folder}/"
@@ -153,7 +176,6 @@ def process_caselaw_data():
                         'status_content_download': content_download_status,
                     }
 
-                    # FIX: Collect all failure reasons
                     failure_reasons = []
                     if content_download_status == 'fail':
                         failure_reasons.append("Missing or empty content files")
@@ -163,28 +185,27 @@ def process_caselaw_data():
                     if missing_fields:
                         failure_reasons.append(f"Missing mandatory fields: {', '.join(missing_fields)}")
                     
-                    # Determine final status and failure reason
                     if failure_reasons:
                         final_status = 'fail'
                         reason_for_failure = '; '.join(failure_reasons)
                         logging.warning(f"{log_prefix}: Marking as 'fail'. Reason(s): {reason_for_failure}")
                     else:
                         final_status = 'pass'
-                        reason_for_failure = None # Set to None if registration is successful
+                        reason_for_failure = None
                     
                     record_end_time = datetime.now(timezone.utc)
                     record_duration = (record_end_time - record_start_time).total_seconds()
 
                     record_data.update({
                         'status_registration': final_status,
-                        'reason_failed': reason_for_failure, # Add new column to data
+                        'reason_failed': reason_for_failure,
                         'start_time_registration': program_start_time,
                         'end_time_registration': record_end_time,
                         'duration_registration': record_duration
                     })
 
                     with dest_engine.connect() as conn:
-                        if result:
+                        if record_exists:
                             update_cols = ", ".join([f"{key} = :{key}" for key in record_data])
                             update_query = text(f"UPDATE {dest_table} SET {update_cols} WHERE source_id = :source_id")
                             conn.execute(update_query, record_data)

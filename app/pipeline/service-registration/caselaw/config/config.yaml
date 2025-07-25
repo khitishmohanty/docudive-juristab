@@ -34,6 +34,10 @@ tables:
           jurisdiction: QLD
           storage_folder: qld
         - database: legal_source
+          table: l2_scan_jade_io_caselaw_tas
+          jurisdiction: TAS
+          storage_folder: tas
+        - database: legal_source
           table: l2_scan_jade_io_caselaw_act
           jurisdiction: ACT
           storage_folder: act
@@ -49,11 +53,6 @@ tables:
           table: l2_scan_jade_io_caselaw_wa
           jurisdiction: WA
           storage_folder: wa
-        - database: legal_source
-          table: l2_scan_jade_io_caselaw_tas
-          jurisdiction: TAS
-          storage_folder: tas
-
     tables_to_write:
       - database: legal_store
         table: caselaw_registry
