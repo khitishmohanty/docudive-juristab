@@ -7,7 +7,8 @@ from utils.s3_manager import S3Manager
 
 class TextProcessor:
     """
-    Handles the text extraction part of the pipeline.
+    Handles the text extraction part of the pipeline by efficiently identifying
+    and processing cases that have not yet been successfully completed.
     """
     def __init__(self, config: dict):
         """
@@ -19,7 +20,7 @@ class TextProcessor:
         self.config = config
         self.html_parser = HtmlParser()
         
-        # Initialize the S3 manager
+        # Initialize the S3 manager using the region from the config
         self.s3_manager = S3Manager(region_name=config['aws']['default_region'])
         
         # This processor connects to both source and destination databases
@@ -29,12 +30,16 @@ class TextProcessor:
     def process_cases(self):
         """
         Main method to run the text extraction pipeline.
-        It iterates through all source tables defined in the config, reads case IDs,
-        and processes each one based on its status.
+        It identifies cases needing processing using an efficient JOIN query
+        and processes each one.
         """
         tables_to_process = self.config['tables']['tables_to_read']
         dest_table_info = self.config['tables']['tables_to_write'][0]
+        
+        # --- FIX: Get destination DB name and table name from config ---
+        dest_db_name = dest_table_info['database']
         dest_table = dest_table_info['table']
+        status_column = dest_table_info['step_columns']['text_extract']['status']
         
         s3_bucket = self.config['aws']['s3']['bucket_name']
         filenames = self.config['enrichment_filenames']
@@ -44,51 +49,57 @@ class TextProcessor:
         # Loop through each source table defined in the configuration
         for source_table_info in tables_to_process:
             source_table = source_table_info['table']
-            s3_base_folder = source_table_info['s3_folder']  # Get the specific S3 folder for this table
+            s3_base_folder = source_table_info['s3_folder']
             
             print(f"\n===== Processing table: {source_table} using S3 folder: {s3_base_folder} =====")
 
             try:
-                # Fetch all case IDs from the current source table
-                cases_df = self.source_db.read_sql(f"SELECT id FROM {source_table}")
-                print(f"Found {len(cases_df)} total cases in source table '{source_table}'.")
+                # --- FIX: Use a fully qualified table name for the cross-database JOIN ---
+                # This explicitly tells the query to look for the destination table
+                # in the correct database (e.g., `legal_store.caselaw_enrichment_status`).
+                query = f"""
+                    SELECT
+                        source.id
+                    FROM
+                        {source_table} AS source
+                    LEFT JOIN
+                        {dest_db_name}.{dest_table} AS dest ON source.id = dest.source_id
+                    WHERE
+                        dest.source_id IS NULL OR dest.{status_column} != 'pass'
+                """
+                cases_to_process_df = self.source_db.read_sql(query)
+                print(f"Found {len(cases_to_process_df)} cases requiring text extraction in '{source_table}'.")
+
             except Exception as e:
                 print(f"ERROR: Could not read from source table {source_table}. Skipping. Error: {e}")
-                continue  # Skip to the next table if there's an error
+                continue # Skip to the next table if the query fails
 
-            # Iterate over each case from the source table
-            for index, row in cases_df.iterrows():
+            # Iterate ONLY over the cases that require processing
+            for index, row in cases_to_process_df.iterrows():
                 source_id = str(row['id'])
-                print(f"\n--- Checking case for text extraction: {source_id} from table {source_table} ---")
+                print(f"\n--- Processing case for text extraction: {source_id} ---")
                 
+                # We still need to check if a status row exists to decide whether to INSERT a new one.
                 status_row = self.dest_db.get_status_by_source_id(dest_table, source_id)
-
-                # If no status record exists, create one
                 if not status_row:
                     print(f"No status record found for {source_id}. Creating new one.")
                     try:
                         self.dest_db.insert_initial_status(table_name=dest_table, source_id=source_id)
-                        status_row = self.dest_db.get_status_by_source_id(dest_table, source_id)
                     except Exception as e:
                         print(f"Failed to insert initial status for {source_id}. Skipping. Error: {e}")
-                        continue
-                
-                # If text has already been extracted successfully, skip it
-                if status_row and status_row.status_text_processor == 'pass':
-                    print(f"Text for case {source_id} has already been extracted. Skipping.")
-                    continue
+                        continue # Skip this case if status insert fails
 
-                # Construct the full S3 path for the source HTML and destination text file
+                # Construct the S3 paths for the HTML and the output text file
                 case_folder = os.path.join(s3_base_folder, source_id)
                 html_file_key = os.path.join(case_folder, filenames['source_html'])
                 txt_file_key = os.path.join(case_folder, filenames['extracted_text'])
                 
-                # Perform the text extraction and save the result
+                # Perform the text extraction, save the result to S3, and update the database
                 self._extract_and_save_text(s3_bucket, html_file_key, txt_file_key, dest_table, source_id)
             
         print("\n--- Text extraction check completed for all cases in all tables. ---")
 
-    def _extract_and_save_text(self, bucket, html_key, txt_key, status_table, source_id):
+    def _extract_and_save_text(self, bucket: str, html_key: str, txt_key: str, status_table: str, source_id: str):
         """
         Handles HTML download from S3, text extraction, saving the text file back to S3,
         and updating the status database.
@@ -117,6 +128,7 @@ class TextProcessor:
             duration = (end_time_utc - start_time_utc).total_seconds()
             
             # Step 4: Update the database to mark this step as 'pass'
+            print(f"Successfully extracted text for {source_id}.")
             self.dest_db.update_step_result(
                 status_table, source_id, 'text_extract', 'pass', duration, 
                 start_time_utc, end_time_utc, step_columns_config
@@ -124,8 +136,8 @@ class TextProcessor:
         except Exception as e:
             end_time_utc = datetime.now(timezone.utc)
             duration = (end_time_utc - start_time_utc).total_seconds()
-            print(f"Text extraction failed for {source_id}. Error: {e}")
-            # Update the database to mark this step as 'failed'
+            print(f"Text extraction FAILED for {source_id}. Error: {e}")
+            # Update the database to mark this step as 'failed' to prevent retrying on next run
             self.dest_db.update_step_result(
                 status_table, source_id, 'text_extract', 'failed', duration,
                 start_time_utc, end_time_utc, step_columns_config
