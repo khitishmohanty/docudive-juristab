@@ -38,22 +38,38 @@ class HtmlGenerator:
             font-size: 14px;
         }}
         .nav-item {{
+            position: relative; /* Required for absolute positioning of child spans */
             cursor: pointer;
-            /* Smoother, slightly longer transition */
-            transition: font-weight 0.25s ease-in-out, color 0.25s ease-in-out;
-            color: #374151; /* Gray-700 */
-            font-weight: 500;
-            padding: 0.75rem 1rem;
+            padding: 0.25rem 1rem; /* Reduced vertical padding to bring items closer */
             border-radius: 0.5rem;
-            font-size: 14px; /* Base font size is constant */
+            font-size: 14px;
         }}
-        .nav-item:hover {{
-            color: #111827; /* Darker text on hover */
-            font-weight: 600; /* Bold on hover */
+        /* This span holds the visible text, which fades out */
+        .nav-item .text-normal {{
+            font-weight: 500;
+            color: #374151; /* Gray-700 */
+            transition: opacity 0.3s ease-in-out;
         }}
-        .nav-item.active {{
-            color: #111827; /* Darker text when active */
-            font-weight: 600; /* Bold when active */
+        /* This span holds the bold text, which fades in */
+        .nav-item .text-bold {{
+            position: absolute;
+            top: 0.25rem;  /* Adjusted to match parent's new top padding */
+            left: 1rem;   /* Must match parent's left padding */
+            font-weight: 600;
+            color: #111827; /* Dark Gray-900 */
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s ease-in-out;
+        }}
+        /* --- The Animation --- */
+        /* Fade out the normal text on hover/active */
+        .nav-item:hover .text-normal,
+        .nav-item.active .text-normal {{
+            opacity: 0;
+        }}
+        /* Fade in the bold text on hover/active */
+        .nav-item:hover .text-bold,
+        .nav-item.active .text-bold {{
+            opacity: 1;
         }}
         .content-card {{
             display: none;
@@ -80,7 +96,7 @@ class HtmlGenerator:
     <div class="w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-8">
         <div class="w-full md:w-1/3 lg:w-1/4">
             <nav class="bg-white p-3 rounded-xl">
-                <ul id="nav-menu" class="space-y-1">
+                <ul id="nav-menu">
                     </ul>
             </nav>
         </div>
@@ -98,11 +114,15 @@ class HtmlGenerator:
 
         // Populate navigation and content cards
         caseData.cards.forEach((card, index) => {{
-            // Create Navigation List Item
             const navItem = document.createElement('li');
             navItem.className = 'nav-item';
             navItem.dataset.index = index;
-            navItem.textContent = card.menuLabel;
+
+            // Create two spans inside the li for the smooth bold transition
+            navItem.innerHTML = `
+                <span class="text-normal">${{card.menuLabel}}</span>
+                <span class="text-bold">${{card.menuLabel}}</span>
+            `;
             navMenu.appendChild(navItem);
 
             // Create Content Card
