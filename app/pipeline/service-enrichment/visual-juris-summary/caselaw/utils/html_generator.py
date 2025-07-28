@@ -2,13 +2,14 @@ import json
 
 class HtmlGenerator:
     """
-    Generates an interactive "Subway Map" HTML visualization from a legal case summary JSON object.
+    Generates an interactive HTML visualization from a legal case summary JSON object,
+    featuring a standard navigation menu.
     """
 
     def generate_html_tree(self, json_data: dict) -> str:
         """
         Takes a dictionary parsed from a case summary JSON and returns a complete
-        HTML string for the interactive subway map visualization.
+        HTML string for the interactive visualization.
 
         Args:
             json_data (dict): The case data parsed from a JSON file.
@@ -25,7 +26,7 @@ class HtmlGenerator:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Case Law Visualization - Subway Map</title>
+    <title>Case Law Visualization</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,27 +37,30 @@ class HtmlGenerator:
             background-color: #ffffff;
             font-size: 14px;
         }}
-        .station {{
+        .nav-item {{
             cursor: pointer;
+            /* Smoother, slightly longer transition */
+            transition: font-weight 0.25s ease-in-out, color 0.25s ease-in-out;
+            color: #374151; /* Gray-700 */
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 14px; /* Base font size is constant */
         }}
-        .station:hover .station-dot {{
-            stroke: #1d4ed8; /* Change stroke color on hover */
+        .nav-item:hover {{
+            color: #111827; /* Darker text on hover */
+            font-weight: 600; /* Bold on hover */
         }}
-        .station .station-dot, .station .station-label {{
-            transition: all 0.2s ease-in-out;
-        }}
-        .station.active .station-dot {{
-            fill: #1d4ed8;
-            stroke: #1d4ed8;
-        }}
-        .station.active .station-label {{
-            font-weight: 600;
-            color: #1d4ed8;
+        .nav-item.active {{
+            color: #111827; /* Darker text when active */
+            font-weight: 600; /* Bold when active */
         }}
         .content-card {{
             display: none;
-            /* Removed background, shadow, and border for a transparent look */
+            background-color: #ffffff;
+            border-radius: 0.75rem;
             animation: fadeIn 0.5s ease-out;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
         }}
         .content-card.active {{
             display: block;
@@ -69,134 +73,87 @@ class HtmlGenerator:
             font-family: 'Poppins', sans-serif;
             font-weight: 500;
         }}
-        .timeline-item {{
-            position: relative;
-            padding-left: 2.5rem;
-            padding-bottom: 1.5rem;
-        }}
-        .timeline-item:last-child {{ padding-bottom: 0; }}
-        .timeline-dot {{
-            position: absolute;
-            left: 0;
-            top: 0.25rem;
-            height: 0.75rem; /* 12px */
-            width: 0.75rem; /* 12px */
-            background-color: white;
-            border: 2px solid #9ca3af;
-            border-radius: 50%;
-        }}
-        .timeline-line {{
-            position: absolute;
-            left: 0.3125rem; /* 5px */
-            top: 0.75rem; /* 12px */
-            bottom: 0;
-            width: 2px;
-            background-color: #e5e7eb; /* Lighter grey */
-        }}
-        .timeline-item:last-child .timeline-line {{ display: none; }}
     </style>
 </head>
-<body class="bg-white p-4 md:p-8">
+<body class="p-4 md:p-8">
 
-    <div class="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-2">
-        <!-- Subway Map Navigator -->
+    <div class="w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-8">
         <div class="w-full md:w-1/3 lg:w-1/4">
-            <svg id="subway-map" width="100%" height="450"></svg>
+            <nav class="bg-white p-3 rounded-xl">
+                <ul id="nav-menu" class="space-y-1">
+                    </ul>
+            </nav>
         </div>
 
-        <!-- Content Display Area -->
-        <div id="content-area" class="w-full md:w-2/3 lg:w-3/4" style="margin-top: 18px;">
-            <!-- Content cards will be injected here -->
-        </div>
+        <div id="content-area" class="w-full md:w-2/3 lg:w-3/4">
+            </div>
     </div>
 
     <script>
     const caseData = {json_string_for_html};
 
     document.addEventListener('DOMContentLoaded', () => {{
-        const svg = document.getElementById('subway-map');
+        const navMenu = document.getElementById('nav-menu');
         const contentArea = document.getElementById('content-area');
-        const totalCards = caseData.cards.length;
-        const yStep = 60;
-        const xPos = 20;
 
-        // Draw the main line
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', xPos);
-        line.setAttribute('y1', yStep);
-        line.setAttribute('x2', xPos);
-        line.setAttribute('y2', yStep * totalCards);
-        line.setAttribute('stroke', '#e5e7eb'); /* Lighter grey */
-        line.setAttribute('stroke-width', '2');
-        svg.appendChild(line);
-
+        // Populate navigation and content cards
         caseData.cards.forEach((card, index) => {{
-            // Create Station on Map
-            const yPos = yStep * (index + 1);
-            const stationGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            stationGroup.classList.add('station');
-            stationGroup.dataset.index = index;
-
-            const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            dot.classList.add('station-dot');
-            dot.setAttribute('cx', xPos);
-            dot.setAttribute('cy', yPos);
-            dot.setAttribute('r', '6');
-            dot.setAttribute('fill', 'white');
-            dot.setAttribute('stroke', '#9ca3af');
-            dot.setAttribute('stroke-width', '2');
-            
-            const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            label.classList.add('station-label');
-            label.setAttribute('x', xPos + 20);
-            label.setAttribute('y', yPos);
-            label.setAttribute('dy', '0.35em');
-            label.textContent = card.menuLabel;
-
-            stationGroup.appendChild(dot);
-            stationGroup.appendChild(label);
-            svg.appendChild(stationGroup);
+            // Create Navigation List Item
+            const navItem = document.createElement('li');
+            navItem.className = 'nav-item';
+            navItem.dataset.index = index;
+            navItem.textContent = card.menuLabel;
+            navMenu.appendChild(navItem);
 
             // Create Content Card
             const contentCard = document.createElement('div');
-            contentCard.className = 'content-card rounded-xl'; // Removed bg-white
+            contentCard.className = 'content-card';
             contentCard.dataset.index = index;
             contentCard.innerHTML = generateCardHTML(card);
             contentArea.appendChild(contentCard);
         }});
 
-        const stations = document.querySelectorAll('.station');
+        const navItems = document.querySelectorAll('.nav-item');
         const contentCards = document.querySelectorAll('.content-card');
 
-        function switchStation(index) {{
-            stations.forEach(s => s.classList.remove('active'));
-            contentCards.forEach(c => c.classList.remove('active'));
+        // Function to switch active view
+        function switchView(index) {{
+            navItems.forEach(item => item.classList.remove('active'));
+            contentCards.forEach(card => card.classList.remove('active'));
 
-            stations[index].classList.add('active');
-            contentCards[index].classList.add('active');
+            if (navItems[index]) {{
+                navItems[index].classList.add('active');
+            }}
+            if (contentCards[index]) {{
+                contentCards[index].classList.add('active');
+            }}
         }}
 
-        stations.forEach((station, index) => {{
-            station.addEventListener('click', () => switchStation(index));
+        // Add click event listeners to navigation items
+        navItems.forEach((item, index) => {{
+            item.addEventListener('click', () => switchView(index));
         }});
 
-        // Activate the first station by default
-        switchStation(0);
+        // Activate the first item by default
+        if (navItems.length > 0) {{
+            switchView(0);
+        }}
     }});
 
+    // This function generates the inner HTML for each content card on the right
     function generateCardHTML(card) {{
         let contentHTML = '';
         switch (card.type) {{
             case 'overview':
                 const listItems = card.content.map(item => `
-                    <li class="flex items-start text-sm">
+                    <li class="flex items-start text-sm py-1">
                         <span class="font-semibold w-28 shrink-0">${{item.label}}:</span> 
                         <span class="text-gray-600">${{item.value}}</span>
                     </li>`).join('');
                 const highlightColor = card.highlight.status === 'negative' ? 'red' : 'green';
                 contentHTML = `
-                    <ul class="space-y-3 text-gray-800">${{listItems}}</ul>
-                    <div class="bg-${{highlightColor}}-50 p-4 border-t border-${{highlightColor}}-200 mt-4">
+                    <ul class="space-y-2 text-gray-800">${{listItems}}</ul>
+                    <div class="bg-${{highlightColor}}-50 p-4 border-t border-${{highlightColor}}-200 mt-4 rounded-b-lg">
                          <p class="text-sm font-semibold text-${{highlightColor}}-800 text-center">${{card.highlight.text}}</p>
                     </div>`;
                 break;
@@ -208,23 +165,20 @@ class HtmlGenerator:
                 contentHTML = `<ul class="space-y-3 text-gray-600 list-disc list-inside text-sm">${{listContent}}</ul>`;
                 break;
             case 'timeline':
-                const timelineItems = card.content.map(item => {{
-                    const textColor = item.highlight ? 'text-blue-800' : 'text-gray-800';
-                    return `
-                        <div class="timeline-item">
-                            <div class="timeline-line"></div>
-                            <div class="timeline-dot" style="border-color: ${{item.highlight ? '#1e40af' : ''}};"></div>
-                            <p class="font-semibold text-sm ${{textColor}}">${{item.date}}</p>
-                            <p class="text-xs text-gray-500">${{item.event || item.description}}</p>
-                        </div>`;
-                }}).join('');
+                 const timelineItems = card.content.map(item => `
+                    <div class="relative pl-8 pb-6 last:pb-0">
+                        <div class="absolute left-0 top-1.5 h-full w-px bg-gray-200"></div>
+                        <div class="absolute left-[-4px] top-1 h-2 w-2 rounded-full ${{item.highlight ? 'bg-blue-600' : 'bg-gray-400'}}"></div>
+                        <p class="font-semibold text-sm ${{item.highlight ? 'text-blue-700' : 'text-gray-800'}}">${{item.date}}</p>
+                        <p class="text-xs text-gray-500">${{item.event || item.description}}</p>
+                    </div>`).join('');
                 contentHTML = `<div>${{timelineItems}}</div>`;
                 break;
             case 'comparison':
                 const sideA = card.content.sideA;
                 const sideB = card.content.sideB;
                 contentHTML = `
-                    <div class="grid md:grid-cols-2 gap-4">
+                    <div class="grid md:grid-cols-2 gap-6">
                         <div>
                             <h3 class="font-semibold text-blue-800 text-sm">${{sideA.title}}</h3>
                             <p class="mt-1 text-gray-600 text-xs">${{sideA.text}}</p>
@@ -244,27 +198,21 @@ class HtmlGenerator:
                     </div>`;
                 break;
             case 'scorecard':
-                const scorecardItems = card.content.map(item => {{
-                    let bulletPoint = '';
-                    if (item.status === 'negative') {{
-                        bulletPoint = `<div class="w-2 h-2 bg-gray-700 rounded-full mt-1.5 mr-3 flex-shrink-0"></div>`;
-                    }} else {{ // Fallback for positive status
-                        bulletPoint = `<div class="w-2 h-2 bg-green-500 rounded-full mt-1.5 mr-3 flex-shrink-0"></div>`;
-                    }}
-                    return `<li class="flex items-start text-gray-700">${{bulletPoint}}<span>${{item.text}}</span></li>`;
-                }}).join('');
+                const scorecardItems = card.content.map(item => `
+                    <li class="flex items-start text-gray-700">
+                        <div class="w-2 h-2 ${{item.status === 'negative' ? 'bg-red-500' : 'bg-green-500'}} rounded-full mt-1.5 mr-3 flex-shrink-0"></div>
+                        <span>${{item.text}}</span>
+                    </li>`).join('');
                 contentHTML = `<ul class="space-y-3">${{scorecardItems}}</ul>`;
                 break;
             case 'text':
-                contentHTML = `<div class="text-gray-600 space-y-3 text-sm leading-relaxed"><p>${{card.content}}</p></div>`;
+                contentHTML = `<div class="text-gray-600 space-y-3 text-sm leading-relaxed">${{card.content}}</div>`;
                 break;
         }}
 
         return `
             <div class="p-6">
-                <div class="flex items-start justify-between">
-                    <h2 class="card-title text-lg font-medium text-gray-800">${{card.title}}</h2>
-                </div>
+                <h2 class="card-title text-xl font-medium text-gray-800">${{card.title}}</h2>
                 <div class="mt-4">${{contentHTML}}</div>
             </div>
         `;
@@ -274,4 +222,3 @@ class HtmlGenerator:
 </html>
         """
         return html_template
-

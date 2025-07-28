@@ -35,8 +35,8 @@ models:
         model: "models/gemini-2.5-pro-preview-05-06"
         base_url: "https://generativelanguage.googleapis.com/v1beta"
         pricing:
-            input_per_million: 1.25
-            output_per_million: 10.00
+            input_per_million: 2.50
+            output_per_million: 15.00
     
     openai:
         model_name: "gpt-4o"
@@ -51,38 +51,38 @@ tables:
       table: l2_scan_jade_io_caselaw_nt
       s3_dest_folder: "case-laws/nt/"
       audit_job_name: "ai_enrichment_service_juristree_nt"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_tas
-    #   s3_dest_folder: "case-laws/tas/"
-    #   audit_job_name: "ai_enrichment_service_juristree_tas"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_vic
-    #   s3_dest_folder: "case-laws/vic/"
-    #   audit_job_name: "ai_enrichment_service_juristree_vic"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_nsw
-    #   s3_dest_folder: "case-laws/nsw/"
-    #   audit_job_name: "ai_enrichment_service_juristree_nsw"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_wa
-    #   s3_dest_folder: "case-laws/wa/"
-    #   audit_job_name: "ai_enrichment_service_juristree_wa"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_sa
-    #   s3_dest_folder: "case-laws/sa/"
-    #   audit_job_name: "ai_enrichment_service_juristree_sa"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_qld
-    #   s3_dest_folder: "case-laws/qld/"
-    #   audit_job_name: "ai_enrichment_service_juristree_qld"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_act
-    #   s3_dest_folder: "case-laws/act/"
-    #   audit_job_name: "ai_enrichment_service_juristree_act"
-    # - database: legal_source
-    #   table: l2_scan_jade_io_caselaw_commonwealth
-    #   s3_dest_folder: "case-laws/commonwealth/"
-    #   audit_job_name: "ai_enrichment_service_juristree_commonwealth"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_tas
+      s3_dest_folder: "case-laws/tas/"
+      audit_job_name: "ai_enrichment_service_juristree_tas"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_vic
+      s3_dest_folder: "case-laws/vic/"
+      audit_job_name: "ai_enrichment_service_juristree_vic"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_nsw
+      s3_dest_folder: "case-laws/nsw/"
+      audit_job_name: "ai_enrichment_service_juristree_nsw"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_wa
+      s3_dest_folder: "case-laws/wa/"
+      audit_job_name: "ai_enrichment_service_juristree_wa"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_sa
+      s3_dest_folder: "case-laws/sa/"
+      audit_job_name: "ai_enrichment_service_juristree_sa"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_qld
+      s3_dest_folder: "case-laws/qld/"
+      audit_job_name: "ai_enrichment_service_juristree_qld"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_act
+      s3_dest_folder: "case-laws/act/"
+      audit_job_name: "ai_enrichment_service_juristree_act"
+    - database: legal_source
+      table: l2_scan_jade_io_caselaw_commonwealth
+      s3_dest_folder: "case-laws/commonwealth/"
+      audit_job_name: "ai_enrichment_service_juristree_commonwealth"
   tables_to_write:
     - database: legal_store
       table: caselaw_enrichment_status
@@ -106,6 +106,7 @@ enrichment_filenames:
   source_html: "miniviewer.html"
   extracted_text: "miniviewer.txt"
   jurismap_json: "jurissummary.json"
+  jurisfilter_json: "jurisfilter.json"
   jurismap_html: "jurissummary.html"
 
 # -- Audit log configuration --
@@ -121,3 +122,8 @@ tables_registry:
     table: "caselaw_registry"
     column: "year"
     processing_years: [2025, 2024, 2023]
+
+# -- Metadata table details
+tables_metadata:
+  database: "legal_store"
+  table: "caselaw_metadata"

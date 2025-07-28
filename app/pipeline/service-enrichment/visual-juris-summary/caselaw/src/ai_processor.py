@@ -33,7 +33,6 @@ class AiProcessor:
         dest_table = dest_table_info['table']
         column_config = dest_table_info['columns']
         
-        # MODIFIED: Pass the entire registry_config dictionary to the database query.
         registry_config = self.config.get('tables_registry', {})
         if not registry_config or 'column' not in registry_config:
             raise ValueError("Configuration error: 'tables_registry' with a 'column' key is not defined in config.yaml")
@@ -43,10 +42,10 @@ class AiProcessor:
             column_config, 
             self.source_info,
             self.processing_year,
-            registry_config # Pass the whole dictionary
+            registry_config
         )
         
-        source_table_name = self.source_info['table'] # Keep this for logging
+        source_table_name = self.source_info['table']
         print(f"Found {len(cases_df)} cases for year {self.processing_year} from source '{source_table_name}' ready for AI enrichment.")
 
         for index, row in cases_df.iterrows():
@@ -59,101 +58,112 @@ class AiProcessor:
             
             case_folder = os.path.join(s3_base_folder, source_id)
             txt_file_key = os.path.join(case_folder, filenames['extracted_text'])
-            json_file_key = os.path.join(case_folder, filenames['jurismap_json'])
+            summary_json_file_key = os.path.join(case_folder, filenames['jurismap_json'])
+            filter_json_file_key = os.path.join(case_folder, filenames['jurisfilter_json'])
             tree_html_file_key = os.path.join(case_folder, filenames['jurismap_html'])
 
-            json_content = None
+            json_summary_content = None
             if getattr(row, column_config['json_valid_status']) != 'pass':
                 print(f"JSON status is not 'pass'. Running process.")
                 text_content = self.s3_manager.get_file_content(s3_bucket, txt_file_key)
                 if text_content:
-                    json_content = self._generate_and_save_json(text_content, s3_bucket, json_file_key, dest_table, source_id, column_config)
+                    json_summary_content = self._generate_and_save_json(
+                        text_content, 
+                        s3_bucket, 
+                        summary_json_file_key, 
+                        filter_json_file_key,
+                        dest_table, 
+                        source_id, 
+                        column_config
+                    )
             else:
-                print("JSON already generated. Loading from S3.")
+                print("JSONs already generated. Loading summary from S3 for HTML generation.")
                 try:
-                    json_string = self.s3_manager.get_file_content(s3_bucket, json_file_key)
-                    json_content = json.loads(json_string)
+                    # Only load the summary JSON, as that's what's needed for HTML
+                    json_string = self.s3_manager.get_file_content(s3_bucket, summary_json_file_key)
+                    json_summary_content = json.loads(json_string)
                 except Exception as e:
-                    print(f"Could not load existing JSON for {source_id}. Error: {e}")
+                    print(f"Could not load existing summary JSON for {source_id}. Error: {e}")
                     continue
 
-            if not json_content:
-                print(f"Skipping HTML generation for {source_id} due to missing JSON content.")
+            if not json_summary_content:
+                print(f"Skipping HTML generation for {source_id} due to missing JSON summary content.")
                 continue
 
             if getattr(row, column_config['html_status']) != 'pass':
                 print(f"HTML status is not 'pass'. Running process.")
-                self._generate_and_save_html_tree(json_content, s3_bucket, tree_html_file_key, dest_table, source_id, column_config)
+                self._generate_and_save_html_tree(json_summary_content, s3_bucket, tree_html_file_key, dest_table, source_id, column_config)
             else:
                 print("HTML tree already generated. Skipping.")
 
         print(f"\n--- AI Enrichment check completed for source: {source_table_name} for year {self.processing_year} ---")
-
-    def _generate_and_save_json(self, text_content, bucket, json_key, status_table, source_id, column_config):
-        # Record start time as a timezone-aware datetime object for the database
+    
+    def _generate_and_save_json(self, text_content, bucket, summary_json_key, filter_json_key, status_table, source_id, column_config):
+        """
+        Generates a full JSON from text, then splits it into two files (summary and filter),
+        saves the filter data to the database, and saves both JSON files to S3.
+        The json_valid_status is only passed if all steps are successful.
+        """
         start_time_dt = datetime.now(timezone.utc)
-        end_time_dt = None
-        duration = 0
-
-        # Initialize token and price variables
         input_tokens, output_tokens = 0, 0
         input_price, output_price = 0.0, 0.0
 
         try:
-            # Get response and token counts from Gemini
+            # Step 1: Get response from Gemini and calculate cost
             gemini_response_str, input_tokens, output_tokens = self.gemini_client.generate_json_from_text(self.prompt, text_content)
-            
-            # Get pricing configuration
             pricing_config = self.config['models']['gemini']['pricing']
-            input_price_per_million = pricing_config['input_per_million']
-            output_price_per_million = pricing_config['output_per_million']
-
-            # Calculate prices based on token counts
-            if input_tokens > 0:
-                input_price = (input_price_per_million / 1000000) * input_tokens
-            if output_tokens > 0:
-                output_price = (output_price_per_million / 1000000) * output_tokens
-
-            # Log the token usage and calculated prices
+            input_price = (pricing_config['input_per_million'] / 1000000) * input_tokens
+            output_price = (pricing_config['output_per_million'] / 1000000) * output_tokens
             print(f"Gemini Token Usage - Input: {input_tokens} (${input_price:.6f}), Output: {output_tokens} (${output_price:.6f})")
-            
-            # Record end time and calculate duration after the API call
+
+            # Step 2: Validate and parse the full JSON response
+            if not self.gemini_client.is_valid_json(gemini_response_str):
+                raise ValueError("Gemini response was not valid JSON.")
+            full_data = json.loads(gemini_response_str)
+
+            # Step 3: Extract and validate the two data parts
+            filter_tags_data = full_data.get("filter_tags")
+            summary_data = {
+                "caseTitle": full_data.get("caseTitle"),
+                "caseSubtitle": full_data.get("caseSubtitle"),
+                "cards": full_data.get("cards")
+            }
+            if not filter_tags_data or not summary_data.get("cards"):
+                raise ValueError("Parsed JSON is missing 'filter_tags' or 'cards' key.")
+
+            # Step 4: Save filter tags to the metadata database
+            metadata_config = self.config.get('tables_metadata')
+            if not metadata_config:
+                raise ValueError("Configuration for 'tables_metadata' is missing from config.yaml.")
+            self.dest_db.upsert_metadata(metadata_config, source_id, filter_tags_data)
+
+            # Step 5: Save the two separate JSON files to S3
+            self.s3_manager.save_json_file(bucket, summary_json_key, json.dumps(summary_data, indent=2))
+            self.s3_manager.save_json_file(bucket, filter_json_key, json.dumps(filter_tags_data, indent=2))
+
+            # Step 6: On success, update status and metrics in the main status table
             end_time_dt = datetime.now(timezone.utc)
             duration = (end_time_dt - start_time_dt).total_seconds()
+            self.dest_db.update_step_result(
+                status_table, source_id, 'json_valid', 'pass', duration, column_config,
+                token_input=input_tokens, token_output=output_tokens,
+                token_input_price=input_price, token_output_price=output_price,
+                start_time=start_time_dt, end_time=end_time_dt
+            )
+            
+            # Return the summary data for immediate HTML generation
+            return summary_data
 
-            if self.gemini_client.is_valid_json(gemini_response_str):
-                # If JSON is valid, save it and update status to 'pass'
-                self.s3_manager.save_json_file(bucket, json_key, gemini_response_str)
-                self.dest_db.update_step_result(
-                    status_table, source_id, 'json_valid', 'pass', duration, column_config,
-                    token_input=input_tokens,
-                    token_output=output_tokens,
-                    token_input_price=input_price,
-                    token_output_price=output_price,
-                    start_time=start_time_dt,
-                    end_time=end_time_dt
-                )
-                return json.loads(gemini_response_str)
-            else:
-                # If JSON is invalid, raise an error to be caught by the except block
-                raise ValueError("Gemini response was not valid JSON.")
         except Exception as e:
-            # If any exception occurs, record the end time and duration
-            if end_time_dt is None:
-                end_time_dt = datetime.now(timezone.utc)
+            # On any failure, log the 'failed' status and all available metrics
+            end_time_dt = datetime.now(timezone.utc)
             duration = (end_time_dt - start_time_dt).total_seconds()
-            
-            print(f"JSON generation failed for {source_id}. Error: {e}")
-            
-            # Update status to 'failed' and log any available data
+            print(f"JSON generation and saving process failed for {source_id}. Error: {e}")
             self.dest_db.update_step_result(
                 status_table, source_id, 'json_valid', 'failed', duration, column_config,
-                token_input=input_tokens,
-                token_output=output_tokens,
-                token_input_price=input_price,
-                token_output_price=output_price,
-                start_time=start_time_dt,
-                end_time=end_time_dt
+                token_input=input_tokens, token_output=output_tokens,
+                token_input_price=input_price, token_output_price=output_price,
+                start_time=start_time_dt, end_time=end_time_dt
             )
             return None
 
