@@ -8,10 +8,11 @@ from utils.s3_manager import S3Manager
 from utils.html_generator import HtmlGenerator
 
 class AiProcessor:
-    # MODIFIED: __init__ now accepts a 'source_info' dictionary
-    def __init__(self, config: dict, prompt_path: str, source_info: dict):
+    # __init__ now accepts a 'source_info' dictionary and a 'processing_year'.
+    def __init__(self, config: dict, prompt_path: str, source_info: dict, processing_year: int):
         self.config = config
         self.source_info = source_info # Store the specific source config
+        self.processing_year = processing_year # Store the processing year
         self.html_generator = HtmlGenerator()
         self.s3_manager = S3Manager(region_name=config['aws']['default_region'])
         self.gemini_client = GeminiClient(model_name=config['models']['gemini']['model'])
@@ -32,19 +33,27 @@ class AiProcessor:
         dest_table = dest_table_info['table']
         column_config = dest_table_info['columns']
         
-        # MODIFIED: Pass the entire source_info dictionary to the database query for a robust JOIN.
-        cases_df = self.dest_db.get_records_for_ai_processing(dest_table, column_config, self.source_info)
+        # MODIFIED: Pass the entire registry_config dictionary to the database query.
+        registry_config = self.config.get('tables_registry', {})
+        if not registry_config or 'column' not in registry_config:
+            raise ValueError("Configuration error: 'tables_registry' with a 'column' key is not defined in config.yaml")
+
+        cases_df = self.dest_db.get_records_for_ai_processing(
+            dest_table, 
+            column_config, 
+            self.source_info,
+            self.processing_year,
+            registry_config # Pass the whole dictionary
+        )
         
         source_table_name = self.source_info['table'] # Keep this for logging
-        print(f"Found {len(cases_df)} cases from source '{source_table_name}' ready for AI enrichment.")
-
+        print(f"Found {len(cases_df)} cases for year {self.processing_year} from source '{source_table_name}' ready for AI enrichment.")
 
         for index, row in cases_df.iterrows():
             source_id = str(row['source_id'])
             print(f"\n--- Processing AI/HTML for case: {source_id} ---")
             
             s3_bucket = self.config['aws']['s3']['bucket_name']
-            # MODIFIED: Use the destination folder from the specific source_info
             s3_base_folder = self.source_info['s3_dest_folder']
             filenames = self.config['enrichment_filenames']
             
@@ -78,7 +87,7 @@ class AiProcessor:
             else:
                 print("HTML tree already generated. Skipping.")
 
-        print(f"\n--- AI Enrichment check completed for source: {source_table_name} ---")
+        print(f"\n--- AI Enrichment check completed for source: {source_table_name} for year {self.processing_year} ---")
 
     def _generate_and_save_json(self, text_content, bucket, json_key, status_table, source_id, column_config):
         # Record start time as a timezone-aware datetime object for the database

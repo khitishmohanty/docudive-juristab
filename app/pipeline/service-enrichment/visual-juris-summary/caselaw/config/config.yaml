@@ -114,3 +114,10 @@ audit_log:
     database: "legal_store"
     table: "audit_log"
     job_name: "text_extraction_service_nt"
+
+# -- Registry details
+tables_registry:
+    database: "legal_store"
+    table: "caselaw_registry"
+    column: "year"
+    processing_years: [2025, 2024, 2023]

@@ -51,37 +51,46 @@ class DatabaseConnector:
         finally:
             session.close()
 
-    # MODIFIED: This method now correctly handles the source_info dictionary.
-    def get_records_for_ai_processing(self, table_name: str, column_config: Dict[str, str], source_info: dict) -> pd.DataFrame:
+    def get_records_for_ai_processing(self, table_name: str, column_config: Dict[str, str], source_info: dict, processing_year: int, registry_config: dict) -> pd.DataFrame:
         """
         Queries the status table for records that are ready for AI processing,
-        filtered by joining with the actual source table.
+        filtered by joining with the source and registry tables to filter by year.
         """
-        # FIX: Correctly access keys from the source_info dictionary
+        # Source table details
         source_db = source_info['database']
         source_table = source_info['table']
         fully_qualified_source_table = f"`{source_db}`.`{source_table}`"
+        
+        # Registry table details from config
+        registry_db = registry_config['database']
+        registry_table = registry_config['table']
+        year_column_name = registry_config['column']
+        fully_qualified_registry_table = f"`{registry_db}`.`{registry_table}`"
 
-        print(f"Querying for records from '{fully_qualified_source_table}' ready for AI processing in table: {table_name}")
+
+        print(f"Querying for records from '{fully_qualified_source_table}' for year {processing_year} ready for AI processing in table: {table_name}")
         try:
             text_status_col = column_config['text_extract_status']
             json_status_col = column_config['json_valid_status']
             html_status_col = column_config['html_status']
             
-            # This query now joins the status table with the source table to get the correct records.
-            # It assumes the primary key of the source table is 'id' and corresponds to 'source_id'.
+            # MODIFIED: This query now joins with the caselaw_registry table to filter by year.
+            # It assumes the registry table has a 'source_id' column to join on.
             query = text(f"""
                 SELECT s.source_id, s.`{json_status_col}`, s.`{html_status_col}`
                 FROM {table_name} s
                 JOIN {fully_qualified_source_table} src ON s.source_id = src.id
+                JOIN {fully_qualified_registry_table} reg ON s.source_id = reg.source_id
                 WHERE 
-                    s.`{text_status_col}` = 'pass' 
+                    reg.`{year_column_name}` = :processing_year
+                    AND s.`{text_status_col}` = 'pass' 
                     AND (s.`{json_status_col}` != 'pass' OR s.`{html_status_col}` != 'pass')
             """)
-            return pd.read_sql_query(query, self.engine)
+            return pd.read_sql_query(query, self.engine, params={"processing_year": processing_year})
         except Exception as e:
             print(f"Error querying for AI-ready records: {e}")
-            print(f"This might be due to a permissions issue (the user for '{self.db_config['name']}' might not have SELECT access to '{fully_qualified_source_table}') or the JOIN column 'id' might not exist on the source table.")
+            # MODIFIED: Added more specific guidance to the error message.
+            print(f"This might be due to a permissions issue, missing columns (e.g., 'id' on source table, 'source_id'/'{year_column_name}' on registry table), or a mismatch in 'source_id' values.")
             raise
 
     def insert_initial_status(self, table_name: str, source_id: str, column_config: Dict[str, str]):
