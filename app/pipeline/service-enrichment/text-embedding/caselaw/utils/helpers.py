@@ -50,18 +50,30 @@ class DatabaseHandler:
         self.char_count_column = metadata_config['columns']['char_count']
         self.word_count_column = metadata_config['columns']['word_count']
 
-    def get_cases_to_process(self):
+        # Registry table config
+        registry_config = config['tables_registry']
+        self.registry_table = registry_config['table']
+        self.registry_year_column = registry_config['column']
+        # --- NEW: Jurisdiction column is assumed to be 'jurisdiction_code' as per your request ---
+        self.registry_jurisdiction_column = 'jurisdiction_code'
+
+
+    def get_cases_to_process(self, year, jurisdiction_code):
         """
-        Fetches a list of source_ids that have passed text processing 
-        but have not yet been successfully embedded.
+        Fetches a list of source_ids for a specific year and jurisdiction that have passed 
+        text processing but have not yet been successfully embedded.
         """
         query = text(f"""
-            SELECT source_id FROM {self.status_table}
-            WHERE status_text_processor = 'pass'
-            AND ({self.status_column} != 'pass' OR {self.status_column} IS NULL)
+            SELECT T1.source_id 
+            FROM {self.status_table} AS T1
+            JOIN {self.registry_table} AS T2 ON T1.source_id = T2.source_id
+            WHERE T2.{self.registry_year_column} = :year
+            AND T2.{self.registry_jurisdiction_column} = :jurisdiction_code
+            AND T1.status_text_processor = 'pass'
+            AND (T1.{self.status_column} != 'pass' OR T1.{self.status_column} IS NULL)
         """)
         with self.engine.connect() as connection:
-            result = connection.execute(query)
+            result = connection.execute(query, {"year": year, "jurisdiction_code": jurisdiction_code})
             return [row[0] for row in result]
 
     def find_s3_folder_for_ids(self, source_ids, tables_to_read_config):

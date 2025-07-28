@@ -84,3 +84,11 @@ tables:
 enrichment_filenames:
   source_text: "miniviewer.txt"
   embedding_output: "embeddings.npy"
+
+# -- Registry details
+tables_registry:
+    database: "legal_store"
+    table: "caselaw_registry"
+    column: "year"
+    processing_years: [2025]
+    jurisdiction_codes: ['ACT','VIC','NT','QLD','WA','SA','TAS','FED']
