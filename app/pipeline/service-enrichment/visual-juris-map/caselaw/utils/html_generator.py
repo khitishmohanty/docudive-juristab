@@ -2,14 +2,14 @@ import json
 
 class HtmlGenerator:
     """
-    Generates an interactive HTML page with two switchable visualizations
-    (Force-Directed Graph and Chord Diagram) from a JurisMap JSON object.
+    Generates an interactive HTML page with three switchable visualizations
+    from a JurisMap JSON object.
     """
 
     def generate_html_tree(self, json_data: dict) -> str:
         """
         Takes a dictionary parsed from the JurisMap JSON and returns a complete
-        HTML string for an interactive page with two chart types.
+        HTML string for an interactive page with three chart types.
 
         Args:
             json_data (dict): The case data parsed from a JSON file.
@@ -29,7 +29,10 @@ class HtmlGenerator:
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+    <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+
     <style>
         body {{
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -37,56 +40,36 @@ class HtmlGenerator:
             padding: 20px;
             background-color: #fff;
         }}
-        .view-toggle {{
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .view-selector {{
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
             margin-bottom: 20px;
         }}
-        .toggle-switch {{
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }}
-        .toggle-switch input {{
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }}
-        .slider {{
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }}
-        .slider:before {{
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }}
-        input:checked + .slider {{
-            background-color: #888;
-        }}
-        input:checked + .slider:before {{
-            transform: translateX(26px);
-        }}
-        .toggle-label {{
-            margin: 0 10px;
+        .view-selector h3 {{
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 16px;
             font-weight: 500;
-            font-size: 14px;
             color: #333;
+        }}
+        .view-selector-options {{
+             display: flex;
+             flex-direction: column;
+             gap: 10px;
+        }}
+        .view-selector-options label {{
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #555;
+        }}
+        .view-selector-options input[type="radio"] {{
+            accent-color: #888;
+            width: 16px;
+            height: 16px;
         }}
         .chart-container {{
             display: flex;
@@ -97,20 +80,18 @@ class HtmlGenerator:
             max-width: 1800px;
             margin: auto;
         }}
-        .tree-container, .chord-container {{
+        .tree-container, .chord-container, .table-container {{
             flex-grow: 1;
             position: relative;
             min-height: 600px;
-            opacity: 0;
-            transform: translateY(15px);
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-        }}
-        .is-visible {{
-            opacity: 1;
-            transform: translateY(0);
-        }}
-        #chord-container {{
             display: none;
+        }}
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(8px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        .view-fade-in {{
+            animation: fadeIn 0.4s ease-out forwards;
         }}
         #tree-svg, #chord-svg {{
             width: 100%;
@@ -126,7 +107,10 @@ class HtmlGenerator:
             border-radius: 8px;
             border: 1px solid #e9ecef;
             padding: 20px;
-            margin-bottom: 20px;
+            transition: opacity 0.3s, transform 0.3s;
+        }}
+        .details-panel.is-hidden {{
+            display: none;
         }}
         .details-panel h3 {{
             margin-top: 0; color: black; font-weight: 500;
@@ -135,6 +119,21 @@ class HtmlGenerator:
         .details-panel p {{
             color: #7A7171; font-size: 12px; line-height: 1.5;
             transition: opacity 0.2s ease-in-out;
+        }}
+        .gridjs-search-input {{
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+        }}
+        .gridjs-thead .gridjs-th {{
+            background-color: #f8f9fa;
+        }}
+        .gridjs-table, .gridjs-td, .gridjs-th {{
+            border-color: #e9ecef !important;
+        }}
+        .gridjs-td {{
+            background-color: transparent;
         }}
         .node {{ cursor: pointer; }}
         .node rect {{ stroke: none; transition: transform 0.2s ease-in-out; }}
@@ -145,52 +144,18 @@ class HtmlGenerator:
         .link-group:hover .link {{ stroke: #343a40; }}
         #arrowhead path {{ fill: #ccc; }}
         .link-group:hover #arrowhead path {{ fill: #343a40; }}
-
-        /* Chord Diagram Styles */
-        .chord-group, .chord-path, .chord-label-group {{
-            transition: opacity 0.2s ease-in-out;
-        }}
-        .chord-group.faded, .chord-path.faded, .chord-label-group.faded {{
-            opacity: 0.1;
-        }}
+        .chord-group, .chord-path, .chord-label-group {{ transition: opacity 0.2s ease-in-out; }}
+        .chord-group.faded, .chord-path.faded, .chord-label-group.faded {{ opacity: 0.1; }}
         .chord-group {{ cursor: pointer; }}
-        .chord-group path {{
-            fill-opacity: 0.8;
-            transition: fill-opacity 0.2s ease-in-out;
-        }}
-        .chord-path {{ 
-            fill-opacity: 0.65;
-            stroke: #fff; 
-            stroke-width: 0.5px; 
-        }}
-        
-        .chord-label-group {{
-            cursor: pointer;
-        }}
-        .chord-label-group .leader-line {{
-            fill: none;
-            stroke: #aaa;
-            stroke-width: 1px;
-        }}
-        .chord-label-group text {{
-            font-size: 12px;
-            font-weight: 400;
-            fill: #333;
-            stroke: #333;
-            stroke-width: 0;
-            transition: stroke-width 0.2s ease-in-out;
-        }}
-        .chord-label-group .party-type {{
-            fill: #6c757d;
-            stroke: #6c757d;
-        }}
-        .chord-label-group .underline {{
-            stroke-width: 2.5px;
-        }}
-        .chord-label-group:hover text,
-        .chord-label-group.selected text {{
-            stroke-width: 0.4px;
-        }}
+        .chord-group path {{ fill-opacity: 0.8; transition: fill-opacity 0.2s ease-in-out; }}
+        .chord-path {{ fill-opacity: 0.65; stroke: #fff; stroke-width: 0.5px; cursor: pointer; }}
+        .chord-path.selected {{ fill-opacity: 0.9 !important; }}
+        .chord-label-group {{ cursor: pointer; }}
+        .chord-label-group .leader-line {{ fill: none; stroke: #aaa; stroke-width: 1px; }}
+        .chord-label-group text {{ font-size: 12px; font-weight: 400; fill: #333; stroke: #333; stroke-width: 0; transition: stroke-width 0.2s ease-in-out; }}
+        .chord-label-group .party-type {{ fill: #6c757d; stroke: #6c757d; }}
+        .chord-label-group .underline {{ stroke-width: 2.5px; }}
+        .chord-label-group:hover text, .chord-label-group.selected text {{ stroke-width: 0.4px; }}
     </style>
 </head>
 <body>
@@ -201,14 +166,24 @@ class HtmlGenerator:
         <div class="chord-container" id="chord-container">
             <svg id="chord-svg"></svg>
         </div>
-        <div class="sidebar">
-            <div class="view-toggle">
-                <span class="toggle-label">Force Graph</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="view-toggle-checkbox">
-                    <span class="slider"></span>
-                </label>
-                <span class="toggle-label">Chord Diagram</span>
+        <div class="table-container" id="table-container"></div>
+        <div class="sidebar" id="sidebar">
+            <div class="view-selector">
+                <h3>View</h3>
+                <div class="view-selector-options">
+                    <label>
+                        <input type="radio" name="view-toggle" value="tree" checked>
+                        <span>Force Graph</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="view-toggle" value="chord">
+                        <span>Chord Diagram</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="view-toggle" value="table">
+                        <span>Table</span>
+                    </label>
+                </div>
             </div>
             <div class="details-panel" id="details-panel">
                 <h3>Details</h3>
@@ -232,55 +207,121 @@ class HtmlGenerator:
 
             const treeContainer = document.getElementById('tree-container');
             const chordContainer = document.getElementById('chord-container');
-            const toggle = document.getElementById('view-toggle-checkbox');
+            const tableContainer = document.getElementById('table-container');
+            const detailsPanel = document.getElementById('details-panel');
             let isTreeRendered = false;
             let isChordRendered = false;
+            let isTableRendered = false;
 
-            toggle.addEventListener('change', function() {{
-                const showChord = this.checked;
-                setTimeout(() => {{
-                    if (showChord) {{
-                        treeContainer.style.display = 'none';
-                        chordContainer.style.display = 'flex';
-                        if (!isChordRendered) {{
+            const viewToggleRadios = document.querySelectorAll('input[name="view-toggle"]');
+            viewToggleRadios.forEach(radio => {{
+                radio.addEventListener('change', function() {{
+                    const targetView = this.value; 
+
+                    const containers = [treeContainer, chordContainer, tableContainer];
+                    let containerToShow;
+
+                    if (targetView === 'chord') containerToShow = chordContainer;
+                    else if (targetView === 'table') containerToShow = tableContainer;
+                    else containerToShow = treeContainer;
+
+                    containers.forEach(c => {{
+                        c.style.display = 'none';
+                        c.classList.remove('view-fade-in');
+                    }});
+                    
+                    detailsPanel.classList.toggle('is-hidden', targetView === 'table');
+
+                    setTimeout(() => {{
+                        containerToShow.style.display = 'block';
+                        containerToShow.classList.add('view-fade-in');
+                        
+                        if (targetView === 'chord' && !isChordRendered) {{
                             renderChordChart();
                             isChordRendered = true;
+                        }} else if (targetView === 'tree' && !isTreeRendered) {{
+                            renderChart();
+                            isTreeRendered = true;
+                        }} else if (targetView === 'table' && !isTableRendered) {{
+                            renderTable();
+                            isTableRendered = true;
                         }}
-                        requestAnimationFrame(() => chordContainer.classList.add('is-visible'));
-                    }} else {{
-                        treeContainer.style.display = 'none';
-                        treeContainer.style.display = 'block';
-                        requestAnimationFrame(() => treeContainer.classList.add('is-visible'));
-                    }}
-                }}, 500);
-
-                if (showChord) {{
-                    treeContainer.classList.remove('is-visible');
-                }} else {{
-                    chordContainer.classList.remove('is-visible');
-                }}
+                    }}, 10);
+                }});
             }});
-
+            
+            treeContainer.style.display = 'block';
+            treeContainer.classList.add('view-fade-in');
             renderChart();
             isTreeRendered = true;
-            treeContainer.style.display = 'block';
-            requestAnimationFrame(() => {{
-                treeContainer.classList.add('is-visible');
-            }});
+            
+            function renderTable() {{
+                const allParties = data.levels.flatMap(l => l.parties);
+                
+                const tableData = allParties.map(party => [
+                    party.name,
+                    party.type,
+                    party.description
+                ]);
+
+                if (tableContainer.hasChildNodes()) {{
+                    return;
+                }}
+
+                new gridjs.Grid({{
+                    columns: [
+                        {{ 
+                            name: 'Party Name',
+                            formatter: (cell, row) => {{
+                                const partyType = row.cells[1].data;
+                                const color = colorMap[partyType] || '#ccc';
+                                return gridjs.html(`<div style="display: flex; align-items: center;"><span style="height: 10px; width: 10px; background-color: ${{color}}; border-radius: 50%; margin-right: 8px; flex-shrink: 0;"></span>${{cell}}</div>`);
+                            }}
+                        }},
+                        'Party Type',
+                        'Description'
+                    ],
+                    data: tableData,
+                    search: {{
+                        placeholder: 'Type to filter parties...'
+                    }},
+                    sort: true,
+                    pagination: {{
+                        limit: 15
+                    }},
+                    style: {{
+                        table: {{ 'font-size': '13px' }},
+                        th: {{ 'font-weight': '500' }}
+                    }}
+                }}).render(tableContainer);
+            }}
 
             function renderChordChart() {{
                 const svg = d3.select("#chord-svg");
                 svg.selectAll("*").remove();
                 const containerWidth = document.querySelector('.chord-container').clientWidth;
+                if (containerWidth <= 0) return;
                 const containerHeight = document.querySelector('.chord-container').clientHeight;
                 const outerRadius = Math.min(containerWidth, containerHeight) * 0.5 - 160;
+
+                if (outerRadius < 20) {{
+                    svg.append("text")
+                        .attr("x", containerWidth / 2)
+                        .attr("y", containerHeight / 2)
+                        .attr("text-anchor", "middle")
+                        .attr("font-family", "Poppins, sans-serif")
+                        .attr("font-size", "14px")
+                        .attr("fill", "#888")
+                        .text("Screen too small to display Chord Diagram.");
+                    return;
+                }}
+                
                 const innerRadius = outerRadius - 20;
                 svg.attr("width", containerWidth).attr("height", containerHeight);
                 const g = svg.append("g").attr("transform", "translate(" + containerWidth / 2 + "," + containerHeight / 2 + ")");
                 
                 svg.on("click", () => {{
-                    g.selectAll(".chord-label-group.selected").dispatch("mouseout");
-                    g.selectAll(".chord-label-group").classed("selected", false);
+                    g.selectAll(".selected").classed("selected", false);
                     unhighlightAll();
                     updateDetails(defaultDetailsText);
                 }});
@@ -297,7 +338,7 @@ class HtmlGenerator:
                 const chord = d3.chordDirected().padAngle(0.05).sortSubgroups(d3.descending).sortChords(d3.descending);
                 const chords = chord(matrix);
 
-                function highlightConnections(d) {{
+                function highlightPartyConnections(d) {{
                     const partyIndex = d.index;
                     const connectedIndices = new Set([partyIndex]);
                     g.selectAll(".chord-path")
@@ -314,6 +355,19 @@ class HtmlGenerator:
                     g.selectAll(".chord-path:not(.faded)").style("fill-opacity", 0.9);
                     g.selectAll(".chord-group:not(.faded) path").style("fill-opacity", 1.0);
                 }}
+                
+                function highlightPathAndParties(element, d) {{
+                    g.selectAll(".chord-group, .chord-path, .chord-label-group").classed("faded", true);
+                    
+                    d3.select(element).classed("faded", false).style("fill-opacity", 0.9);
+                    g.selectAll(".chord-group").filter(gd => gd.index === d.source.index || gd.index === d.target.index).classed("faded", false);
+                    g.selectAll(".chord-label-group").filter(ld => ld.index === d.source.index || ld.index === d.target.index).classed("faded", false);
+
+                    const sourceParty = indexToParty.get(d.source.index);
+                    const targetParty = indexToParty.get(d.target.index);
+                    const connection = data.connections.find(c => c.source === sourceParty.name && c.target === targetParty.name);
+                    updateDetails('<span>' + sourceParty.name + '</span> <strong style="color: black;">' + (connection ? connection.relationship : 'related to') + '</strong> <span>' + targetParty.name + '</span>');
+                }}
 
                 function unhighlightAll() {{
                     g.selectAll(".faded").classed("faded", false);
@@ -322,9 +376,13 @@ class HtmlGenerator:
                 }}
                 
                 const group = g.append("g").selectAll("g").data(chords.groups).join("g").attr("class", "chord-group")
-                    .on("mouseover", (event, d) => highlightConnections(d))
+                    .on("mouseover", (event, d) => {{
+                        if (!g.select(".selected").node()) {{
+                            highlightPartyConnections(d);
+                        }}
+                    }})
                     .on("mouseout", function() {{
-                        if (!g.select(".chord-label-group.selected").node()) {{
+                        if (!g.select(".selected").node()) {{
                             unhighlightAll();
                         }}
                     }})
@@ -345,8 +403,38 @@ class HtmlGenerator:
                     .attr("class", "chord-path")
                     .attr("d", d3.ribbonArrow().radius(innerRadius - 1))
                     .attr("fill", d => colorMap[indexToParty.get(d.source.index).type] || '#ccc')
-                    .attr("stroke", d => d3.rgb(colorMap[indexToParty.get(d.source.index).type] || '#ccc').darker());
-                
+                    .attr("stroke", d => d3.rgb(colorMap[indexToParty.get(d.source.index).type] || '#ccc').darker())
+                    .on("mouseover", function(event, d) {{
+                        if (!d3.select(this).classed("selected")) {{
+                            highlightPathAndParties(this, d);
+                        }}
+                    }})
+                    .on("mouseout", function() {{
+                        const selectedNode = g.select(".selected");
+                        if (selectedNode.node()) {{
+                            if (selectedNode.classed("chord-path")) {{
+                                highlightPathAndParties(selectedNode.node(), selectedNode.datum());
+                            }} else {{
+                                highlightPartyConnections(selectedNode.datum());
+                            }}
+                        }} else {{
+                            unhighlightAll();
+                            updateDetails(defaultDetailsText);
+                        }}
+                    }})
+                    .on("click", function(event, d) {{
+                        event.stopPropagation();
+                        const isAlreadySelected = d3.select(this).classed("selected");
+                        g.selectAll(".selected").classed("selected", false);
+                        if (!isAlreadySelected) {{
+                            d3.select(this).classed("selected", true);
+                            highlightPathAndParties(this, d);
+                        }} else {{
+                            unhighlightAll();
+                            updateDetails(defaultDetailsText);
+                        }}
+                    }});
+
                 const labelData = chords.groups.map(d => {{
                     const party = indexToParty.get(d.index);
                     const midAngle = (d.startAngle + d.endAngle) / 2;
@@ -383,41 +471,31 @@ class HtmlGenerator:
                 }});
 
                 const labelGroup = g.append("g").selectAll("g").data(labelData).join("g")
-                    .attr("class", "chord-label-group")
+                    .attr("class", d => "chord-label-group " + (d.angle < Math.PI ? "label-on-right" : "label-on-left"))
                     .on("mouseover", function(event, d) {{
-                        highlightConnections(d);
-                        const underline = d3.select(this).select(".underline");
-                        const x1 = parseFloat(underline.attr("data-og-x1"));
-                        const x2 = parseFloat(underline.attr("data-og-x2"));
-                        const onRightSide = d.angle < Math.PI;
-                        underline.transition().duration(200)
-                            .attr(onRightSide ? "x2" : "x1", onRightSide ? x2 + 5 : x1 - 5);
+                         if (!g.select(".selected").node()) {{
+                            highlightPartyConnections(d);
+                        }}
                     }})
                     .on("mouseout", function() {{
-                        if (d3.select(this).classed("selected")) return;
-                        unhighlightAll();
-                        const underline = d3.select(this).select(".underline");
-                        underline.transition().duration(200)
-                            .attr("x1", underline.attr("data-og-x1"))
-                            .attr("x2", underline.attr("data-og-x2"));
+                        if (!g.select(".selected").node()) {{
+                           unhighlightAll();
+                        }}
                     }})
                     .on("click", function(event, d) {{
                         event.stopPropagation();
                         const group = d3.select(this);
                         const isAlreadySelected = group.classed("selected");
+                        
+                        g.selectAll(".selected").classed("selected", false);
 
-                        g.selectAll(".chord-label-group.selected").each(function() {{
-                            d3.select(this).classed("selected", false).dispatch("mouseout");
-                        }});
-                        
-                        group.classed("selected", !isAlreadySelected);
-                        
                         if (!isAlreadySelected) {{
+                            group.classed("selected", true);
                             updateDetails(d.description);
-                            group.dispatch("mouseover");
+                            highlightPartyConnections(d);
                         }} else {{
+                            unhighlightAll();
                             updateDetails(defaultDetailsText);
-                            group.dispatch("mouseout");
                         }}
                     }});
 
@@ -457,9 +535,7 @@ class HtmlGenerator:
                         .attr("x1", bbox.x)
                         .attr("x2", bbox.x + bbox.width)
                         .attr("y1", bbox.y + bbox.height + 1)
-                        .attr("y2", bbox.y + bbox.height + 1)
-                        .attr("data-og-x1", bbox.x)
-                        .attr("data-og-x2", bbox.x + bbox.width);
+                        .attr("y2", bbox.y + bbox.height + 1);
                 }});
             }}
 
@@ -575,8 +651,11 @@ class HtmlGenerator:
             }}
             
             window.addEventListener('resize', debounce(() => {{
-                if (isTreeRendered && !toggle.checked) renderChart();
-                if (isChordRendered && toggle.checked) renderChordChart();
+                const isTreeVisible = document.querySelector('input[name="view-toggle"][value="tree"]').checked;
+                const isChordVisible = document.querySelector('input[name="view-toggle"][value="chord"]').checked;
+
+                if (isTreeVisible) renderChart();
+                if (isChordVisible) renderChordChart();
             }}, 250));
             
             function getIntersectionPoint(source, target, width, height) {{
