@@ -120,4 +120,4 @@ tables_registry:
     database: "legal_store"
     table: "caselaw_registry"
     column: "year"
-    processing_years: [2025, 2024, 2023]
+    processing_years: [2025]
