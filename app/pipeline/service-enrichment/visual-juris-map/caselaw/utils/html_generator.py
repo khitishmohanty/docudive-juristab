@@ -102,14 +102,15 @@ class HtmlGenerator:
             display: none;
         }}
 
-        /* Target the main Grid.js container for top alignment and width */
+        /* MODIFIED: Removed the border from the container and added overflow:hidden 
+           to let the inner table's border be the only one visible, while still getting rounded corners. */
         #table-container .gridjs-container {{
             margin-top: 0;
             border-radius: 8px;
-            border: 1px solid #e9ecef;
             box-sizing: border-box;
             width: 100%;
             display: block;
+            overflow: hidden; 
         }}
 
         /* Ensure the wrapper inside the container also behaves correctly */
@@ -246,7 +247,7 @@ class HtmlGenerator:
         .link-group.faded {{ opacity: 0.1; }}
         /* Highlight color for links: BLACK, original thickness */
         .link-group.highlighted .link {{ stroke: #343a40; stroke-width: 1.5px; }} 
-        .node.highlighted rect {{ stroke: #ff7f0e; stroke-width: 2px; }} /* Node border highlight remains orange */
+        /* REMOVED: .node.highlighted rect {{ stroke: #ff7f0e; stroke-width: 2px; }} */
     </style>
 </head>
 <body>
@@ -718,16 +719,20 @@ class HtmlGenerator:
                 const linkGroup = g.append("g").selectAll("g").data(links).join("g").attr("class", "link-group")
                     .on("mouseover", function(event, d) {{
                         d3.select(this).raise().select('.link').attr('marker-end', 'url(#arrowhead-hover)');
-                        if (!g.select(".node.highlighted").node()) {{ 
-                            updateDetails('<span>' + d.source.id + '</span> <strong style="color: black;">' + d.relationship + '</strong> <span>' + d.target.id + '</span>');
-                        }}
+                        // MODIFIED: Always show link details on hover, regardless of node selection.
+                        updateDetails('<span>' + d.source.id + '</span> <strong style="color: black;">' + d.relationship + '</strong> <span>' + d.target.id + '</span>');
                     }})
                     .on("mouseout", function() {{
-                        // Only reset arrowhead if the link is not part of the current selection
                         if (!d3.select(this).classed("highlighted")) {{
                             d3.select(this).select('.link').attr('marker-end', 'url(#arrowhead)');
                         }}
-                        if (!g.select(".node.highlighted").node()) {{
+                        
+                        // MODIFIED: Revert to selected node's description or default text.
+                        const selectedNode = g.select(".node.highlighted");
+                        if (selectedNode.node()) {{
+                            const selectedNodeData = selectedNode.datum();
+                            updateDetails(selectedNodeData.description);
+                        }} else {{
                             updateDetails(defaultDetailsText);
                         }}
                     }});
