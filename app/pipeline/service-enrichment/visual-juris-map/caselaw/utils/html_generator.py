@@ -142,6 +142,8 @@ class HtmlGenerator:
         .node .type-label {{ font-size: 11px; font-weight: 500; fill: white; pointer-events: none; }}
         .link-group .link {{ fill: none; stroke: #ccc; stroke-width: 1.5px; }}
         .link-group:hover .link {{ stroke: #343a40; }}
+        /* MODIFIED: Reduced link-hitbox stroke-width to prevent visual artifacts */
+        .link-group .link-hitbox {{ fill: none; stroke: transparent; stroke-width: 8px; cursor: pointer; }}
         #arrowhead path {{ fill: #ccc; }}
         .link-group:hover #arrowhead path {{ fill: #343a40; }}
         .chord-group, .chord-path, .chord-label-group {{ transition: opacity 0.2s ease-in-out; }}
@@ -581,16 +583,24 @@ class HtmlGenerator:
                     const levelData = levelInfo.get(node.level);
                     if (levelData) node.y = levelData.y + levelData.height / 2;
                 }});
+
+                // MODIFIED: Adjusted simulation forces for better stability and distribution
+                const simulation = d3.forceSimulation(nodes)
+                    .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.7)) // Slightly increased strength
+                    .force("charge", d3.forceManyBody().strength(-200)) // Increased repulsion
+                    .force("collide", d3.forceCollide().radius(nodeWidth / 2 + 10).iterations(2)) // Added iterations for better collision resolution
+                    .force("x", d3.forceX(width / 2).strength(0.08)) // Slightly increased X-force towards center
+                    .force("y", d3.forceY(d => {{
+                        const levelData = levelInfo.get(d.level);
+                        return levelData ? levelData.y + levelData.height / 2 : d.y;
+                    }}).strength(0.5)); // Stronger Y-force to keep nodes within their levels
+                
                 levelInfo.forEach((info, levelNumber) => {{
                     const levelData = data.levels.find(l => l.level_number === levelNumber);
                     g.append("line").attr("x1", 50).attr("x2", width - 50).attr("y1", info.y).attr("y2", info.y).attr("class", "level-line");
                     g.append("text").attr("x", 50).attr("y", info.y + 15).attr("class", "level-label").text(levelData.level_description);
                 }});
-                const simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.6))
-                    .force("charge", d3.forceManyBody().strength(-150))
-                    .force("collide", d3.forceCollide().radius(nodeWidth / 2 + 10).strength(1))
-                    .force("x", d3.forceX(width / 2).strength(0.05));
+
                 const linkGroup = g.append("g").selectAll("g").data(links).join("g").attr("class", "link-group")
                     .on("mouseover", function(event, d) {{
                         d3.select(this).raise().select('.link').attr('marker-end', 'url(#arrowhead-hover)');
@@ -602,11 +612,25 @@ class HtmlGenerator:
                     }});
                 const node = g.append("g").selectAll("g").data(nodes).join("g").attr("class", "node").call(drag(simulation));
                 
+                // MODIFIED: getPath to use a smoother curve and handle node-to-node connections better
                 const getPath = d => {{
                     if (!d.source || !d.target) return "";
-                    const startPoint = getIntersectionPoint(d.target, d.source, nodeWidth, nodeHeight);
-                    const endPoint = getIntersectionPoint(d.source, d.target, nodeWidth, nodeHeight);
-                    return "M" + startPoint.x + "," + startPoint.y + " C " + startPoint.x + "," + (startPoint.y + endPoint.y) / 2 + " " + endPoint.x + "," + (startPoint.y + endPoint.y) / 2 + " " + endPoint.x + "," + endPoint.y;
+                    const startPoint = getIntersectionPoint(d.source, d.target, nodeWidth, nodeHeight);
+                    const endPoint = getIntersectionPoint(d.target, d.source, nodeWidth, nodeHeight);
+                    
+                    // Use a slightly more direct curve for shorter distances, a cubic Bezier for others
+                    const midX = (startPoint.x + endPoint.x) / 2;
+                    const midY = (startPoint.y + endPoint.y) / 2;
+
+                    // Control points for the Bezier curve
+                    // This creates a slight arc for better visual flow
+                    const cp1x = startPoint.x;
+                    const cp1y = startPoint.y + (endPoint.y - startPoint.y) * 0.2; // Control point closer to source y
+
+                    const cp2x = endPoint.x;
+                    const cp2y = endPoint.y - (endPoint.y - startPoint.y) * 0.2; // Control point closer to target y
+
+                    return `M${{startPoint.x}},${{startPoint.y}} C ${{cp1x}},${{cp1y}} ${{cp2x}},${{cp2y}} ${{endPoint.x}},${{endPoint.y}}`;
                 }};
 
                 linkGroup.append("path").attr("class", "link-hitbox").attr("d", getPath);
@@ -617,10 +641,18 @@ class HtmlGenerator:
                 const nameLabel = node.append("text").attr("y", nodeHeight / 2 + 3).attr("dy", "0.5em").text(d => d.name);
 
                 simulation.on("tick", () => {{
+                    // MODIFIED: Refined node position constraint to respect level boundaries more precisely
                     nodes.forEach(d => {{
                         const levelData = levelInfo.get(d.level);
-                        const padding = 35;
-                        d.y = Math.max(levelData.y + (nodeHeight / 2) + padding, Math.min(levelData.y + levelData.height - (nodeHeight / 2) - padding, d.y));
+                        if (levelData) {{
+                            const minX = nodeWidth / 2;
+                            const maxX = width - nodeWidth / 2;
+                            const minY = levelData.y + nodeHeight / 2 + 10; // Add some padding from the line
+                            const maxY = levelData.y + levelData.height - nodeHeight / 2 - 10; // Add some padding
+
+                            d.x = Math.max(minX, Math.min(maxX, d.x));
+                            d.y = Math.max(minY, Math.min(maxY, d.y));
+                        }}
                     }});
                     visibleLink.attr("d", getPath);
                     linkGroup.selectAll(".link-hitbox").attr("d", getPath);
@@ -658,26 +690,79 @@ class HtmlGenerator:
                 if (isChordVisible) renderChordChart();
             }}, 250));
             
-            function getIntersectionPoint(source, target, width, height) {{
-                const dx = target.x - source.x;
-                const dy = target.y - source.y;
-                const w = width / 2;
-                const h = height / 2;
-                const angle = Math.atan2(dy, dx);
-                const rectAngle = Math.atan2(h, w);
-                let x, y;
-                if (angle > -rectAngle && angle < rectAngle) {{
-                    x = target.x - w; y = target.y - w * Math.tan(angle);
-                }} else if (angle > rectAngle && angle < Math.PI - rectAngle) {{
-                    x = target.x - h / Math.tan(angle); y = target.y - h;
-                }} else if (angle < -rectAngle && angle > -Math.PI + rectAngle) {{
-                    x = target.x + h / Math.tan(angle); y = target.y + h;
-                }} else {{
-                    x = target.x + w; y = target.y + w * Math.tan(angle);
+            // MODIFIED: getIntersectionPoint to be more precise for rectangle intersections
+            function getIntersectionPoint(source, target, nodeWidth, nodeHeight) {{
+                const sx = source.x;
+                const sy = source.y;
+                const tx = target.x;
+                const ty = target.y;
+
+                const dx = tx - sx;
+                const dy = ty - sy;
+
+                const halfWidth = nodeWidth / 2;
+                const halfHeight = nodeHeight / 2;
+
+                let t = Infinity;
+
+                // Check intersection with the target node's sides
+                // Top side
+                if (dy !== 0) {{
+                    const t_y_top = (ty - halfHeight - sy) / dy;
+                    if (t_y_top >= 0 && t_y_top <= 1) {{
+                        const intersectX = sx + t_y_top * dx;
+                        if (intersectX >= tx - halfWidth && intersectX <= tx + halfWidth) {{
+                            t = Math.min(t, t_y_top);
+                        }}
+                    }}
                 }}
-                return {{x, y}};
+                // Bottom side
+                if (dy !== 0) {{
+                    const t_y_bottom = (ty + halfHeight - sy) / dy;
+                    if (t_y_bottom >= 0 && t_y_bottom <= 1) {{
+                        const intersectX = sx + t_y_bottom * dx;
+                        if (intersectX >= tx - halfWidth && intersectX <= tx + halfWidth) {{
+                            t = Math.min(t, t_y_bottom);
+                        }}
+                    }}
+                }}
+                // Left side
+                if (dx !== 0) {{
+                    const t_x_left = (tx - halfWidth - sx) / dx;
+                    if (t_x_left >= 0 && t_x_left <= 1) {{
+                        const intersectY = sy + t_x_left * dy;
+                        if (intersectY >= ty - halfHeight && intersectY <= ty + halfHeight) {{
+                            t = Math.min(t, t_x_left);
+                        }}
+                    }}
+                }}
+                // Right side
+                if (dx !== 0) {{
+                    const t_x_right = (tx + halfWidth - sx) / dx;
+                    if (t_x_right >= 0 && t_x_right <= 1) {{
+                        const intersectY = sy + t_x_right * dy;
+                        if (intersectY >= ty - halfHeight && intersectY <= ty + halfHeight) {{
+                            t = Math.min(t, t_x_right);
+                        }}
+                    }}
+                }}
+
+                if (t === Infinity) {{
+                    // Fallback if no intersection found (shouldn't happen with correct force simulation)
+                    // Return a point slightly outside the target to ensure the arrow is visible
+                    const angle = Math.atan2(dy, dx);
+                    return {{
+                        x: tx - halfWidth * Math.cos(angle) * 1.1, 
+                        y: ty - halfHeight * Math.sin(angle) * 1.1
+                    }};
+                }}
+
+                return {{
+                    x: sx + t * dx,
+                    y: sy + t * dy
+                }};
             }}
-            
+
             function drag(simulation) {{
                 let dragstarted_x, dragstarted_y;
                 function dragstarted(event, d) {{
