@@ -663,9 +663,12 @@ class HtmlGenerator:
                 svg.call(zoom);
                 
                 // Add click listener to the SVG background to deselect all
-                svg.on("click", () => {{
-                    unhighlightAllTreeElements();
-                    updateDetails(defaultDetailsText);
+                svg.on("click", (event) => {{
+                    // Check if the click was directly on the svg background
+                    if (event.target === svg.node()) {{
+                        unhighlightAllTreeElements();
+                        updateDetails(defaultDetailsText);
+                    }}
                 }});
 
                 const nodes = [];
@@ -715,35 +718,19 @@ class HtmlGenerator:
                 const linkGroup = g.append("g").selectAll("g").data(links).join("g").attr("class", "link-group")
                     .on("mouseover", function(event, d) {{
                         d3.select(this).raise().select('.link').attr('marker-end', 'url(#arrowhead-hover)');
-                        // Only update details on hover if nothing is currently selected
                         if (!g.select(".node.highlighted").node()) {{ 
                             updateDetails('<span>' + d.source.id + '</span> <strong style="color: black;">' + d.relationship + '</strong> <span>' + d.target.id + '</span>');
                         }}
                     }})
                     .on("mouseout", function() {{
-                        d3.select(this).select('.link').attr('marker-end', 'url(#arrowhead)');
-                        // Only revert details if nothing is currently selected
+                        // Only reset arrowhead if the link is not part of the current selection
+                        if (!d3.select(this).classed("highlighted")) {{
+                            d3.select(this).select('.link').attr('marker-end', 'url(#arrowhead)');
+                        }}
                         if (!g.select(".node.highlighted").node()) {{
                             updateDetails(defaultDetailsText);
                         }}
                     }});
-
-                // Attach a custom 'nodeclick' event listener
-                const node = g.append("g").selectAll("g").data(nodes).join("g").attr("class", "node")
-                    .on("nodeclick", function(event, d) {{ // Custom event handler
-                        event.stopPropagation(); // Stop propagation for the custom event too if needed
-                        const isAlreadySelected = d3.select(this).classed("highlighted");
-
-                        unhighlightAllTreeElements(); 
-
-                        if (!isAlreadySelected) {{
-                            highlightNodeAndConnections(d);
-                            updateDetails(d.description);
-                        }} else {{
-                            updateDetails(defaultDetailsText);
-                        }}
-                    }})
-                    .call(drag(simulation)); 
                 
                 const getPath = d => {{
                     if (!d.source || !d.target) return "";
@@ -765,6 +752,25 @@ class HtmlGenerator:
                 linkGroup.append("path").attr("class", "link-hitbox").attr("d", getPath);
                 const visibleLink = linkGroup.append("path").attr("class", "link").attr('marker-end','url(#arrowhead)').attr("d", getPath);
                 
+                const node = g.append("g").selectAll("g").data(nodes).join("g").attr("class", "node")
+                    .call(drag(simulation))
+                    .on("click", function(event, d) {{
+                        event.stopPropagation(); // Prevent click from bubbling to the SVG background which would deselect.
+                        const isAlreadySelected = d3.select(this).classed("highlighted");
+
+                        unhighlightAllTreeElements(); // Always clear previous state first.
+
+                        if (!isAlreadySelected) {{
+                            // If not selected, highlight the new selection.
+                            highlightNodeAndConnections(d);
+                            updateDetails(d.description);
+                        }} else {{
+                            // If it was selected, clicking it again deselects it.
+                            // unhighlightAllTreeElements already cleared it.
+                            updateDetails(defaultDetailsText);
+                        }}
+                    }});
+
                 node.append("rect").attr("x", -nodeWidth / 2).attr("y", -nodeHeight / 2).attr("width", nodeWidth).attr("height", nodeHeight).attr("rx", 15).attr("ry", 15).attr("fill", d => colorMap[d.type] || colorMap['Other parties']);
                 node.append("text").attr("class", "type-label").attr("dy", "0.3em").text(d => d.type.substring(0, 1));
                 const nameLabel = node.append("text").attr("y", nodeHeight / 2 + 3).attr("dy", "0.5em").text(d => d.name);
@@ -793,10 +799,8 @@ class HtmlGenerator:
                     const connectedNodes = new Set();
                     const connectedLinks = new Set();
                     
-                    // Add the selected node itself
                     connectedNodes.add(selectedNodeData.id);
 
-                    // Find connected links and their associated nodes
                     links.forEach(link => {{
                         if (link.source.id === selectedNodeData.id || link.target.id === selectedNodeData.id) {{
                             connectedLinks.add(link);
@@ -805,16 +809,14 @@ class HtmlGenerator:
                         }}
                     }});
 
-                    // Apply/remove 'faded' and 'highlighted' classes
                     g.selectAll(".node")
                         .classed("faded", d => !connectedNodes.has(d.id))
-                        .classed("highlighted", d => d.id === selectedNodeData.id); // Only the clicked node gets 'highlighted' class
+                        .classed("highlighted", d => d.id === selectedNodeData.id);
 
                     g.selectAll(".link-group")
                         .classed("faded", d => !connectedLinks.has(d))
                         .classed("highlighted", d => connectedLinks.has(d));
 
-                    // Ensure highlighted links get the "hover" arrowhead color
                     g.selectAll(".link-group.highlighted .link")
                         .attr('marker-end', 'url(#arrowhead-hover)');
                 }}
@@ -822,7 +824,7 @@ class HtmlGenerator:
                 function unhighlightAllTreeElements() {{
                     g.selectAll(".node").classed("faded", false).classed("highlighted", false);
                     g.selectAll(".link-group").classed("faded", false).classed("highlighted", false);
-                    g.selectAll(".link").attr('marker-end', 'url(#arrowhead)'); // Reset arrowheads
+                    g.selectAll(".link-group .link").attr('marker-end', 'url(#arrowhead)'); // Reset all arrowheads
                 }}
             }}
 
@@ -848,14 +850,13 @@ class HtmlGenerator:
             }}
             
             window.addEventListener('resize', debounce(() => {{
-                // Re-render the visible chart on resize
                 const isTreeVisible = document.querySelector('input[name="view-toggle"][value="tree"]').checked;
                 const isChordVisible = document.querySelector('input[name="view-toggle"][value="chord"]').checked;
                 const isTableVisible = document.querySelector('input[name="view-toggle"][value="table"]').checked;
 
                 if (isTreeVisible) renderChart();
                 else if (isChordVisible) renderChordChart();
-                else if (isTableVisible) renderTable(); // Ensure table also re-renders on resize
+                else if (isTableVisible) renderTable();
             }}, 250));
             
             function getIntersectionPoint(source, target, nodeWidth, nodeHeight) {{
@@ -922,57 +923,27 @@ class HtmlGenerator:
                     y: sy + t * dy
                 }};
             }}
-
+            
+            // MODIFIED: Simplified drag handler
             function drag(simulation) {{
-                let clickTolerance = 3; // pixels
-                let startX, startY;
-                let clickTimer = null; // To hold the timeout for a potential click
-
                 function dragstarted(event, d) {{
                     if (!event.active) simulation.alphaTarget(0.3).restart();
-                    d.fx = event.x; 
-                    d.fy = event.y;
-                    startX = event.x; // Record start position for click detection
-                    startY = event.y;
-                    d3.select(this).raise();
-
-                    // Set a timeout for a potential click. If a drag starts, this will be cleared.
-                    clickTimer = setTimeout(() => {{
-                        clickTimer = null; // Clear the timer reference
-                    }}, 200); // Small delay to allow D3's drag to register if movement occurs
+                    d.fx = d.x;
+                    d.fy = d.y;
                 }}
-                function dragged(event, d) {{ 
-                    d.fx = event.x; 
+                function dragged(event, d) {{
+                    d.fx = event.x;
                     d.fy = event.y;
-                    // If the node has moved beyond tolerance, it's a drag, so cancel any pending click.
-                    if (clickTimer && Math.sqrt(Math.pow(event.x - startX, 2) + Math.pow(event.y - startY, 2)) > clickTolerance) {{
-                        clearTimeout(clickTimer);
-                        clickTimer = null; // Indicate that it's no longer a potential click
-                    }}
                 }}
                 function dragended(event, d) {{
-                    if (!event.active) {{ simulation.alphaTarget(0); }}
-                    d.fx = null; 
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
                     d.fy = null;
-
-                    // If clickTimer is still active, it means no significant drag occurred within the timeout,
-                    // so we treat it as a click.
-                    if (clickTimer) {{
-                        clearTimeout(clickTimer); // Clear it one last time
-                        clickTimer = null;
-                        
-                        // Execute the click logic directly
-                        const isAlreadySelected = d3.select(this).classed("highlighted");
-                        unhighlightAllTreeElements(); 
-                        if (!isAlreadySelected) {{
-                            highlightNodeAndConnections(d);
-                            updateDetails(d.description);
-                        }} else {{
-                            updateDetails(defaultDetailsText);
-                        }}
-                    }}
                 }}
-                return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+                return d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended);
             }}
 
             function wrap(text, width) {{
