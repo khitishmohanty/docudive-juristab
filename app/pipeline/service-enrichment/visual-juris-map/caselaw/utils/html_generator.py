@@ -37,8 +37,20 @@ class HtmlGenerator:
         body {{
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0; /* Remove body padding */
             background-color: #fff;
+        }}
+        /* Add padding to the main content container instead */
+        .chart-container {{
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 40px;
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px; /* Apply overall page padding here */
+            box-sizing: border-box; /* Include padding in element's total width */
         }}
         .view-selector {{
             padding: 15px;
@@ -60,7 +72,7 @@ class HtmlGenerator:
         }}
         .view-selector-options label {{
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -71,21 +83,63 @@ class HtmlGenerator:
             width: 16px;
             height: 16px;
         }}
-        .chart-container {{
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            gap: 40px;
-            width: 100%;
-            max-width: 1800px;
-            margin: auto;
-        }}
         .tree-container, .chord-container, .table-container {{
             flex-grow: 1;
             position: relative;
             min-height: 600px;
             display: none;
+            overflow: hidden; /* Ensure this container itself doesn't cause outside scrolling */
         }}
+
+        /* Table Specific Styles for Alignment and Overflow */
+        #table-container {{
+            overflow-x: hidden;
+            padding-top: 1px;
+        }}
+
+        /* Hide the grid.js search input container */
+        #table-container .gridjs-head {{
+            display: none;
+        }}
+
+        /* Target the main Grid.js container for top alignment and width */
+        #table-container .gridjs-container {{
+            margin-top: 0;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-sizing: border-box;
+            width: 100%;
+            display: block;
+        }}
+
+        /* Ensure the wrapper inside the container also behaves correctly */
+        #table-container .gridjs-wrapper {{
+            width: 100%;
+            overflow-x: auto;
+            box-sizing: border-box;
+            border: none; /* Remove redundant border from wrapper */
+            border-radius: 0;
+        }}
+
+        /* Ensure table itself respects container width */
+        #table-container .gridjs-table {{
+            width: 100%;
+            table-layout: auto;
+            border-collapse: collapse;
+        }}
+        /* Styles for table headers to prevent overflow */
+        #table-container .gridjs-th {{
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 8px 10px;
+        }}
+        #table-container .gridjs-td {{
+            word-wrap: break-word;
+            white-space: normal;
+            padding: 8px 10px;
+        }}
+
         @keyframes fadeIn {{
             from {{ opacity: 0; transform: translateY(8px); }}
             to {{ opacity: 1; transform: translateY(0); }}
@@ -101,16 +155,28 @@ class HtmlGenerator:
         .sidebar {{
             width: 300px;
             flex-shrink: 0;
+            padding-top: 0;
+            margin-top: 0;
         }}
         .details-panel {{
             background-color: white;
             border-radius: 8px;
             border: 1px solid #e9ecef;
             padding: 20px;
-            transition: opacity 0.3s, transform 0.3s;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }}
         .details-panel.is-hidden {{
-            display: none;
+            opacity: 0;
+            visibility: hidden;
+            height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
+            border: none;
+            overflow: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out, height 0.3s ease-in-out, padding 0.3s ease-in-out, margin 0.3s ease-in-out, border 0.3s ease-in-out;
         }}
         .details-panel h3 {{
             margin-top: 0; color: black; font-weight: 500;
@@ -146,18 +212,41 @@ class HtmlGenerator:
         .link-group .link-hitbox {{ fill: none; stroke: transparent; stroke-width: 8px; cursor: pointer; }}
         #arrowhead path {{ fill: #ccc; }}
         .link-group:hover #arrowhead path {{ fill: #343a40; }}
-        .chord-group, .chord-path, .chord-label-group {{ transition: opacity 0.2s ease-in-out; }}
+
+        /* New styles for dotted lines under level headings */
+        .level-line {{
+            stroke: #adb5bd; /* light grey */
+            stroke-width: 1px;
+            stroke-dasharray: 2,2; /* Dotted line */
+        }}
+        .level-label {{
+            font-size: 14px;
+            font-weight: 500;
+            fill: #495057;
+        }}
+
+        /* Chord Diagram Transition */
+        .chord-group, .chord-path, .chord-label-group {{
+            transition: opacity 0.3s ease-in-out, fill-opacity 0.3s ease-in-out; /* Smooth transition */
+        }}
         .chord-group.faded, .chord-path.faded, .chord-label-group.faded {{ opacity: 0.1; }}
         .chord-group {{ cursor: pointer; }}
-        .chord-group path {{ fill-opacity: 0.8; transition: fill-opacity 0.2s ease-in-out; }}
+        .chord-group path {{ fill-opacity: 0.8; transition: fill-opacity 0.3s ease-in-out; }} /* Smooth transition */
         .chord-path {{ fill-opacity: 0.65; stroke: #fff; stroke-width: 0.5px; cursor: pointer; }}
         .chord-path.selected {{ fill-opacity: 0.9 !important; }}
         .chord-label-group {{ cursor: pointer; }}
         .chord-label-group .leader-line {{ fill: none; stroke: #aaa; stroke-width: 1px; }}
-        .chord-label-group text {{ font-size: 12px; font-weight: 400; fill: #333; stroke: #333; stroke-width: 0; transition: stroke-width 0.2s ease-in-out; }}
+        .chord-label-group text {{ font-size: 12px; font-weight: 400; fill: #333; stroke: #333; stroke-width: 0; transition: stroke-width 0.3s ease-in-out; }} /* Smooth transition */
         .chord-label-group .party-type {{ fill: #6c757d; stroke: #6c757d; }}
         .chord-label-group .underline {{ stroke-width: 2.5px; }}
         .chord-label-group:hover text, .chord-label-group.selected text {{ stroke-width: 0.4px; }}
+        
+        /* Styles for highlighting nodes and links */
+        .node.faded {{ opacity: 0.2; }}
+        .link-group.faded {{ opacity: 0.1; }}
+        /* Highlight color for links: BLACK, original thickness */
+        .link-group.highlighted .link {{ stroke: #343a40; stroke-width: 1.5px; }} 
+        .node.highlighted rect {{ stroke: #ff7f0e; stroke-width: 2px; }} /* Node border highlight remains orange */
     </style>
 </head>
 <body>
@@ -175,7 +264,7 @@ class HtmlGenerator:
                 <div class="view-selector-options">
                     <label>
                         <input type="radio" name="view-toggle" value="tree" checked>
-                        <span>Force Graph</span>
+                        <span>Party Graph</span>
                     </label>
                     <label>
                         <input type="radio" name="view-toggle" value="chord">
@@ -223,18 +312,23 @@ class HtmlGenerator:
                     const containers = [treeContainer, chordContainer, tableContainer];
                     let containerToShow;
 
-                    if (targetView === 'chord') containerToShow = chordContainer;
-                    else if (targetView === 'table') containerToShow = tableContainer;
-                    else containerToShow = treeContainer;
-
+                    // Immediately hide all containers to avoid showing multiple charts
                     containers.forEach(c => {{
                         c.style.display = 'none';
                         c.classList.remove('view-fade-in');
                     }});
                     
-                    detailsPanel.classList.toggle('is-hidden', targetView === 'table');
+                    if (targetView === 'table') {{
+                        detailsPanel.classList.add('is-hidden');
+                    }} else {{
+                        detailsPanel.classList.remove('is-hidden');
+                    }}
 
                     setTimeout(() => {{
+                        if (targetView === 'chord') containerToShow = chordContainer;
+                        else if (targetView === 'table') containerToShow = tableContainer;
+                        else containerToShow = treeContainer;
+
                         containerToShow.style.display = 'block';
                         containerToShow.classList.add('view-fade-in');
                         
@@ -266,11 +360,12 @@ class HtmlGenerator:
                     party.description
                 ]);
 
-                if (tableContainer.hasChildNodes()) {{
-                    return;
+                // Ensure the table is only rendered once or re-rendered explicitly
+                if (tableContainer.grid) {{ // Check if Grid.js instance already exists
+                    tableContainer.grid.destroy(); // Destroy existing instance if any
                 }}
 
-                new gridjs.Grid({{
+                tableContainer.grid = new gridjs.Grid({{ // Store grid instance on the container
                     columns: [
                         {{ 
                             name: 'Party Name',
@@ -278,15 +373,20 @@ class HtmlGenerator:
                                 const partyType = row.cells[1].data;
                                 const color = colorMap[partyType] || '#ccc';
                                 return gridjs.html(`<div style="display: flex; align-items: center;"><span style="height: 10px; width: 10px; background-color: ${{color}}; border-radius: 50%; margin-right: 8px; flex-shrink: 0;"></span>${{cell}}</div>`);
-                            }}
+                            }},
+                            // Removed fixed width for better responsiveness
                         }},
-                        'Party Type',
-                        'Description'
+                        {{
+                            name: 'Party Type',
+                            // Removed fixed width for better responsiveness
+                        }},
+                        {{
+                            name: 'Description',
+                            // Removed fixed width for better responsiveness
+                        }}
                     ],
                     data: tableData,
-                    search: {{
-                        placeholder: 'Type to filter parties...'
-                    }},
+                    search: false, 
                     sort: true,
                     pagination: {{
                         limit: 15
@@ -415,7 +515,7 @@ class HtmlGenerator:
                         const selectedNode = g.select(".selected");
                         if (selectedNode.node()) {{
                             if (selectedNode.classed("chord-path")) {{
-                                highlightPathAndParties(selectedNode.node(), selectedNode.datum());
+                                highlightPathAndPartied(selectedNode.node(), selectedNode.datum());
                             }} else {{
                                 highlightPartyConnections(selectedNode.datum());
                             }}
@@ -561,12 +661,22 @@ class HtmlGenerator:
                 const g = svg.append("g");
                 const zoom = d3.zoom().on("zoom", (event) => g.attr("transform", event.transform));
                 svg.call(zoom);
+                
+                // Add click listener to the SVG background to deselect all
+                svg.on("click", () => {{
+                    unhighlightAllTreeElements();
+                    updateDetails(defaultDetailsText);
+                }});
+
                 const nodes = [];
                 const nodeMap = new Map();
                 const levelInfo = new Map();
                 const nodeWidth = 70, nodeHeight = 28;
                 const nodesPerRow = Math.floor(width / (nodeWidth + 25));
-                let yPos = 1;
+
+                const initialVerticalOffset = 30; 
+                let yPos = initialVerticalOffset; 
+
                 data.levels.forEach(level => {{
                     const numRows = Math.ceil(level.parties.length / nodesPerRow);
                     const levelHeight = Math.max(120, numRows * (nodeHeight + 50));
@@ -575,25 +685,26 @@ class HtmlGenerator:
                         nodes.push({{ id: party.name, ...party, level: level.level_number }});
                         nodeMap.set(party.name, nodes[nodes.length - 1]);
                     }});
-                    yPos += levelHeight;
+                    yPos += levelHeight; 
                 }});
-                svg.attr("height", yPos);
+                
+                svg.attr("height", yPos + initialVerticalOffset); 
+
                 const links = data.connections.map(d => ({{ source: nodeMap.get(d.source), target: nodeMap.get(d.target), relationship: d.relationship }})).filter(l => l.source && l.target);
                 nodes.forEach(node => {{
                     const levelData = levelInfo.get(node.level);
                     if (levelData) node.y = levelData.y + levelData.height / 2;
                 }});
 
-                // MODIFIED: Adjusted simulation forces for better stability and distribution
                 const simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.7)) // Slightly increased strength
-                    .force("charge", d3.forceManyBody().strength(-200)) // Increased repulsion
-                    .force("collide", d3.forceCollide().radius(nodeWidth / 2 + 10).iterations(2)) // Added iterations for better collision resolution
-                    .force("x", d3.forceX(width / 2).strength(0.08)) // Slightly increased X-force towards center
+                    .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.7))
+                    .force("charge", d3.forceManyBody().strength(-200))
+                    .force("collide", d3.forceCollide().radius(nodeWidth / 2 + 10).iterations(2))
+                    .force("x", d3.forceX(width / 2).strength(0.08))
                     .force("y", d3.forceY(d => {{
                         const levelData = levelInfo.get(d.level);
                         return levelData ? levelData.y + levelData.height / 2 : d.y;
-                    }}).strength(0.5)); // Stronger Y-force to keep nodes within their levels
+                    }}).strength(0.5));
                 
                 levelInfo.forEach((info, levelNumber) => {{
                     const levelData = data.levels.find(l => l.level_number === levelNumber);
@@ -604,31 +715,49 @@ class HtmlGenerator:
                 const linkGroup = g.append("g").selectAll("g").data(links).join("g").attr("class", "link-group")
                     .on("mouseover", function(event, d) {{
                         d3.select(this).raise().select('.link').attr('marker-end', 'url(#arrowhead-hover)');
-                        updateDetails('<span>' + d.source.id + '</span> <strong style="color: black;">' + d.relationship + '</strong> <span>' + d.target.id + '</span>');
+                        // Only update details on hover if nothing is currently selected
+                        if (!g.select(".node.highlighted").node()) {{ 
+                            updateDetails('<span>' + d.source.id + '</span> <strong style="color: black;">' + d.relationship + '</strong> <span>' + d.target.id + '</span>');
+                        }}
                     }})
                     .on("mouseout", function() {{
                         d3.select(this).select('.link').attr('marker-end', 'url(#arrowhead)');
-                        updateDetails(defaultDetailsText);
+                        // Only revert details if nothing is currently selected
+                        if (!g.select(".node.highlighted").node()) {{
+                            updateDetails(defaultDetailsText);
+                        }}
                     }});
-                const node = g.append("g").selectAll("g").data(nodes).join("g").attr("class", "node").call(drag(simulation));
+
+                // Attach a custom 'nodeclick' event listener
+                const node = g.append("g").selectAll("g").data(nodes).join("g").attr("class", "node")
+                    .on("nodeclick", function(event, d) {{ // Custom event handler
+                        event.stopPropagation(); // Stop propagation for the custom event too if needed
+                        const isAlreadySelected = d3.select(this).classed("highlighted");
+
+                        unhighlightAllTreeElements(); 
+
+                        if (!isAlreadySelected) {{
+                            highlightNodeAndConnections(d);
+                            updateDetails(d.description);
+                        }} else {{
+                            updateDetails(defaultDetailsText);
+                        }}
+                    }})
+                    .call(drag(simulation)); 
                 
-                // MODIFIED: getPath to use a smoother curve and handle node-to-node connections better
                 const getPath = d => {{
                     if (!d.source || !d.target) return "";
                     const startPoint = getIntersectionPoint(d.source, d.target, nodeWidth, nodeHeight);
                     const endPoint = getIntersectionPoint(d.target, d.source, nodeWidth, nodeHeight);
                     
-                    // Use a slightly more direct curve for shorter distances, a cubic Bezier for others
                     const midX = (startPoint.x + endPoint.x) / 2;
                     const midY = (startPoint.y + endPoint.y) / 2;
 
-                    // Control points for the Bezier curve
-                    // This creates a slight arc for better visual flow
                     const cp1x = startPoint.x;
-                    const cp1y = startPoint.y + (endPoint.y - startPoint.y) * 0.2; // Control point closer to source y
+                    const cp1y = startPoint.y + (endPoint.y - startPoint.y) * 0.2; 
 
                     const cp2x = endPoint.x;
-                    const cp2y = endPoint.y - (endPoint.y - startPoint.y) * 0.2; // Control point closer to target y
+                    const cp2y = endPoint.y - (endPoint.y - startPoint.y) * 0.2; 
 
                     return `M${{startPoint.x}},${{startPoint.y}} C ${{cp1x}},${{cp1y}} ${{cp2x}},${{cp2y}} ${{endPoint.x}},${{endPoint.y}}`;
                 }};
@@ -641,14 +770,13 @@ class HtmlGenerator:
                 const nameLabel = node.append("text").attr("y", nodeHeight / 2 + 3).attr("dy", "0.5em").text(d => d.name);
 
                 simulation.on("tick", () => {{
-                    // MODIFIED: Refined node position constraint to respect level boundaries more precisely
                     nodes.forEach(d => {{
                         const levelData = levelInfo.get(d.level);
                         if (levelData) {{
                             const minX = nodeWidth / 2;
                             const maxX = width - nodeWidth / 2;
-                            const minY = levelData.y + nodeHeight / 2 + 10; // Add some padding from the line
-                            const maxY = levelData.y + levelData.height - nodeHeight / 2 - 10; // Add some padding
+                            const minY = levelData.y + nodeHeight / 2 + 10;
+                            const maxY = levelData.y + levelData.height - nodeHeight / 2 - 10;
 
                             d.x = Math.max(minX, Math.min(maxX, d.x));
                             d.y = Math.max(minY, Math.min(maxY, d.y));
@@ -659,6 +787,43 @@ class HtmlGenerator:
                     node.attr("transform", d => "translate(" + d.x + "," + d.y + ")");
                     nameLabel.call(wrap, nodeWidth - 5);
                 }});
+
+                // --- Highlighting Functions for Tree Map ---
+                function highlightNodeAndConnections(selectedNodeData) {{
+                    const connectedNodes = new Set();
+                    const connectedLinks = new Set();
+                    
+                    // Add the selected node itself
+                    connectedNodes.add(selectedNodeData.id);
+
+                    // Find connected links and their associated nodes
+                    links.forEach(link => {{
+                        if (link.source.id === selectedNodeData.id || link.target.id === selectedNodeData.id) {{
+                            connectedLinks.add(link);
+                            connectedNodes.add(link.source.id);
+                            connectedNodes.add(link.target.id);
+                        }}
+                    }});
+
+                    // Apply/remove 'faded' and 'highlighted' classes
+                    g.selectAll(".node")
+                        .classed("faded", d => !connectedNodes.has(d.id))
+                        .classed("highlighted", d => d.id === selectedNodeData.id); // Only the clicked node gets 'highlighted' class
+
+                    g.selectAll(".link-group")
+                        .classed("faded", d => !connectedLinks.has(d))
+                        .classed("highlighted", d => connectedLinks.has(d));
+
+                    // Ensure highlighted links get the "hover" arrowhead color
+                    g.selectAll(".link-group.highlighted .link")
+                        .attr('marker-end', 'url(#arrowhead-hover)');
+                }}
+
+                function unhighlightAllTreeElements() {{
+                    g.selectAll(".node").classed("faded", false).classed("highlighted", false);
+                    g.selectAll(".link-group").classed("faded", false).classed("highlighted", false);
+                    g.selectAll(".link").attr('marker-end', 'url(#arrowhead)'); // Reset arrowheads
+                }}
             }}
 
             function updateDetails(htmlContent) {{
@@ -683,14 +848,16 @@ class HtmlGenerator:
             }}
             
             window.addEventListener('resize', debounce(() => {{
+                // Re-render the visible chart on resize
                 const isTreeVisible = document.querySelector('input[name="view-toggle"][value="tree"]').checked;
                 const isChordVisible = document.querySelector('input[name="view-toggle"][value="chord"]').checked;
+                const isTableVisible = document.querySelector('input[name="view-toggle"][value="table"]').checked;
 
                 if (isTreeVisible) renderChart();
-                if (isChordVisible) renderChordChart();
+                else if (isChordVisible) renderChordChart();
+                else if (isTableVisible) renderTable(); // Ensure table also re-renders on resize
             }}, 250));
             
-            // MODIFIED: getIntersectionPoint to be more precise for rectangle intersections
             function getIntersectionPoint(source, target, nodeWidth, nodeHeight) {{
                 const sx = source.x;
                 const sy = source.y;
@@ -705,8 +872,6 @@ class HtmlGenerator:
 
                 let t = Infinity;
 
-                // Check intersection with the target node's sides
-                // Top side
                 if (dy !== 0) {{
                     const t_y_top = (ty - halfHeight - sy) / dy;
                     if (t_y_top >= 0 && t_y_top <= 1) {{
@@ -716,7 +881,6 @@ class HtmlGenerator:
                         }}
                     }}
                 }}
-                // Bottom side
                 if (dy !== 0) {{
                     const t_y_bottom = (ty + halfHeight - sy) / dy;
                     if (t_y_bottom >= 0 && t_y_bottom <= 1) {{
@@ -726,7 +890,6 @@ class HtmlGenerator:
                         }}
                     }}
                 }}
-                // Left side
                 if (dx !== 0) {{
                     const t_x_left = (tx - halfWidth - sx) / dx;
                     if (t_x_left >= 0 && t_x_left <= 1) {{
@@ -736,7 +899,6 @@ class HtmlGenerator:
                         }}
                     }}
                 }}
-                // Right side
                 if (dx !== 0) {{
                     const t_x_right = (tx + halfWidth - sx) / dx;
                     if (t_x_right >= 0 && t_x_right <= 1) {{
@@ -748,8 +910,6 @@ class HtmlGenerator:
                 }}
 
                 if (t === Infinity) {{
-                    // Fallback if no intersection found (shouldn't happen with correct force simulation)
-                    // Return a point slightly outside the target to ensure the arrow is visible
                     const angle = Math.atan2(dy, dx);
                     return {{
                         x: tx - halfWidth * Math.cos(angle) * 1.1, 
@@ -764,19 +924,52 @@ class HtmlGenerator:
             }}
 
             function drag(simulation) {{
-                let dragstarted_x, dragstarted_y;
+                let clickTolerance = 3; // pixels
+                let startX, startY;
+                let clickTimer = null; // To hold the timeout for a potential click
+
                 function dragstarted(event, d) {{
                     if (!event.active) simulation.alphaTarget(0.3).restart();
-                    d.fx = event.x; d.fy = event.y;
-                    dragstarted_x = event.x; dragstarted_y = event.y;
+                    d.fx = event.x; 
+                    d.fy = event.y;
+                    startX = event.x; // Record start position for click detection
+                    startY = event.y;
                     d3.select(this).raise();
+
+                    // Set a timeout for a potential click. If a drag starts, this will be cleared.
+                    clickTimer = setTimeout(() => {{
+                        clickTimer = null; // Clear the timer reference
+                    }}, 200); // Small delay to allow D3's drag to register if movement occurs
                 }}
-                function dragged(event, d) {{ d.fx = event.x; d.fy = event.y; }}
+                function dragged(event, d) {{ 
+                    d.fx = event.x; 
+                    d.fy = event.y;
+                    // If the node has moved beyond tolerance, it's a drag, so cancel any pending click.
+                    if (clickTimer && Math.sqrt(Math.pow(event.x - startX, 2) + Math.pow(event.y - startY, 2)) > clickTolerance) {{
+                        clearTimeout(clickTimer);
+                        clickTimer = null; // Indicate that it's no longer a potential click
+                    }}
+                }}
                 function dragended(event, d) {{
                     if (!event.active) {{ simulation.alphaTarget(0); }}
-                    d.fx = null; d.fy = null;
-                    if (Math.sqrt(Math.pow(event.x - dragstarted_x, 2) + Math.pow(event.y - dragstarted_y, 2)) < 3) {{
-                        updateDetails(d.description);
+                    d.fx = null; 
+                    d.fy = null;
+
+                    // If clickTimer is still active, it means no significant drag occurred within the timeout,
+                    // so we treat it as a click.
+                    if (clickTimer) {{
+                        clearTimeout(clickTimer); // Clear it one last time
+                        clickTimer = null;
+                        
+                        // Execute the click logic directly
+                        const isAlreadySelected = d3.select(this).classed("highlighted");
+                        unhighlightAllTreeElements(); 
+                        if (!isAlreadySelected) {{
+                            highlightNodeAndConnections(d);
+                            updateDetails(d.description);
+                        }} else {{
+                            updateDetails(defaultDetailsText);
+                        }}
                     }}
                 }}
                 return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
