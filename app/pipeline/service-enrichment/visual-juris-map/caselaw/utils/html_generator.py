@@ -236,7 +236,7 @@ class HtmlGenerator:
         .chord-path {{ fill-opacity: 0.65; stroke: #fff; stroke-width: 0.5px; cursor: pointer; }}
         .chord-path.selected {{ fill-opacity: 0.9 !important; }}
         .chord-label-group {{ cursor: pointer; }}
-        .chord-label-group .leader-line {{ fill: none; stroke: #aaa; stroke-width: 1px; }}
+        .chord-label-group .leader-line {{ fill: none; stroke: #ddd; stroke-width: 1px; }}
         .chord-label-group text {{ font-size: 12px; font-weight: 400; fill: #333; stroke: #333; stroke-width: 0; transition: stroke-width 0.3s ease-in-out; }} /* Smooth transition */
         .chord-label-group .party-type {{ fill: #6c757d; stroke: #6c757d; }}
         .chord-label-group .underline {{ stroke-width: 2.5px; }}
@@ -297,6 +297,22 @@ class HtmlGenerator:
                 'Other parties': '#6c757d'
             }};
 
+            const nodes = [];
+            const nodeMap = new Map();
+            data.levels.forEach(level => {{
+                level.parties.forEach(party => {{
+                    const nodeData = {{ id: party.name, ...party, level: level.level_number }};
+                    nodes.push(nodeData);
+                    nodeMap.set(party.name, nodeData);
+                }});
+            }});
+            const links = data.connections.map(d => ({{ 
+                source: nodeMap.get(d.source), 
+                target: nodeMap.get(d.target), 
+                relationship: d.relationship 
+            }})).filter(l => l.source && l.target);
+
+
             const treeContainer = document.getElementById('tree-container');
             const chordContainer = document.getElementById('chord-container');
             const tableContainer = document.getElementById('table-container');
@@ -313,7 +329,6 @@ class HtmlGenerator:
                     const containers = [treeContainer, chordContainer, tableContainer];
                     let containerToShow;
 
-                    // Immediately hide all containers to avoid showing multiple charts
                     containers.forEach(c => {{
                         c.style.display = 'none';
                         c.classList.remove('view-fade-in');
@@ -352,6 +367,64 @@ class HtmlGenerator:
             renderChart();
             isTreeRendered = true;
             
+            function findPathToTop(startNode) {{
+                const pathNodes = new Set();
+                const pathLinks = new Set();
+                const orderedPath = []; 
+
+                if (!startNode || startNode.level === 1) {{
+                    if(startNode) pathNodes.add(startNode.id);
+                    return {{ pathNodes, pathLinks, orderedPath }};
+                }}
+
+                const queue = [startNode];
+                const visited = new Set([startNode.id]);
+                const predecessors = new Map();
+                let topNode = null;
+
+                BFS_LOOP:
+                while (queue.length > 0) {{
+                    const currentNode = queue.shift();
+
+                    for (const link of links) {{
+                        let neighbor = null;
+                        if (link.source.id === currentNode.id) {{
+                            neighbor = link.target;
+                        }} else if (link.target.id === currentNode.id) {{
+                            neighbor = link.source;
+                        }}
+
+                        if (neighbor && !visited.has(neighbor.id)) {{
+                            visited.add(neighbor.id);
+                            predecessors.set(neighbor.id, {{ parentNode: currentNode, link: link }});
+                            queue.push(neighbor);
+
+                            if (neighbor.level === 1) {{
+                                topNode = neighbor;
+                                break BFS_LOOP;
+                            }}
+                        }}
+                    }}
+                }}
+
+                if (topNode) {{
+                    let currentInPath = topNode;
+                    while (predecessors.has(currentInPath.id)) {{
+                        const pred = predecessors.get(currentInPath.id);
+                        if (!pred) break;
+                        
+                        orderedPath.unshift(pred.link);
+                        pathLinks.add(pred.link);
+                        pathNodes.add(currentInPath.id);
+
+                        currentInPath = pred.parentNode;
+                    }}
+                    pathNodes.add(startNode.id);
+                }}
+
+                return {{ pathNodes, pathLinks, orderedPath }};
+            }}
+            
             function renderTable() {{
                 const allParties = data.levels.flatMap(l => l.parties);
                 
@@ -361,12 +434,11 @@ class HtmlGenerator:
                     party.description
                 ]);
 
-                // Ensure the table is only rendered once or re-rendered explicitly
-                if (tableContainer.grid) {{ // Check if Grid.js instance already exists
-                    tableContainer.grid.destroy(); // Destroy existing instance if any
+                if (tableContainer.grid) {{
+                    tableContainer.grid.destroy();
                 }}
 
-                tableContainer.grid = new gridjs.Grid({{ // Store grid instance on the container
+                tableContainer.grid = new gridjs.Grid({{
                     columns: [
                         {{ 
                             name: 'Party Name',
@@ -375,23 +447,14 @@ class HtmlGenerator:
                                 const color = colorMap[partyType] || '#ccc';
                                 return gridjs.html(`<div style="display: flex; align-items: center;"><span style="height: 10px; width: 10px; background-color: ${{color}}; border-radius: 50%; margin-right: 8px; flex-shrink: 0;"></span>${{cell}}</div>`);
                             }},
-                            // Removed fixed width for better responsiveness
                         }},
-                        {{
-                            name: 'Party Type',
-                            // Removed fixed width for better responsiveness
-                        }},
-                        {{
-                            name: 'Description',
-                            // Removed fixed width for better responsiveness
-                        }}
+                        {{ name: 'Party Type' }},
+                        {{ name: 'Description' }}
                     ],
                     data: tableData,
                     search: false, 
                     sort: true,
-                    pagination: {{
-                        limit: 15
-                    }},
+                    pagination: {{ limit: 15 }},
                     style: {{
                         table: {{ 'font-size': '13px' }},
                         th: {{ 'font-weight': '500' }}
@@ -432,14 +495,62 @@ class HtmlGenerator:
                 const parties = data.levels.flatMap(l => l.parties);
                 const nameToIndex = new Map(parties.map((p, i) => [p.name, i]));
                 const indexToParty = new Map(parties.map((p, i) => [i, p]));
+                
                 const matrix = Array.from({{length: parties.length}}, () => Array(parties.length).fill(0));
+                const relationshipMap = new Map();
+                
+                const connectedPartyNames = new Set();
                 data.connections.forEach(conn => {{
+                    connectedPartyNames.add(conn.source);
+                    connectedPartyNames.add(conn.target);
+
                     const sourceIndex = nameToIndex.get(conn.source);
                     const targetIndex = nameToIndex.get(conn.target);
-                    if (sourceIndex !== undefined && targetIndex !== undefined) matrix[sourceIndex][targetIndex] += 1;
+                    if (sourceIndex !== undefined && targetIndex !== undefined) {{
+                        matrix[sourceIndex][targetIndex] += 1;
+                        const key = `${{sourceIndex}}-${{targetIndex}}`;
+                        if (!relationshipMap.has(key)) {{
+                            relationshipMap.set(key, conn.relationship);
+                        }}
+                    }}
                 }});
+
                 const chord = d3.chordDirected().padAngle(0.05).sortSubgroups(d3.descending).sortChords(d3.descending);
                 const chords = chord(matrix);
+
+                function showNodeDetailsInChordView(d) {{
+                    const selectedNode = nodeMap.get(d.name);
+                    const {{ orderedPath }} = findPathToTop(selectedNode);
+                    
+                    let detailsHtml = `<p><strong style="color: black;">${{d.name}}</strong></p><p style="margin: 8px 0 0 0;">${{d.description}}</p>`;
+                    if (orderedPath && orderedPath.length > 0) {{
+                        detailsHtml += `<p style="margin-top: 15px; margin-bottom: 8px; border-top: 1px solid #eee; padding-top: 10px;"><strong style="color: black;">Relationship Path</strong></p>`;
+                        detailsHtml += `<ul style="font-size: 12px; padding-left: 0; margin: 0; list-style-type: none;">`;
+                        orderedPath.forEach(link => {{
+                            detailsHtml += `<li style="margin-bottom: 5px;">${{link.source.name}} <strong style="color: black;">&rarr;</strong> <span style="color: black;">${{link.relationship}}</span> <strong style="color: black;">&rarr;</strong> ${{link.target.name}}</li>`;
+                        }});
+                        detailsHtml += `</ul>`;
+                    }}
+                    updateDetails(detailsHtml);
+                }}
+
+                function highlightParentPath(d) {{
+                    const selectedNode = nodeMap.get(d.name);
+                    const {{ pathNodes }} = findPathToTop(selectedNode);
+                    pathNodes.add(selectedNode.id);
+
+                    const indicesToHighlight = new Set([...pathNodes].map(name => nameToIndex.get(name)));
+
+                    g.selectAll('.chord-group').classed('faded', gd => !indicesToHighlight.has(gd.index));
+                    g.selectAll('.chord-label-group').classed('faded', ld => !indicesToHighlight.has(ld.index));
+                    
+                    g.selectAll('.chord-path').classed('faded', c =>
+                        !(indicesToHighlight.has(c.source.index) && indicesToHighlight.has(c.target.index))
+                    );
+
+                    g.selectAll(".chord-path:not(.faded)").style("fill-opacity", 0.9);
+                    g.selectAll(".chord-group:not(.faded) path").style("fill-opacity", 1.0);
+                }}
 
                 function highlightPartyConnections(d) {{
                     const partyIndex = d.index;
@@ -468,8 +579,11 @@ class HtmlGenerator:
 
                     const sourceParty = indexToParty.get(d.source.index);
                     const targetParty = indexToParty.get(d.target.index);
-                    const connection = data.connections.find(c => c.source === sourceParty.name && c.target === targetParty.name);
-                    updateDetails('<span>' + sourceParty.name + '</span> <strong style="color: black;">' + (connection ? connection.relationship : 'related to') + '</strong> <span>' + targetParty.name + '</span>');
+                    const key = `${{d.source.index}}-${{d.target.index}}`;
+                    const relationshipText = relationshipMap.get(key) || 'related to';
+
+                    const detailsHtml = `<span>${{sourceParty.name}}</span> <strong style="color: black;">&rarr;</strong> <span style="color: black;">${{relationshipText}}</span> <strong style="color: black;">&rarr;</strong> <span>${{targetParty.name}}</span>`;
+                    updateDetails(detailsHtml);
                 }}
 
                 function unhighlightAll() {{
@@ -516,9 +630,10 @@ class HtmlGenerator:
                         const selectedNode = g.select(".selected");
                         if (selectedNode.node()) {{
                             if (selectedNode.classed("chord-path")) {{
-                                highlightPathAndPartied(selectedNode.node(), selectedNode.datum());
-                            }} else {{
-                                highlightPartyConnections(selectedNode.datum());
+                                highlightPathAndParties(selectedNode.node(), selectedNode.datum());
+                            }} else if (selectedNode.classed("chord-label-group")) {{
+                                highlightParentPath(selectedNode.datum());
+                                showNodeDetailsInChordView(selectedNode.datum());
                             }}
                         }} else {{
                             unhighlightAll();
@@ -581,8 +696,11 @@ class HtmlGenerator:
                         }}
                     }})
                     .on("mouseout", function() {{
-                        if (!g.select(".selected").node()) {{
+                        const selectedNode = g.select('.selected');
+                        if (!selectedNode.node()) {{
                            unhighlightAll();
+                        }} else if (selectedNode.classed('chord-label-group')) {{
+                           highlightParentPath(selectedNode.datum());
                         }}
                     }})
                     .on("click", function(event, d) {{
@@ -594,24 +712,31 @@ class HtmlGenerator:
 
                         if (!isAlreadySelected) {{
                             group.classed("selected", true);
-                            updateDetails(d.description);
-                            highlightPartyConnections(d);
+                            highlightParentPath(d);
+                            showNodeDetailsInChordView(d);
                         }} else {{
                             unhighlightAll();
                             updateDetails(defaultDetailsText);
                         }}
                     }});
 
-                labelGroup.append("path")
-                    .attr("class", "leader-line")
-                    .attr("d", d => {{
-                        const angle = d.angle - Math.PI / 2;
-                        const onRightSide = d.angle < Math.PI;
-                        const startX = (outerRadius + 2) * Math.cos(angle);
-                        const startY = (outerRadius + 2) * Math.sin(angle);
-                        const elbowX = (outerRadius + 40) * (onRightSide ? 1 : -1);
-                        return "M" + startX + "," + startY + "C" + elbowX + "," + startY + " " + elbowX + "," + d.finalY + " " + elbowX + "," + d.finalY;
-                    }});
+                labelGroup.each(function(d) {{
+                    if (connectedPartyNames.has(d.name)) {{
+                        const pathGenerator = (labelData) => {{
+                            const angle = labelData.angle - Math.PI / 2;
+                            const onRightSide = labelData.angle < Math.PI;
+                            // MODIFICATION: Use innerRadius for the line's starting point
+                            const startX = innerRadius * Math.cos(angle);
+                            const startY = innerRadius * Math.sin(angle);
+                            const elbowX = (outerRadius + 40) * (onRightSide ? 1 : -1);
+                            return `M${{startX}},${{startY}}C${{elbowX}},${{startY}} ${{elbowX}},${{labelData.finalY}} ${{elbowX}},${{labelData.finalY}}`;
+                        }};
+
+                        d3.select(this).append("path")
+                            .attr("class", "leader-line")
+                            .attr("d", pathGenerator(d));
+                    }}
+                }});
 
                 const textLabels = labelGroup.append("text")
                     .attr("transform", d => {{
@@ -663,17 +788,13 @@ class HtmlGenerator:
                 const zoom = d3.zoom().on("zoom", (event) => g.attr("transform", event.transform));
                 svg.call(zoom);
                 
-                // Add click listener to the SVG background to deselect all
                 svg.on("click", (event) => {{
-                    // Check if the click was directly on the svg background
                     if (event.target === svg.node()) {{
                         unhighlightAllTreeElements();
                         updateDetails(defaultDetailsText);
                     }}
                 }});
 
-                const nodes = [];
-                const nodeMap = new Map();
                 const levelInfo = new Map();
                 const nodeWidth = 70, nodeHeight = 28;
                 const nodesPerRow = Math.floor(width / (nodeWidth + 25));
@@ -685,16 +806,11 @@ class HtmlGenerator:
                     const numRows = Math.ceil(level.parties.length / nodesPerRow);
                     const levelHeight = Math.max(120, numRows * (nodeHeight + 50));
                     levelInfo.set(level.level_number, {{ y: yPos, height: levelHeight }});
-                    level.parties.forEach(party => {{
-                        nodes.push({{ id: party.name, ...party, level: level.level_number }});
-                        nodeMap.set(party.name, nodes[nodes.length - 1]);
-                    }});
                     yPos += levelHeight; 
                 }});
                 
                 svg.attr("height", yPos + initialVerticalOffset); 
 
-                const links = data.connections.map(d => ({{ source: nodeMap.get(d.source), target: nodeMap.get(d.target), relationship: d.relationship }})).filter(l => l.source && l.target);
                 nodes.forEach(node => {{
                     const levelData = levelInfo.get(node.level);
                     if (levelData) node.y = levelData.y + levelData.height / 2;
@@ -716,22 +832,33 @@ class HtmlGenerator:
                     g.append("text").attr("x", 50).attr("y", info.y + 15).attr("class", "level-label").text(levelData.level_description);
                 }});
 
+                function showNodeDetails(d) {{
+                    const {{ orderedPath }} = findPathToTop(d);
+                    let detailsHtml = `<p><strong style="color: black;">${{d.name}}</strong></p><p style="margin: 8px 0 0 0;">${{d.description}}</p>`;
+
+                    if (orderedPath && orderedPath.length > 0) {{
+                        detailsHtml += `<p style="margin-top: 15px; margin-bottom: 8px; border-top: 1px solid #eee; padding-top: 10px;"><strong style="color: black;">Relationship Path</strong></p>`;
+                        detailsHtml += `<ul style="font-size: 12px; padding-left: 0; margin: 0; list-style-type: none;">`;
+                        orderedPath.forEach(link => {{
+                            detailsHtml += `<li style="margin-bottom: 5px;">${{link.source.name}} <strong style="color: black;">&rarr;</strong> <span style="color: black;">${{link.relationship}}</span> <strong style="color: black;">&rarr;</strong> ${{link.target.name}}</li>`;
+                        }});
+                        detailsHtml += `</ul>`;
+                    }}
+                    updateDetails(detailsHtml);
+                }}
+
                 const linkGroup = g.append("g").selectAll("g").data(links).join("g").attr("class", "link-group")
                     .on("mouseover", function(event, d) {{
                         d3.select(this).raise().select('.link').attr('marker-end', 'url(#arrowhead-hover)');
-                        // MODIFIED: Always show link details on hover, regardless of node selection.
                         updateDetails('<span>' + d.source.id + '</span> <strong style="color: black;">' + d.relationship + '</strong> <span>' + d.target.id + '</span>');
                     }})
                     .on("mouseout", function() {{
                         if (!d3.select(this).classed("highlighted")) {{
                             d3.select(this).select('.link').attr('marker-end', 'url(#arrowhead)');
                         }}
-                        
-                        // MODIFIED: Revert to selected node's description or default text.
                         const selectedNode = g.select(".node.highlighted");
                         if (selectedNode.node()) {{
-                            const selectedNodeData = selectedNode.datum();
-                            updateDetails(selectedNodeData.description);
+                            showNodeDetails(selectedNode.datum());
                         }} else {{
                             updateDetails(defaultDetailsText);
                         }}
@@ -741,16 +868,19 @@ class HtmlGenerator:
                     if (!d.source || !d.target) return "";
                     const startPoint = getIntersectionPoint(d.source, d.target, nodeWidth, nodeHeight);
                     const endPoint = getIntersectionPoint(d.target, d.source, nodeWidth, nodeHeight);
-                    
-                    const midX = (startPoint.x + endPoint.x) / 2;
-                    const midY = (startPoint.y + endPoint.y) / 2;
-
-                    const cp1x = startPoint.x;
-                    const cp1y = startPoint.y + (endPoint.y - startPoint.y) * 0.2; 
-
-                    const cp2x = endPoint.x;
-                    const cp2y = endPoint.y - (endPoint.y - startPoint.y) * 0.2; 
-
+                    const dx = endPoint.x - startPoint.x;
+                    const dy = endPoint.y - startPoint.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    if (length < 2) {{
+                        return `M${{startPoint.x}},${{startPoint.y}}L${{endPoint.x}},${{endPoint.y}}`;
+                    }}
+                    const perpDx = -dy / length;
+                    const perpDy = dx / length;
+                    const bend = length * 0.15;
+                    const cp1x = startPoint.x + dx * 0.33 + bend * perpDx;
+                    const cp1y = startPoint.y + dy * 0.33 + bend * perpDy;
+                    const cp2x = startPoint.x + dx * 0.66 - bend * perpDx;
+                    const cp2y = startPoint.y + dy * 0.66 - bend * perpDy;
                     return `M${{startPoint.x}},${{startPoint.y}} C ${{cp1x}},${{cp1y}} ${{cp2x}},${{cp2y}} ${{endPoint.x}},${{endPoint.y}}`;
                 }};
 
@@ -760,18 +890,15 @@ class HtmlGenerator:
                 const node = g.append("g").selectAll("g").data(nodes).join("g").attr("class", "node")
                     .call(drag(simulation))
                     .on("click", function(event, d) {{
-                        event.stopPropagation(); // Prevent click from bubbling to the SVG background which would deselect.
+                        event.stopPropagation();
                         const isAlreadySelected = d3.select(this).classed("highlighted");
 
-                        unhighlightAllTreeElements(); // Always clear previous state first.
+                        unhighlightAllTreeElements(); 
 
                         if (!isAlreadySelected) {{
-                            // If not selected, highlight the new selection.
                             highlightNodeAndConnections(d);
-                            updateDetails(d.description);
+                            showNodeDetails(d);
                         }} else {{
-                            // If it was selected, clicking it again deselects it.
-                            // unhighlightAllTreeElements already cleared it.
                             updateDetails(defaultDetailsText);
                         }}
                     }});
@@ -799,28 +926,28 @@ class HtmlGenerator:
                     nameLabel.call(wrap, nodeWidth - 5);
                 }});
 
-                // --- Highlighting Functions for Tree Map ---
                 function highlightNodeAndConnections(selectedNodeData) {{
-                    const connectedNodes = new Set();
-                    const connectedLinks = new Set();
-                    
-                    connectedNodes.add(selectedNodeData.id);
-
+                    const immediateNodes = new Set([selectedNodeData.id]);
+                    const immediateLinks = new Set();
                     links.forEach(link => {{
                         if (link.source.id === selectedNodeData.id || link.target.id === selectedNodeData.id) {{
-                            connectedLinks.add(link);
-                            connectedNodes.add(link.source.id);
-                            connectedNodes.add(link.target.id);
+                            immediateLinks.add(link);
+                            immediateNodes.add(link.source.id);
+                            immediateNodes.add(link.target.id);
                         }}
                     }});
 
+                    const {{ pathNodes, pathLinks }} = findPathToTop(selectedNodeData);
+                    const allNodesToHighlight = new Set([...immediateNodes, ...pathNodes]);
+                    const allLinksToHighlight = new Set([...immediateLinks, ...pathLinks]);
+
                     g.selectAll(".node")
-                        .classed("faded", d => !connectedNodes.has(d.id))
+                        .classed("faded", d => !allNodesToHighlight.has(d.id))
                         .classed("highlighted", d => d.id === selectedNodeData.id);
 
                     g.selectAll(".link-group")
-                        .classed("faded", d => !connectedLinks.has(d))
-                        .classed("highlighted", d => connectedLinks.has(d));
+                        .classed("faded", d => !allLinksToHighlight.has(d))
+                        .classed("highlighted", d => allLinksToHighlight.has(d));
 
                     g.selectAll(".link-group.highlighted .link")
                         .attr('marker-end', 'url(#arrowhead-hover)');
@@ -829,7 +956,7 @@ class HtmlGenerator:
                 function unhighlightAllTreeElements() {{
                     g.selectAll(".node").classed("faded", false).classed("highlighted", false);
                     g.selectAll(".link-group").classed("faded", false).classed("highlighted", false);
-                    g.selectAll(".link-group .link").attr('marker-end', 'url(#arrowhead)'); // Reset all arrowheads
+                    g.selectAll(".link-group .link").attr('marker-end', 'url(#arrowhead)');
                 }}
             }}
 
@@ -929,7 +1056,6 @@ class HtmlGenerator:
                 }};
             }}
             
-            // MODIFIED: Simplified drag handler
             function drag(simulation) {{
                 function dragstarted(event, d) {{
                     if (!event.active) simulation.alphaTarget(0.3).restart();
