@@ -19,6 +19,7 @@ class HtmlGenerator:
         """
         json_string_for_html = json.dumps(json_data)
 
+        # The HTML template remains the same until the renderChordChart function in the script
         html_template = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -102,6 +103,8 @@ class HtmlGenerator:
             display: none;
         }}
 
+        /* MODIFIED: Removed the border from the container and added overflow:hidden 
+           to let the inner table's border be the only one visible, while still getting rounded corners. */
         #table-container .gridjs-container {{
             margin-top: 0;
             border-radius: 8px;
@@ -111,19 +114,22 @@ class HtmlGenerator:
             overflow: hidden; 
         }}
 
+        /* Ensure the wrapper inside the container also behaves correctly */
         #table-container .gridjs-wrapper {{
             width: 100%;
             overflow-x: auto;
             box-sizing: border-box;
-            border: none;
+            border: none; /* Remove redundant border from wrapper */
             border-radius: 0;
         }}
 
+        /* Ensure table itself respects container width */
         #table-container .gridjs-table {{
             width: 100%;
             table-layout: auto;
             border-collapse: collapse;
         }}
+        /* Styles for table headers to prevent overflow */
         #table-container .gridjs-th {{
             white-space: nowrap;
             overflow: hidden;
@@ -204,14 +210,16 @@ class HtmlGenerator:
         .node .type-label {{ font-size: 11px; font-weight: 500; fill: white; pointer-events: none; }}
         .link-group .link {{ fill: none; stroke: #ccc; stroke-width: 1.5px; }}
         .link-group:hover .link {{ stroke: #343a40; }}
+        /* MODIFIED: Reduced link-hitbox stroke-width to prevent visual artifacts */
         .link-group .link-hitbox {{ fill: none; stroke: transparent; stroke-width: 8px; cursor: pointer; }}
         #arrowhead path {{ fill: #ccc; }}
         .link-group:hover #arrowhead path {{ fill: #343a40; }}
 
+        /* New styles for dotted lines under level headings */
         .level-line {{
-            stroke: #adb5bd;
+            stroke: #adb5bd; /* light grey */
             stroke-width: 1px;
-            stroke-dasharray: 2,2;
+            stroke-dasharray: 2,2; /* Dotted line */
         }}
         .level-label {{
             font-size: 14px;
@@ -219,24 +227,28 @@ class HtmlGenerator:
             fill: #495057;
         }}
 
+        /* Chord Diagram Transition */
         .chord-group, .chord-path, .chord-label-group {{
-            transition: opacity 0.3s ease-in-out, fill-opacity 0.3s ease-in-out;
+            transition: opacity 0.3s ease-in-out, fill-opacity 0.3s ease-in-out; /* Smooth transition */
         }}
         .chord-group.faded, .chord-path.faded, .chord-label-group.faded {{ opacity: 0.1; }}
         .chord-group {{ cursor: pointer; }}
-        .chord-group path {{ fill-opacity: 0.8; transition: fill-opacity 0.3s ease-in-out; }}
+        .chord-group path {{ fill-opacity: 0.8; transition: fill-opacity 0.3s ease-in-out; }} /* Smooth transition */
         .chord-path {{ fill-opacity: 0.65; stroke: #fff; stroke-width: 0.5px; cursor: pointer; }}
         .chord-path.selected {{ fill-opacity: 0.9 !important; }}
         .chord-label-group {{ cursor: pointer; }}
         .chord-label-group .leader-line {{ fill: none; stroke: #ddd; stroke-width: 1px; }}
-        .chord-label-group text {{ font-size: 12px; font-weight: 400; fill: #333; stroke: #333; stroke-width: 0; transition: stroke-width 0.3s ease-in-out; }}
+        .chord-label-group text {{ font-size: 12px; font-weight: 400; fill: #333; stroke: #333; stroke-width: 0; transition: stroke-width 0.3s ease-in-out; }} /* Smooth transition */
         .chord-label-group .party-type {{ fill: #6c757d; stroke: #6c757d; }}
         .chord-label-group .underline {{ stroke-width: 2.5px; }}
         .chord-label-group:hover text, .chord-label-group.selected text {{ stroke-width: 0.4px; }}
         
+        /* Styles for highlighting nodes and links */
         .node.faded {{ opacity: 0.2; }}
         .link-group.faded {{ opacity: 0.1; }}
+        /* Highlight color for links: BLACK, original thickness */
         .link-group.highlighted .link {{ stroke: #343a40; stroke-width: 1.5px; }} 
+        /* REMOVED: .node.highlighted rect {{ stroke: #ff7f0e; stroke-width: 2px; }} */
     </style>
 </head>
 <body>
@@ -541,6 +553,24 @@ class HtmlGenerator:
                     g.selectAll(".chord-group:not(.faded) path").style("fill-opacity", 1.0);
                 }}
 
+                function highlightPartyConnections(d) {{
+                    const partyIndex = d.index;
+                    const connectedIndices = new Set([partyIndex]);
+                    g.selectAll(".chord-path")
+                        .filter(c => c.source.index === partyIndex || c.target.index === partyIndex)
+                        .each(c => {{
+                            connectedIndices.add(c.source.index);
+                            connectedIndices.add(c.target.index);
+                        }});
+                    
+                    g.selectAll(".chord-group").classed("faded", gd => !connectedIndices.has(gd.index));
+                    g.selectAll(".chord-path").classed("faded", c => !(c.source.index === partyIndex || c.target.index === partyIndex));
+                    g.selectAll(".chord-label-group").classed("faded", ld => !connectedIndices.has(ld.index));
+                    
+                    g.selectAll(".chord-path:not(.faded)").style("fill-opacity", 0.9);
+                    g.selectAll(".chord-group:not(.faded) path").style("fill-opacity", 1.0);
+                }}
+                
                 function highlightPathAndParties(element, d) {{
                     g.selectAll(".chord-group, .chord-path, .chord-label-group").classed("faded", true);
                     
@@ -564,6 +594,7 @@ class HtmlGenerator:
                 }}
                 
                 const group = g.append("g").selectAll("g").data(chords.groups).join("g").attr("class", "chord-group")
+                    // START MODIFICATION
                     .on("mouseover", (event, d) => {{
                         if (!g.select(".selected").node()) {{
                             const partyData = indexToParty.get(d.index);
@@ -572,11 +603,20 @@ class HtmlGenerator:
                         }}
                     }})
                     .on("mouseout", function() {{
-                        if (!g.select(".selected").node()) {{
+                        const selectedNode = g.select(".selected");
+                        if (selectedNode.node()) {{
+                            if (selectedNode.classed("chord-path")) {{
+                                highlightPathAndParties(selectedNode.node(), selectedNode.datum());
+                            }} else if (selectedNode.classed("chord-label-group")) {{
+                                highlightParentPath(selectedNode.datum());
+                                showNodeDetailsInChordView(selectedNode.datum());
+                            }}
+                        }} else {{
                             unhighlightAll();
                             updateDetails(defaultDetailsText);
                         }}
                     }})
+                    // END MODIFICATION
                     .on("click", (event, d) => {{
                         event.stopPropagation();
                         const labelNode = g.selectAll(".chord-label-group").filter(ld => ld.index === d.index).node();
@@ -596,12 +636,20 @@ class HtmlGenerator:
                     .attr("fill", d => colorMap[indexToParty.get(d.source.index).type] || '#ccc')
                     .attr("stroke", d => d3.rgb(colorMap[indexToParty.get(d.source.index).type] || '#ccc').darker())
                     .on("mouseover", function(event, d) {{
-                        if (!g.select(".selected").node()) {{
+                        if (!d3.select(this).classed("selected")) {{
                             highlightPathAndParties(this, d);
                         }}
                     }})
                     .on("mouseout", function() {{
-                        if (!g.select(".selected").node()) {{
+                        const selectedNode = g.select(".selected");
+                        if (selectedNode.node()) {{
+                            if (selectedNode.classed("chord-path")) {{
+                                highlightPathAndParties(selectedNode.node(), selectedNode.datum());
+                            }} else if (selectedNode.classed("chord-label-group")) {{
+                                highlightParentPath(selectedNode.datum());
+                                showNodeDetailsInChordView(selectedNode.datum());
+                            }}
+                        }} else {{
                             unhighlightAll();
                             updateDetails(defaultDetailsText);
                         }}
@@ -656,6 +704,7 @@ class HtmlGenerator:
 
                 const labelGroup = g.append("g").selectAll("g").data(labelData).join("g")
                     .attr("class", d => "chord-label-group " + (d.angle < Math.PI ? "label-on-right" : "label-on-left"))
+                    // START MODIFICATION
                     .on("mouseover", function(event, d) {{
                          if (!g.select(".selected").node()) {{
                             highlightParentPath(d);
@@ -663,11 +712,20 @@ class HtmlGenerator:
                         }}
                     }})
                     .on("mouseout", function() {{
-                        if (!g.select(".selected").node()) {{
+                        const selectedNode = g.select(".selected");
+                        if (selectedNode.node()) {{
+                            if (selectedNode.classed("chord-path")) {{
+                                highlightPathAndParties(selectedNode.node(), selectedNode.datum());
+                            }} else if (selectedNode.classed("chord-label-group")) {{
+                                highlightParentPath(selectedNode.datum());
+                                showNodeDetailsInChordView(selectedNode.datum());
+                            }}
+                        }} else {{
                             unhighlightAll();
                             updateDetails(defaultDetailsText);
                         }}
                     }})
+                    // END MODIFICATION
                     .on("click", function(event, d) {{
                         event.stopPropagation();
                         const group = d3.select(this);
@@ -690,6 +748,7 @@ class HtmlGenerator:
                         const pathGenerator = (labelData) => {{
                             const angle = labelData.angle - Math.PI / 2;
                             const onRightSide = labelData.angle < Math.PI;
+                            // MODIFICATION: Use innerRadius for the line's starting point
                             const startX = innerRadius * Math.cos(angle);
                             const startY = innerRadius * Math.sin(angle);
                             const elbowX = (outerRadius + 40) * (onRightSide ? 1 : -1);
@@ -748,22 +807,9 @@ class HtmlGenerator:
                     .attr('markerWidth', 6).attr('markerHeight', 6)
                     .append('svg:path').attr('d', 'M0,-5L10,0L0,5').attr('fill', '#343a40');
 
-                /* --- ZOOM & PAN IMPLEMENTATION --- */
-                /* Create a group element to contain all chart elements that will be zoomed. */
                 const g = svg.append("g");
-                /* Define the zoom behavior. The 'on("zoom")' function is called whenever a zoom/pan event occurs. */
-                const zoom = d3.zoom().on("zoom", (event) => {{
-                    /* 'event.transform' contains the current zoom level and pan offsets. */
-                    /* We apply this transformation to our group element 'g'. */
-                    g.attr("transform", event.transform);
-                }});
-                
-                /* Apply the zoom behavior to the main SVG. This enables:
-                 * - Zooming with the mouse scroll wheel or trackpad pinch gesture.
-                 * - Panning by clicking and dragging the chart's background.
-                */
+                const zoom = d3.zoom().on("zoom", (event) => g.attr("transform", event.transform));
                 svg.call(zoom);
-                /* --- END ZOOM & PAN --- */
                 
                 svg.on("click", (event) => {{
                     if (event.target === svg.node()) {{
@@ -958,21 +1004,15 @@ class HtmlGenerator:
                 }};
             }}
             
-            /* --- RESPONSIVENESS IMPLEMENTATION --- */
-            /* Listen for the window to be resized. */
             window.addEventListener('resize', debounce(() => {{
-                /* Check which visualization is currently active. */
                 const isTreeVisible = document.querySelector('input[name="view-toggle"][value="tree"]').checked;
                 const isChordVisible = document.querySelector('input[name="view-toggle"][value="chord"]').checked;
                 const isTableVisible = document.querySelector('input[name="view-toggle"][value="table"]').checked;
 
-                /* Re-render the active visualization to fit the new screen size.
-                 * This makes the chart "autoadjustable". */
                 if (isTreeVisible) renderChart();
                 else if (isChordVisible) renderChordChart();
                 else if (isTableVisible) renderTable();
-            }}, 250)); /* Debounce prevents the function from firing too rapidly, improving performance. */
-            /* --- END RESPONSIVENESS --- */
+            }}, 250));
             
             function getIntersectionPoint(source, target, nodeWidth, nodeHeight) {{
                 const sx = source.x;
