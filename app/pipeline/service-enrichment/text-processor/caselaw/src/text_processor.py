@@ -30,86 +30,127 @@ class TextProcessor:
     def process_cases(self):
         """
         Main method to run the text extraction pipeline.
-        It identifies cases needing processing using an efficient JOIN query
-        and processes each one.
+        It iterates through configured years and jurisdictions (or all if not specified) 
+        to find and process cases.
         """
-        tables_to_process = self.config['tables']['tables_to_read']
+        # Configuration for tables and S3
         dest_table_info = self.config['tables']['tables_to_write'][0]
-        
-        # --- FIX: Get destination DB name and table name from config ---
-        dest_db_name = dest_table_info['database']
         dest_table = dest_table_info['table']
         status_column = dest_table_info['step_columns']['text_extract']['status']
-        
+
+        registry_config = self.config.get('tables_registry')
+        if not registry_config:
+            print("FATAL: 'tables_registry' configuration not found in config.yaml. Aborting.")
+            return
+
+        registry_table = registry_config['table']
+        registry_year_col = registry_config['column']
+        processing_years = registry_config.get('processing_years', [])
+        jurisdictions_to_process = registry_config.get('jurisdiction_codes', [])
+
+        # If processing_years is empty in config, fetch all available years from the registry.
+        if not processing_years:
+            print("Config 'processing_years' is empty. Fetching all available years from the registry.")
+            try:
+                years_df = self.dest_db.read_sql(f"SELECT DISTINCT {registry_year_col} FROM {registry_table} ORDER BY {registry_year_col} DESC")
+                processing_years = years_df[registry_year_col].tolist()
+                if not processing_years:
+                    print("No years found in the registry. Aborting.")
+                    return
+            except Exception as e:
+                print(f"FATAL: Could not fetch years from registry. Aborting. Error: {e}")
+                return
+
+        # If jurisdiction_codes is empty in config, fetch all available jurisdictions from the registry.
+        if not jurisdictions_to_process:
+            print("Config 'jurisdiction_codes' is empty. Fetching all available jurisdictions from the registry.")
+            try:
+                juris_df = self.dest_db.read_sql(f"SELECT DISTINCT jurisdiction_code FROM {registry_table} WHERE jurisdiction_code IS NOT NULL AND jurisdiction_code != ''")
+                jurisdictions_to_process = juris_df['jurisdiction_code'].tolist()
+                if not jurisdictions_to_process:
+                    print("No jurisdictions found in the registry. Aborting.")
+                    return
+            except Exception as e:
+                print(f"FATAL: Could not fetch jurisdictions from registry. Aborting. Error: {e}")
+                return
+
         s3_bucket = self.config['aws']['s3']['bucket_name']
         filenames = self.config['enrichment_filenames']
+        
+        tables_to_read_config = self.config['tables']['tables_to_read']
+        jurisdiction_lookup = {item['jurisdiction']: item for item in tables_to_read_config}
+        
+        print(f"Starting processing for years: {processing_years}")
+        print(f"Starting processing for jurisdictions: {jurisdictions_to_process}")
 
-        print(f"Found {len(tables_to_process)} source tables to process.")
+        # Outer loop for years
+        for year in processing_years:
+            print(f"\n===== Processing Year: {year} =====")
 
-        # Loop through each source table defined in the configuration
-        for source_table_info in tables_to_process:
-            source_table = source_table_info['table']
-            s3_base_folder = source_table_info['s3_folder']
+            # Inner loop for jurisdictions
+            for jurisdiction in jurisdictions_to_process:
+                jurisdiction_info = jurisdiction_lookup.get(jurisdiction)
+                if not jurisdiction_info:
+                    print(f"WARNING: Configuration for jurisdiction '{jurisdiction}' not found in 'tables_to_read'. Skipping.")
+                    continue
+                    
+                s3_base_folder = jurisdiction_info['s3_folder']
+                print(f"\n--- Checking Jurisdiction: {jurisdiction} for Year: {year} ---")
+
+                try:
+                    query = f"""
+                        SELECT
+                            reg.source_id
+                        FROM
+                            {registry_table} AS reg
+                        LEFT JOIN
+                            {dest_table} AS dest ON reg.source_id = dest.source_id
+                        WHERE
+                            reg.jurisdiction_code = :jurisdiction
+                            AND reg.{registry_year_col} = :year
+                            AND (dest.source_id IS NULL OR dest.{status_column} != 'pass')
+                    """
+                    
+                    params = {"jurisdiction": jurisdiction, "year": year}
+                    cases_to_process_df = self.dest_db.read_sql(query, params=params)
+                    
+                    print(f"Found {len(cases_to_process_df)} cases from registry requiring processing.")
+
+                except Exception as e:
+                    print(f"ERROR: Could not query the registry for jurisdiction {jurisdiction} and year {year}. Skipping. Error: {e}")
+                    continue
+
+                if cases_to_process_df.empty:
+                    continue
+
+                for index, row in cases_to_process_df.iterrows():
+                    source_id = str(row['source_id'])
+                    print(f"- Processing case: {source_id}")
+                    
+                    status_row = self.dest_db.get_status_by_source_id(dest_table, source_id)
+                    if not status_row:
+                        print(f"No status record found for {source_id}. Creating new one.")
+                        try:
+                            self.dest_db.insert_initial_status(table_name=dest_table, source_id=source_id)
+                        except Exception as e:
+                            print(f"Failed to insert initial status for {source_id}. Skipping. Error: {e}")
+                            continue
+
+                    case_folder = os.path.join(s3_base_folder, source_id)
+                    html_file_key = os.path.join(case_folder, filenames['source_html'])
+                    txt_file_key = os.path.join(case_folder, filenames['extracted_text'])
+                    
+                    # --- FIX: Corrected variable name from 'txt_key' to 'txt_file_key' ---
+                    self._extract_and_save_text(
+                        s3_bucket, html_file_key, txt_file_key, dest_table, source_id, case_folder
+                    )
             
-            print(f"\n===== Processing table: {source_table} using S3 folder: {s3_base_folder} =====")
+        print("\n--- Text extraction check completed for all configured years and jurisdictions. ---")
 
-            try:
-                # --- FIX: Use a fully qualified table name for the cross-database JOIN ---
-                # This explicitly tells the query to look for the destination table
-                # in the correct database (e.g., `legal_store.caselaw_enrichment_status`).
-                query = f"""
-                    SELECT
-                        source.id
-                    FROM
-                        {source_table} AS source
-                    LEFT JOIN
-                        {dest_db_name}.{dest_table} AS dest ON source.id = dest.source_id
-                    WHERE
-                        dest.source_id IS NULL OR dest.{status_column} != 'pass'
-                """
-                cases_to_process_df = self.source_db.read_sql(query)
-                print(f"Found {len(cases_to_process_df)} cases requiring text extraction in '{source_table}'.")
-
-            except Exception as e:
-                print(f"ERROR: Could not read from source table {source_table}. Skipping. Error: {e}")
-                continue # Skip to the next table if the query fails
-
-            # Iterate ONLY over the cases that require processing
-            for index, row in cases_to_process_df.iterrows():
-                source_id = str(row['id'])
-                print(f"\n--- Processing case for text extraction: {source_id} ---")
-                
-                # We still need to check if a status row exists to decide whether to INSERT a new one.
-                status_row = self.dest_db.get_status_by_source_id(dest_table, source_id)
-                if not status_row:
-                    print(f"No status record found for {source_id}. Creating new one.")
-                    try:
-                        self.dest_db.insert_initial_status(table_name=dest_table, source_id=source_id)
-                    except Exception as e:
-                        print(f"Failed to insert initial status for {source_id}. Skipping. Error: {e}")
-                        continue # Skip this case if status insert fails
-
-                # Construct the S3 paths for the HTML and the output text file
-                case_folder = os.path.join(s3_base_folder, source_id)
-                html_file_key = os.path.join(case_folder, filenames['source_html'])
-                txt_file_key = os.path.join(case_folder, filenames['extracted_text'])
-                
-                # Perform the text extraction, save the result to S3, and update the database
-                self._extract_and_save_text(s3_bucket, html_file_key, txt_file_key, dest_table, source_id)
-            
-        print("\n--- Text extraction check completed for all cases in all tables. ---")
-
-    def _extract_and_save_text(self, bucket: str, html_key: str, txt_key: str, status_table: str, source_id: str):
+    def _extract_and_save_text(self, bucket: str, html_key: str, txt_key: str, status_table: str, source_id: str, case_folder: str):
         """
-        Handles HTML download from S3, text extraction, saving the text file back to S3,
+        Handles HTML download, text extraction, HTML modification, saving artifacts to S3,
         and updating the status database.
-
-        Args:
-            bucket (str): The S3 bucket name.
-            html_key (str): The key for the source HTML file in S3.
-            txt_key (str): The key for the destination text file in S3.
-            status_table (str): The name of the database table for status tracking.
-            source_id (str): The unique ID of the case being processed.
         """
         start_time_utc = datetime.now(timezone.utc)
         
@@ -117,18 +158,19 @@ class TextProcessor:
         step_columns_config = dest_table_info['step_columns']
         
         try:
-            # Step 1: Get the HTML content from S3
             html_content = self.s3_manager.get_file_content(bucket, html_key)
-            # Step 2: Extract text from the HTML
+            modified_html_content = self.html_parser.modify_html_font(html_content)
+            visual_filename = self.config['enrichment_filenames']['visual_file']
+            visual_file_key = os.path.join(case_folder, visual_filename)
+            self.s3_manager.save_text_file(bucket, visual_file_key, modified_html_content)
+            
             text_content = self.html_parser.extract_text(html_content)
-            # Step 3: Save the extracted text back to S3
             self.s3_manager.save_text_file(bucket, txt_key, text_content)
             
             end_time_utc = datetime.now(timezone.utc)
             duration = (end_time_utc - start_time_utc).total_seconds()
             
-            # Step 4: Update the database to mark this step as 'pass'
-            print(f"Successfully extracted text for {source_id}.")
+            print(f"Successfully extracted text and created visual file for {source_id}.")
             self.dest_db.update_step_result(
                 status_table, source_id, 'text_extract', 'pass', duration, 
                 start_time_utc, end_time_utc, step_columns_config
@@ -136,8 +178,7 @@ class TextProcessor:
         except Exception as e:
             end_time_utc = datetime.now(timezone.utc)
             duration = (end_time_utc - start_time_utc).total_seconds()
-            print(f"Text extraction FAILED for {source_id}. Error: {e}")
-            # Update the database to mark this step as 'failed' to prevent retrying on next run
+            print(f"Text extraction and visual file creation FAILED for {source_id}. Error: {e}")
             self.dest_db.update_step_result(
                 status_table, source_id, 'text_extract', 'failed', duration,
                 start_time_utc, end_time_utc, step_columns_config

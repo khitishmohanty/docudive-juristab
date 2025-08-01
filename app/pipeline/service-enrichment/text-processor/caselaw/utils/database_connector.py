@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import create_engine, text, Row
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class DatabaseConnector:
     """Handles all database interactions."""
@@ -31,10 +31,15 @@ class DatabaseConnector:
             print(f"Error creating database engine: {e}")
             raise
     
-    def read_sql(self, query: str) -> pd.DataFrame:
-        print(f"Executing query...")
+    def read_sql(self, query: str, params: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
+        """
+        Executes a SQL query and returns the result as a pandas DataFrame.
+        Supports parameterized queries for safety.
+        """
+        print(f"Executing query with params: {params is not None}")
         try:
-            return pd.read_sql_query(query, self.engine)
+            # Use SQLAlchemy's text() construct for safe parameter binding
+            return pd.read_sql_query(sql=text(query), con=self.engine, params=params)
         except Exception as e:
             print(f"Error executing query: {e}")
             raise
@@ -76,7 +81,6 @@ class DatabaseConnector:
     def update_step_result(self, table_name: str, source_id: str, step: str, status: str, duration: float, start_time: datetime, end_time: datetime, step_columns: dict):
         """
         Updates the status, duration, start time, and end time for a specific processing step.
-        The column names are dynamically read from the provided configuration.
         """
         session = self.Session()
         

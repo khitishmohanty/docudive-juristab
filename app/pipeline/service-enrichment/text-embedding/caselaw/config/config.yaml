@@ -91,4 +91,4 @@ tables_registry:
     table: "caselaw_registry"
     column: "year"
     processing_years: [2025]
-    jurisdiction_codes: ['ACT','VIC','NT','QLD','WA','SA','TAS','FED']
+    jurisdiction_codes: ['ACT','VIC','NT','QLD','WA','SA','TAS','FED','NSW']
