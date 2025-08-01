@@ -1,0 +1,53 @@
+# -- Google cloud project details --
+google_cloud:
+    project_id: "juris-tab"
+    region: "us"
+
+# -- Database connection details --
+database:
+    dialect: "mysql"
+    driver: "mysqlconnector"
+    host: "juris-data.crkmq80swpic.ap-southeast-2.rds.amazonaws.com"
+    port: "3306"
+    name: "legal_store"
+
+# -- AWS connection details --
+aws:
+    default_region: "ap-southeast-2"
+    s3:
+        bucket_name: "legal-store"
+        folder_name: "case-laws/"
+        
+# -- Google Cloud Storage connection details --
+gcp:
+    storage:
+        bucket_name: "juristab-legal-store"
+        folder_name: "books-txt/"
+
+# List of tables to be read by the connector
+tables:
+  tables_to_read:
+    - database: legal_store
+      table: caselaw_registry
+      
+  tables_to_write:
+    - database: legal_store
+      table: caselaw_enrichment_status
+      columns:
+        processing_status: "status_gcpingestion"
+        processing_duration: "duration_gcpingestion"
+        start_time: "start_time_gcpingestion"
+        end_time: "end_time_gcpingestion"
+
+# -- File to process --
+enrichment_filenames:
+  source_file: "miniviewer.txt"
+
+# -- Registry details
+tables_registry:
+    database: "legal_store"
+    table: "caselaw_registry"
+    column: "year"
+    processing_years: []
+    sub_folders: ['act','commonwealth','nsw','nt','qld','sa','tas','vic','wa']
+    jurisdiction_codes: ['ACT','FED','NSW','NT','QLD','SA','TAS','VIC','WA']
