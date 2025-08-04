@@ -120,3 +120,51 @@ class DatabaseConnector:
             raise
         finally:
             session.close()
+
+    def upsert_metadata_counts(self, table_name: str, source_id: str, char_count_col: str, word_count_col: str, char_count: int, word_count: int):
+        """
+        Updates or inserts character and word counts in the metadata table.
+        If a record with the source_id exists, it's updated. Otherwise, a new record is inserted.
+        """
+        session = self.Session()
+        try:
+            # Check if the record exists
+            stmt_select = text(f"SELECT source_id FROM {table_name} WHERE source_id = :source_id")
+            result = session.execute(stmt_select, {"source_id": source_id}).fetchone()
+
+            if result:
+                # Update existing record
+                stmt_update = text(f"""
+                    UPDATE {table_name}
+                    SET {char_count_col} = :char_count,
+                        {word_count_col} = :word_count
+                    WHERE source_id = :source_id
+                """)
+                session.execute(stmt_update, {
+                    "char_count": char_count,
+                    "word_count": word_count,
+                    "source_id": source_id
+                })
+                print(f"Updated metadata for source_id: {source_id}")
+            else:
+                # Insert new record
+                new_id = str(uuid.uuid4())
+                stmt_insert = text(f"""
+                    INSERT INTO {table_name} (id, source_id, {char_count_col}, {word_count_col})
+                    VALUES (:id, :source_id, :char_count, :word_count)
+                """)
+                session.execute(stmt_insert, {
+                    "id": new_id,
+                    "source_id": source_id,
+                    "char_count": char_count,
+                    "word_count": word_count
+                })
+                print(f"Inserted new metadata for source_id: {source_id}")
+
+            session.commit()
+        except Exception as e:
+            print(f"Error upserting metadata for source_id {source_id}: {e}")
+            session.rollback()
+            raise
+        finally:
+            session.close()

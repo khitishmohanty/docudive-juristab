@@ -48,18 +48,9 @@ class TextProcessor:
         processing_years = registry_config.get('processing_years', [])
         jurisdictions_to_process = registry_config.get('jurisdiction_codes', [])
 
-        # If processing_years is empty in config, fetch all available years from the registry.
-        if not processing_years:
-            print("Config 'processing_years' is empty. Fetching all available years from the registry.")
-            try:
-                years_df = self.dest_db.read_sql(f"SELECT DISTINCT {registry_year_col} FROM {registry_table} ORDER BY {registry_year_col} DESC")
-                processing_years = years_df[registry_year_col].tolist()
-                if not processing_years:
-                    print("No years found in the registry. Aborting.")
-                    return
-            except Exception as e:
-                print(f"FATAL: Could not fetch years from registry. Aborting. Error: {e}")
-                return
+        # If processing_years is not specified in the config, we will process all years by not applying a year filter.
+        # We use a list with [None] to signify a single run that queries for all years.
+        years_to_iterate = processing_years if processing_years else [None]
 
         # If jurisdiction_codes is empty in config, fetch all available jurisdictions from the registry.
         if not jurisdictions_to_process:
@@ -80,12 +71,14 @@ class TextProcessor:
         tables_to_read_config = self.config['tables']['tables_to_read']
         jurisdiction_lookup = {item['jurisdiction']: item for item in tables_to_read_config}
         
-        print(f"Starting processing for years: {processing_years}")
         print(f"Starting processing for jurisdictions: {jurisdictions_to_process}")
 
-        # Outer loop for years
-        for year in processing_years:
-            print(f"\n===== Processing Year: {year} =====")
+        # Outer loop for years. If years_to_iterate is [None], this loop runs once without a year filter.
+        for year in years_to_iterate:
+            if year:
+                print(f"\n===== Processing Year: {year} =====")
+            else:
+                print(f"\n===== Processing for All Years =====")
 
             # Inner loop for jurisdictions
             for jurisdiction in jurisdictions_to_process:
@@ -95,29 +88,35 @@ class TextProcessor:
                     continue
                     
                 s3_base_folder = jurisdiction_info['s3_folder']
-                print(f"\n--- Checking Jurisdiction: {jurisdiction} for Year: {year} ---")
+                print(f"\n--- Checking Jurisdiction: {jurisdiction} ---")
 
                 try:
-                    query = f"""
-                        SELECT
-                            reg.source_id
-                        FROM
-                            {registry_table} AS reg
-                        LEFT JOIN
-                            {dest_table} AS dest ON reg.source_id = dest.source_id
-                        WHERE
-                            reg.jurisdiction_code = :jurisdiction
-                            AND reg.{registry_year_col} = :year
-                            AND (dest.source_id IS NULL OR dest.{status_column} != 'pass')
-                    """
+                    # Base query and parameters
+                    query_parts = [
+                        f"SELECT reg.source_id",
+                        f"FROM {registry_table} AS reg",
+                        f"LEFT JOIN {dest_table} AS dest ON reg.source_id = dest.source_id",
+                        f"WHERE reg.jurisdiction_code = :jurisdiction"
+                    ]
+                    params = {"jurisdiction": jurisdiction}
+
+                    # Conditionally add the year filter if a specific year is provided
+                    if year is not None:
+                        query_parts.append(f"AND reg.{registry_year_col} = :year")
+                        params["year"] = year
                     
-                    params = {"jurisdiction": jurisdiction, "year": year}
+                    # Add the final status check condition
+                    query_parts.append(f"AND (dest.source_id IS NULL OR dest.{status_column} != 'pass')")
+                    
+                    query = "\n".join(query_parts)
+                    
                     cases_to_process_df = self.dest_db.read_sql(query, params=params)
                     
-                    print(f"Found {len(cases_to_process_df)} cases from registry requiring processing.")
+                    log_message_year = f"for year {year} " if year else "for all years "
+                    print(f"Found {len(cases_to_process_df)} cases {log_message_year}from registry requiring processing.")
 
                 except Exception as e:
-                    print(f"ERROR: Could not query the registry for jurisdiction {jurisdiction} and year {year}. Skipping. Error: {e}")
+                    print(f"ERROR: Could not query the registry for jurisdiction {jurisdiction}. Skipping. Error: {e}")
                     continue
 
                 if cases_to_process_df.empty:
@@ -140,7 +139,6 @@ class TextProcessor:
                     html_file_key = os.path.join(case_folder, filenames['source_html'])
                     txt_file_key = os.path.join(case_folder, filenames['extracted_text'])
                     
-                    # --- FIX: Corrected variable name from 'txt_key' to 'txt_file_key' ---
                     self._extract_and_save_text(
                         s3_bucket, html_file_key, txt_file_key, dest_table, source_id, case_folder
                     )
@@ -166,6 +164,25 @@ class TextProcessor:
             
             text_content = self.html_parser.extract_text(html_content)
             self.s3_manager.save_text_file(bucket, txt_key, text_content)
+
+            # --- ADDED: Calculate counts and update metadata table ---
+            char_count = len(text_content)
+            word_count = len(text_content.split())
+            print(f"Case {source_id}: Character count = {char_count}, Word count = {word_count}")
+
+            metadata_config = self.config.get('tables_metadata')
+            if metadata_config:
+                self.dest_db.upsert_metadata_counts(
+                    table_name=metadata_config['table'],
+                    source_id=source_id,
+                    char_count_col=metadata_config['column_count_char'],
+                    word_count_col=metadata_config['column_word_char'],
+                    char_count=char_count,
+                    word_count=word_count
+                )
+            else:
+                print("WARNING: 'tables_metadata' configuration not found in config.yaml. Skipping metadata update.")
+            # --- END ADDED ---
             
             end_time_utc = datetime.now(timezone.utc)
             duration = (end_time_utc - start_time_utc).total_seconds()
