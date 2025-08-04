@@ -106,7 +106,6 @@ enrichment_filenames:
   source_html: "miniviewer.html"
   extracted_text: "miniviewer.txt"
   jurismap_json: "jurissummary.json"
-  jurisfilter_json: "jurisfilter.json"
   jurismap_html: "jurissummary.html"
 
 # -- Audit log configuration --
@@ -122,8 +121,3 @@ tables_registry:
     table: "caselaw_registry"
     column: "year"
     processing_years: [2025]
-
-# -- Metadata table details
-tables_metadata:
-  database: "legal_store"
-  table: "caselaw_metadata"

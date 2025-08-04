@@ -201,44 +201,44 @@ class DatabaseConnector:
         finally:
             session.close()
             
-    def upsert_metadata(self, metadata_config: Dict[str, str], source_id: str, filter_data: Dict[str, str]):
-        """
-        Inserts or updates a record in the caselaw_metadata table.
-        This performs an "upsert" operation based on the source_id.
+    # def upsert_metadata(self, metadata_config: Dict[str, str], source_id: str, filter_data: Dict[str, str]):
+    #     """
+    #     Inserts or updates a record in the caselaw_metadata table.
+    #     This performs an "upsert" operation based on the source_id.
 
-        Args:
-            metadata_config (dict): Configuration for the metadata table.
-            source_id (str): The unique source identifier for the case.
-            filter_data (dict): A dictionary of the filter tags to be saved.
-        """
-        session = self.Session()
-        table_name = f"`{metadata_config['database']}`.`{metadata_config['table']}`"
+    #     Args:
+    #         metadata_config (dict): Configuration for the metadata table.
+    #         source_id (str): The unique source identifier for the case.
+    #         filter_data (dict): A dictionary of the filter tags to be saved.
+    #     """
+    #     session = self.Session()
+    #     table_name = f"`{metadata_config['database']}`.`{metadata_config['table']}`"
         
-        # Prepare columns and values for the INSERT part
-        columns = ['source_id'] + list(filter_data.keys())
-        column_str = ', '.join([f"`{col}`" for col in columns])
-        placeholders = ', '.join([f":{col}" for col in columns])
+    #     # Prepare columns and values for the INSERT part
+    #     columns = ['source_id'] + list(filter_data.keys())
+    #     column_str = ', '.join([f"`{col}`" for col in columns])
+    #     placeholders = ', '.join([f":{col}" for col in columns])
         
-        # Prepare the UPDATE part for the ON DUPLICATE KEY clause
-        update_clauses = [f"`{key}` = VALUES(`{key}`)" for key in filter_data.keys()]
-        update_str = ', '.join(update_clauses)
+    #     # Prepare the UPDATE part for the ON DUPLICATE KEY clause
+    #     update_clauses = [f"`{key}` = VALUES(`{key}`)" for key in filter_data.keys()]
+    #     update_str = ', '.join(update_clauses)
         
-        # Prepare the parameters dictionary
-        params = {'source_id': source_id, **filter_data}
+    #     # Prepare the parameters dictionary
+    #     params = {'source_id': source_id, **filter_data}
         
-        try:
-            # Use INSERT ... ON DUPLICATE KEY UPDATE for an "upsert"
-            stmt = text(f"""
-                INSERT INTO {table_name} ({column_str})
-                VALUES ({placeholders})
-                ON DUPLICATE KEY UPDATE {update_str}
-            """)
-            session.execute(stmt, params)
-            session.commit()
-            print(f"Successfully upserted metadata for source_id: {source_id}")
-        except Exception as e:
-            print(f"Error upserting metadata for source_id {source_id}: {e}")
-            session.rollback()
-            raise # Re-raise the exception to be handled by the caller
-        finally:
-            session.close()
+    #     try:
+    #         # Use INSERT ... ON DUPLICATE KEY UPDATE for an "upsert"
+    #         stmt = text(f"""
+    #             INSERT INTO {table_name} ({column_str})
+    #             VALUES ({placeholders})
+    #             ON DUPLICATE KEY UPDATE {update_str}
+    #         """)
+    #         session.execute(stmt, params)
+    #         session.commit()
+    #         print(f"Successfully upserted metadata for source_id: {source_id}")
+    #     except Exception as e:
+    #         print(f"Error upserting metadata for source_id {source_id}: {e}")
+    #         session.rollback()
+    #         raise # Re-raise the exception to be handled by the caller
+    #     finally:
+    #         session.close()

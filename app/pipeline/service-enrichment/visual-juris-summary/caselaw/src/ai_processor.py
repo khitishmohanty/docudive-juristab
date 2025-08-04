@@ -59,7 +59,6 @@ class AiProcessor:
             case_folder = os.path.join(s3_base_folder, source_id)
             txt_file_key = os.path.join(case_folder, filenames['extracted_text'])
             summary_json_file_key = os.path.join(case_folder, filenames['jurismap_json'])
-            filter_json_file_key = os.path.join(case_folder, filenames['jurisfilter_json'])
             tree_html_file_key = os.path.join(case_folder, filenames['jurismap_html'])
 
             json_summary_content = None
@@ -71,7 +70,6 @@ class AiProcessor:
                         text_content, 
                         s3_bucket, 
                         summary_json_file_key, 
-                        filter_json_file_key,
                         dest_table, 
                         source_id, 
                         column_config
@@ -98,10 +96,9 @@ class AiProcessor:
 
         print(f"\n--- AI Enrichment check completed for source: {source_table_name} for year {self.processing_year} ---")
     
-    def _generate_and_save_json(self, text_content, bucket, summary_json_key, filter_json_key, status_table, source_id, column_config):
+    def _generate_and_save_json(self, text_content, bucket, summary_json_key, status_table, source_id, column_config):
         """
-        Generates a full JSON from text, then splits it into two files (summary and filter),
-        saves the filter data to the database, and saves both JSON files to S3.
+        Generates a summary JSON from text, saves it to S3, and updates the status table.
         The json_valid_status is only passed if all steps are successful.
         """
         start_time_dt = datetime.now(timezone.utc)
@@ -116,32 +113,19 @@ class AiProcessor:
             output_price = (pricing_config['output_per_million'] / 1000000) * output_tokens
             print(f"Gemini Token Usage - Input: {input_tokens} (${input_price:.6f}), Output: {output_tokens} (${output_price:.6f})")
 
-            # Step 2: Validate and parse the full JSON response
+            # Step 2: Validate and parse the JSON response
             if not self.gemini_client.is_valid_json(gemini_response_str):
                 raise ValueError("Gemini response was not valid JSON.")
-            full_data = json.loads(gemini_response_str)
+            summary_data = json.loads(gemini_response_str)
 
-            # Step 3: Extract and validate the two data parts
-            filter_tags_data = full_data.get("filter_tags")
-            summary_data = {
-                "caseTitle": full_data.get("caseTitle"),
-                "caseSubtitle": full_data.get("caseSubtitle"),
-                "cards": full_data.get("cards")
-            }
-            if not filter_tags_data or not summary_data.get("cards"):
-                raise ValueError("Parsed JSON is missing 'filter_tags' or 'cards' key.")
+            # Step 3: Basic validation of the parsed data
+            if not summary_data.get("cards") or not summary_data.get("caseTitle"):
+                raise ValueError("Parsed JSON is missing required 'cards' or 'caseTitle' key.")
 
-            # Step 4: Save filter tags to the metadata database
-            metadata_config = self.config.get('tables_metadata')
-            if not metadata_config:
-                raise ValueError("Configuration for 'tables_metadata' is missing from config.yaml.")
-            self.dest_db.upsert_metadata(metadata_config, source_id, filter_tags_data)
-
-            # Step 5: Save the two separate JSON files to S3
+            # Step 4: Save the summary JSON file to S3
             self.s3_manager.save_json_file(bucket, summary_json_key, json.dumps(summary_data, indent=2))
-            self.s3_manager.save_json_file(bucket, filter_json_key, json.dumps(filter_tags_data, indent=2))
 
-            # Step 6: On success, update status and metrics in the main status table
+            # Step 5: On success, update status and metrics in the main status table
             end_time_dt = datetime.now(timezone.utc)
             duration = (end_time_dt - start_time_dt).total_seconds()
             self.dest_db.update_step_result(
