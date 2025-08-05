@@ -22,7 +22,7 @@ aws:
 gcp:
     storage:
         bucket_name: "juristab-legal-store"
-        folder_name: "books-txt/"
+        folder_name: "books-search-repo/"
 
 # List of tables to be read by the connector
 tables:
@@ -51,3 +51,10 @@ tables_registry:
     processing_years: []
     sub_folders: ['act','commonwealth','nsw','nt','qld','sa','tas','vic','wa']
     jurisdiction_codes: ['ACT','FED','NSW','NT','QLD','SA','TAS','VIC','WA']
+
+# -- JSON Line file store --
+json_line:
+    storage:
+      bucket_name: "juristab-legal-store"
+      folder_name: "structured-files/"
+    chunk_size: 10000

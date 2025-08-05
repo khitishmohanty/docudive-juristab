@@ -45,7 +45,7 @@ class JurisLinkExtractor:
         source_ids_to_process = self._get_source_ids_from_registry()
         
         if not source_ids_to_process:
-            self.logger.warning("No source records found matching the criteria in config.yaml. Exiting.")
+            self.logger.warning("No new source records found matching the criteria in config.yaml. Exiting.")
             return
 
         self.logger.info(f"Found {len(source_ids_to_process)} source(s) to process.")
@@ -87,7 +87,8 @@ class JurisLinkExtractor:
 
     def _get_source_ids_from_registry(self):
         """
-        Fetches source_id and file_path from the caselaw_registry table.
+        Fetches source_id and file_path from the caselaw_registry table 
+        for records that have not already been successfully processed.
         """
         try:
             with open(self.config_path, 'r') as file:
@@ -96,13 +97,23 @@ class JurisLinkExtractor:
             
             years = registry_config['processing_years']
             jurisdictions = registry_config['jurisdiction_codes']
+            
+            # Get the specific status column name from the config
+            status_column = self.enrichment_cols['processing_status']
 
-            self.logger.info(f"Querying for records with years: {years} and jurisdictions: {jurisdictions}")
+            self.logger.info(f"Querying for records with years: {years} and jurisdictions: {jurisdictions} that have not passed processing.")
 
+            # MODIFIED QUERY:
+            # - LEFT JOINs caselaw_enrichment_status to check the processing status.
+            # - WHERE clause now also checks if the status is NOT 'pass'.
+            #   Records not in caselaw_enrichment_status will have a NULL status and be included.
             query = text(f"""
-                SELECT source_id, file_path FROM {self.caselaw_registry_table}
-                WHERE {registry_config['column']} IN :years 
-                AND jurisdiction_code IN :jurisdiction_codes
+                SELECT cr.source_id, cr.file_path 
+                FROM {self.caselaw_registry_table} cr
+                LEFT JOIN {self.enrichment_status_table} ces ON cr.source_id = ces.source_id
+                WHERE cr.{registry_config['column']} IN :years 
+                AND cr.jurisdiction_code IN :jurisdiction_codes
+                AND (ces.{status_column} IS NULL OR ces.{status_column} != 'pass')
             """)
 
             result = self.db_session.execute(query.bindparams(
@@ -217,7 +228,7 @@ class JurisLinkExtractor:
             else:
                 # Insert new record
                 insert_query = text(f"""
-                    INSERT INTO {self.enrichment_status_table} (source_id, {status_col}, {duration_col}, {start_time_col}, {end_time_col}) 
+                    INSERT INTO {self.enrichment_status_table} (source_id, {status_col}, {duration_col}, {start_time_col}, {end_col}) 
                     VALUES (:source_id, :status, :duration, :start_time, :end_time)
                 """)
                 self.db_session.execute(insert_query, {

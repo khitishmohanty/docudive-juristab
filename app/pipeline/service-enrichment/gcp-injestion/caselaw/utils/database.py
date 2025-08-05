@@ -34,15 +34,15 @@ def connect_db(db_config, db_user, db_password):
         logging.error(f"Database connection error: {e}")
         return None
 
-def fetch_caselaw_registry(conn, table_registry_config, table_write_config):
+def fetch_caselaws_for_gcp_ingestion(conn, update_table_config):
     """
-    Fetches records from the caselaw_registry table based on the configuration,
-    only for records where 'status_gcpingestion' is not 'pass'.
+    Fetches records that are ready for ingestion into GCP.
+    It joins metadata, enrichment status, and registry tables, and filters out
+    records that have already been successfully ingested.
     
     Args:
         conn: The database connection object.
-        table_registry_config (dict): The registry configuration from the YAML file.
-        table_write_config (dict): The write configuration from the YAML file.
+        update_table_config (dict): The write configuration from the YAML file.
         
     Returns:
         list: A list of dictionaries, where each dictionary is a record.
@@ -51,41 +51,63 @@ def fetch_caselaw_registry(conn, table_registry_config, table_write_config):
         return []
     
     cursor = conn.cursor(dictionary=True)
-    registry_table_name = table_registry_config['table']
-    enrichment_table_name = table_write_config['table']
-    jurisdiction_codes = table_registry_config['jurisdiction_codes']
-    processing_years = table_registry_config.get('processing_years', [])
-    status_column = table_write_config['columns']['processing_status']
-
-    # Base query
+    status_column = update_table_config['columns']['processing_status']
+    
+    # This query joins the necessary tables to get all metadata for records
+    # that have successfully passed the metadata extraction and text processing stages,
+    # and have not yet been ingested into GCP.
     query = f"""
-    SELECT cr.id, cr.source_id, cr.jurisdiction_code
-    FROM `{registry_table_name}` cr
-    JOIN `{enrichment_table_name}` es ON cr.source_id = es.source_id
-    WHERE es.`{status_column}` != 'pass'
+    SELECT 
+        cm.id,
+        cm.source_id,
+        cm.count_char,
+        cm.count_word,
+        cm.file_no,
+        cm.presiding_officer,
+        cm.counsel,
+        cm.law_firm_agency,
+        cm.court_type,
+        cm.hearing_location,
+        cm.judgment_date,
+        cm.hearing_dates,
+        cm.incident_date,
+        cm.keywords,
+        cm.legislation_cited,
+        cm.affected_sectors,
+        cm.practice_areas,
+        cm.citation,
+        cm.key_issues,
+        cm.panelist,
+        cm.orders,
+        cm.decision,
+        cm.cases_cited,
+        cm.matter_type,
+        cm.parties,
+        cm.representation,
+        cm.category,
+        cm.bjs_number,
+        cr.neutral_citation,
+        cr.jurisdiction_code,
+        cr.decision_date,
+        cr.book_name
+    FROM legal_store.caselaw_metadata cm
+    JOIN legal_store.caselaw_enrichment_status ces 
+        ON cm.source_id = ces.source_id
+    JOIN legal_store.caselaw_registry cr 
+        ON cm.source_id = cr.source_id
+    WHERE 
+        ces.status_metadataextract = 'pass'
+        AND ces.status_text_processor = 'pass'
+        AND ces.`{status_column}` != 'pass';
     """
-    
-    # Values to be passed to the query
-    query_values = []
-    
-    # Add the year filter if the list is not empty
-    if processing_years:
-        year_placeholders = ', '.join(['%s'] * len(processing_years))
-        query += f" AND cr.year IN ({year_placeholders})"
-        query_values.extend(processing_years)
-    
-    # Add the jurisdiction filter
-    jurisdiction_placeholders = ', '.join(['%s'] * len(jurisdiction_codes))
-    query += f" AND cr.jurisdiction_code IN ({jurisdiction_placeholders})"
-    query_values.extend(jurisdiction_codes)
 
     try:
-        cursor.execute(query, tuple(query_values))
+        cursor.execute(query)
         results = cursor.fetchall()
-        logging.info(f"Fetched {len(results)} records from {registry_table_name} for processing.")
+        logging.info(f"Fetched {len(results)} records for GCP ingestion.")
         return results
     except mysql.connector.Error as e:
-        logging.error(f"Failed to fetch data from database: {e}")
+        logging.error(f"Failed to fetch data for GCP ingestion: {e}")
         return []
     finally:
         cursor.close()
@@ -99,7 +121,7 @@ def update_enrichment_status(conn, update_config, source_id, status, duration, s
         conn: The database connection object.
         update_config (dict): The configuration for the table to write to.
         source_id (str): The source_id of the record to update.
-        status (str): The processing status ('success' or 'failed').
+        status (str): The processing status ('pass' or 'failed').
         duration (float): The duration of the process in seconds.
         start_time (datetime): The start timestamp.
         end_time (datetime): The end timestamp.
