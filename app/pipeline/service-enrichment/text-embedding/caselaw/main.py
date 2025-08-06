@@ -20,6 +20,10 @@ def main():
     # 1. Load Configuration
     config = load_config('config/config.yaml')
     
+    # --- Get server pod price from config ---
+    server_pod_price = config.get('server_pod_price', {}).get('hour_price', 0.28)
+    print(f"Using server pod hourly price: ${server_pod_price}")
+
     # 2. Initialize Handlers
     try:
         # Use the DatabaseHandler that filters based on config (modified for optional filtering)
@@ -71,10 +75,10 @@ def main():
             embedding_output_filename = config['enrichment_filenames']['embedding_output']
             
             for source_id in tqdm(source_ids_to_process, desc=desc):
-                # This processing loop is the same as in the handler
                 start_time = time.time()
+                # --- Pass price=None on initial failure ---
                 if source_id not in id_to_folder_map:
-                    db_handler.update_embedding_status(source_id, 'fail_mapping')
+                    db_handler.update_embedding_status(source_id, 'fail_mapping', price=None)
                     continue
                 try:
                     s3_folder = id_to_folder_map[source_id]
@@ -87,10 +91,17 @@ def main():
                     embedding_bytes = embedding_generator.save_embedding_to_bytes(embedding_vector)
                     s3_handler.upload_embedding(embedding_s3_key, embedding_bytes)
                     duration = time.time() - start_time
-                    db_handler.update_embedding_status(source_id, 'pass', duration)
+                    
+                    # --- Calculate the price based on duration and hourly rate ---
+                    price = (duration / 3600) * server_pod_price
+                    
+                    # --- Pass the calculated price to the database handler ---
+                    db_handler.update_embedding_status(source_id, 'pass', duration, price)
+
                 except Exception as e:
                     print(f"\nERROR processing source_id {source_id}: {e}")
-                    db_handler.update_embedding_status(source_id, 'fail')
+                    # --- Pass price=None on processing failure ---
+                    db_handler.update_embedding_status(source_id, 'fail', price=None)
 
     print("\nCaselaw Embedding Service batch job finished.")
 

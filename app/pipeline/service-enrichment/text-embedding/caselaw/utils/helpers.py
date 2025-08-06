@@ -43,6 +43,8 @@ class DatabaseHandler:
         self.duration_column = status_config['columns']['processing_duration']
         self.start_time_column = status_config['columns']['start_time']
         self.end_time_column = status_config['columns']['end_time']
+        # --- Added price column from config ---
+        self.price_column = status_config['columns']['price']
 
         # Registry table config
         registry_config = config['tables_registry']
@@ -116,13 +118,15 @@ class DatabaseHandler:
         
         return id_to_folder_map
 
-    def update_embedding_status(self, source_id, status, duration=None):
-        """Updates the embedding status for a given source_id."""
+    # --- Modified function to accept and store price ---
+    def update_embedding_status(self, source_id, status, duration=None, price=None):
+        """Updates the embedding status, duration, and price for a given source_id."""
         update_query = f"""
             UPDATE {self.status_table}
             SET 
                 {self.status_column} = :status,
                 {self.duration_column} = :duration,
+                {self.price_column} = :price,
                 {self.end_time_column} = NOW()
             WHERE source_id = :source_id
         """
@@ -138,6 +142,7 @@ class DatabaseHandler:
             connection.execute(text(update_query), {
                 "status": status,
                 "duration": duration,
+                "price": price,
                 "source_id": source_id
             })
             connection.commit()

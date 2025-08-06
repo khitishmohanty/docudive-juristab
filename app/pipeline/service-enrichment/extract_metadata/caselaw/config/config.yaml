@@ -1,6 +1,6 @@
 # -- Google cloud project details --
 google_cloud:
-    project_id: "juris-tab"
+    project_id: "studied-glow-468203-f5"
     region: "us"
 
 # -- AI model configuration --
