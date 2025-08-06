@@ -20,13 +20,12 @@ def main():
     # 1. Load Configuration
     config = load_config('config/config.yaml')
     
-    # --- Get server pod price from config ---
+    # --- This part is unchanged ---
     server_pod_price = config.get('server_pod_price', {}).get('hour_price', 0.28)
     print(f"Using server pod hourly price: ${server_pod_price}")
 
     # 2. Initialize Handlers
     try:
-        # Use the DatabaseHandler that filters based on config (modified for optional filtering)
         db_handler = DatabaseHandler(config)
         s3_handler = S3Handler(config)
         embedding_generator = EmbeddingGenerator(config)
@@ -39,28 +38,38 @@ def main():
     processing_years = registry_config.get('processing_years', [])
     jurisdiction_codes = registry_config.get('jurisdiction_codes', [])
 
-    if not processing_years or not jurisdiction_codes:
-        print("FATAL: 'processing_years' or 'jurisdiction_codes' not found in config. Exiting.")
-        return
+    # --- MODIFICATION ---
+    # If lists are empty, replace them with a list containing 'None'.
+    # This ensures the loop runs once and treats the filter as "all-inclusive".
+    if not processing_years:
+        processing_years = [None] 
+    if not jurisdiction_codes:
+        jurisdiction_codes = [None]
 
-    print(f"Configured to process years: {processing_years}")
-    print(f"Configured to process jurisdictions: {jurisdiction_codes}")
+    # The fatal error check has been removed.
+    print(f"Configured to process years: {processing_years if processing_years != [None] else 'All'}")
+    print(f"Configured to process jurisdictions: {jurisdiction_codes if jurisdiction_codes != [None] else 'All'}")
 
     # 4. Loop through each year and then each jurisdiction from the config
     for year in processing_years:
         for jurisdiction in jurisdiction_codes:
-            print(f"\n{'='*25}\nProcessing Year: {year}, Jurisdiction: {jurisdiction}\n{'='*25}")
+            # --- MODIFICATION ---
+            # Construct a descriptive name for the current processing batch
+            year_str = str(year) if year else "All-Years"
+            jur_str = jurisdiction if jurisdiction else "All-Jurisdictions"
+            
+            print(f"\n{'='*25}\nProcessing Year: {year_str}, Jurisdiction: {jur_str}\n{'='*25}")
 
             # 5. Get list of cases to process for the current year and jurisdiction
             try:
-                # Use the DatabaseHandler that expects year and jurisdiction
+                # The get_cases_to_process function already handles None for year/jurisdiction
                 source_ids_to_process = db_handler.get_cases_to_process(year, jurisdiction)
                 if not source_ids_to_process:
-                    print(f"No new cases to process for {year}-{jurisdiction}. Continuing.")
+                    print(f"No new cases to process for {year_str}-{jur_str}. Continuing.")
                     continue
-                print(f"Found {len(source_ids_to_process)} cases to process for {year}-{jurisdiction}.")
+                print(f"Found {len(source_ids_to_process)} cases to process for {year_str}-{jur_str}.")
             except Exception as e:
-                print(f"ERROR: Could not fetch cases for {year}-{jurisdiction}. Skipping. Error: {e}")
+                print(f"ERROR: Could not fetch cases for {year_str}-{jur_str}. Skipping. Error: {e}")
                 continue
 
             # 6. Find the S3 folder for each source_id
@@ -70,13 +79,12 @@ def main():
             )
 
             # 7. Process each case
-            desc = f"Processing {year}-{jurisdiction}"
+            desc = f"Processing {year_str}-{jur_str}"
             source_text_filename = config['enrichment_filenames']['source_text']
             embedding_output_filename = config['enrichment_filenames']['embedding_output']
             
             for source_id in tqdm(source_ids_to_process, desc=desc):
                 start_time = time.time()
-                # --- Pass price=None on initial failure ---
                 if source_id not in id_to_folder_map:
                     db_handler.update_embedding_status(source_id, 'fail_mapping', price=None)
                     continue
@@ -91,16 +99,11 @@ def main():
                     embedding_bytes = embedding_generator.save_embedding_to_bytes(embedding_vector)
                     s3_handler.upload_embedding(embedding_s3_key, embedding_bytes)
                     duration = time.time() - start_time
-                    
-                    # --- Calculate the price based on duration and hourly rate ---
                     price = (duration / 3600) * server_pod_price
-                    
-                    # --- Pass the calculated price to the database handler ---
                     db_handler.update_embedding_status(source_id, 'pass', duration, price)
 
                 except Exception as e:
                     print(f"\nERROR processing source_id {source_id}: {e}")
-                    # --- Pass price=None on processing failure ---
                     db_handler.update_embedding_status(source_id, 'fail', price=None)
 
     print("\nCaselaw Embedding Service batch job finished.")
