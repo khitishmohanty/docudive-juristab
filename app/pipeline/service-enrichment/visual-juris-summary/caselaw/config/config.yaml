@@ -1,8 +1,7 @@
 # -- Google cloud project details --
 google_cloud:
-    project_id: "juristab"
+    project_id: "studied-glow-468203-f5"
     region: "us"
-    processor_id: "c60807664382dc8" 
 
 # -- Database connection details --
 database:
