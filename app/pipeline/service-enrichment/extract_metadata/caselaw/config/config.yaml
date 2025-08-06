@@ -67,14 +67,18 @@ tables:
     - database: legal_store
       table: caselaw_enrichment_status
       columns:
-        processing_status: "status_metadataextract"
-        processing_duration: "duration_metadataextract"
-        start_time: "start_time_metadataextract"
-        end_time: "end_time_metadataextract"
-        token_input: "token_input_metadataextract"
-        token_output: "token_output_metadataextract"
-        token_input_price: "token_input_price_metadataextract"
-        token_output_price: "token_output_price_metadataextract"
+        processing_status_ai: "status_metadataextract_ai"
+        processing_duration_ai: "duration_metadataextract_ai"
+        processing_status_rulebased: "status_metadataextract_rulebased"
+        processing_duration_rulebased: "duration_metadataextract_rulebased"
+        start_time_ai: "start_time_metadataextract_ai"
+        end_time_ai: "end_time_metadataextract_ai"
+        start_time_rulebased: "start_time_metadataextract_rulebased"
+        end_time_rulebased: "end_time_metadataextract_rulebased"
+        token_input: "token_input_metadataextract_ai"
+        token_output: "token_output_metadataextract_ai"
+        token_input_price: "token_input_price_metadataextract_ai"
+        token_output_price: "token_output_price_metadataextract_ai"
 
     - database: legal_store
       table: caselaw_metadata

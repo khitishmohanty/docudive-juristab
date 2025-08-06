@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def get_records_to_process(db_manager, registry_config, jurisdiction_codes, years):
     """
     Retrieves records from the caselaw_registry table that need processing.
+    Selects records where either rule-based or AI extraction has not passed.
     """
     if not db_manager._get_connection():
         return []
@@ -27,16 +28,26 @@ def get_records_to_process(db_manager, registry_config, jurisdiction_codes, year
         year_placeholders = ', '.join(['%s'] * len(years))
         
         query = f"""
-            SELECT cr.source_id, cr.file_path, cr.jurisdiction_code, cr.status_content_download 
-            FROM caselaw_registry AS cr
-            WHERE cr.status_content_download = 'pass' 
-            AND cr.jurisdiction_code IN ({jurisdiction_placeholders}) 
-            AND cr.{registry_config['column']} IN ({year_placeholders})
-            AND NOT EXISTS (
-                SELECT 1 FROM caselaw_enrichment_status AS ces
-                WHERE cr.source_id = ces.source_id
-                AND ces.status_metadataextract = 'pass'
-            )
+            SELECT 
+                cr.source_id, 
+                cr.file_path, 
+                cr.jurisdiction_code, 
+                cr.status_content_download,
+                COALESCE(ces.status_metadataextract_rulebased, 'pending') AS status_metadataextract_rulebased,
+                COALESCE(ces.status_metadataextract_ai, 'pending') AS status_metadataextract_ai
+            FROM 
+                caselaw_registry AS cr
+            LEFT JOIN 
+                caselaw_enrichment_status AS ces ON cr.source_id = ces.source_id
+            WHERE 
+                cr.status_content_download = 'pass' 
+                AND cr.jurisdiction_code IN ({jurisdiction_placeholders}) 
+                AND cr.{registry_config['column']} IN ({year_placeholders})
+                AND (
+                    ces.source_id IS NULL 
+                    OR ces.status_metadataextract_rulebased != 'pass' 
+                    OR ces.status_metadataextract_ai != 'pass'
+                )
         """
         
         params = jurisdiction_codes + years
@@ -54,143 +65,146 @@ def get_records_to_process(db_manager, registry_config, jurisdiction_codes, year
 
 def process_record(record, config, field_mapping, db_columns, use_ai_extraction, prompt_content):
     """
-    Processes a single case law record, with an optional AI enrichment step.
+    Processes a single case law record, running rule-based and/or AI extraction
+    based on the record's current status.
     """
     source_id = record['source_id']
     logging.info(f"Processing record for source_id: {source_id}")
-    start_time = datetime.now()
 
-    rulebased_success, ai_success, db_ops_successful = False, False, False
+    process_start_time = datetime.now()
+    status_updates = {}
+
+    rulebased_status, ai_status = 'skip', 'skip'
+    rulebased_duration, ai_duration = 0.0, 0.0
     input_tokens, output_tokens = 0, 0
     input_price, output_price = 0.0, 0.0
+    
+    metadata, counsel_firm_mappings = {}, []
+    db_ops_successful = False
+
+    needs_rulebased_processing = record.get('status_metadataextract_rulebased') != 'pass'
+    needs_ai_processing = record.get('status_metadataextract_ai') != 'pass' and use_ai_extraction
+
+    if not needs_rulebased_processing and not needs_ai_processing:
+        logging.info(f"Skipping source_id: {source_id} as both steps have passed.")
+        return
 
     aws_config = config.get('aws')
     s3_manager = S3Manager(region_name=aws_config['default_region'])
-    
-    jurisdiction_code = record['jurisdiction_code']
-    s3_config_for_jurisdiction = next((s3_cfg for s3_cfg in config.get('aws', 's3') if s3_cfg['jurisdiction_code'] == jurisdiction_code), None)
-    if not s3_config_for_jurisdiction:
-        logging.error(f"Could not find S3 config for jurisdiction: {jurisdiction_code}")
-        return
-
-    bucket_name = s3_config_for_jurisdiction['bucket_name']
     s3_file_key = get_full_s3_key(record['source_id'], record['jurisdiction_code'], config)
 
     if not s3_file_key:
-        logging.error(f"Could not construct a valid S3 file key for source_id: {source_id}. Skipping.")
+        logging.error(f"Could not construct S3 file key for {source_id}. Skipping.")
         return
+        
+    bucket_name = next((s3_cfg['bucket_name'] for s3_cfg in config.get('aws', 's3') if s3_cfg['jurisdiction_code'] == record['jurisdiction_code']), None)
 
     try:
         html_content = s3_manager.get_file_content(bucket_name, s3_file_key)
     except Exception as e:
-        logging.error(f"Failed to download HTML file: {e}. Cannot proceed with extraction.")
+        logging.error(f"Failed to download HTML file for {source_id}: {e}. Cannot proceed.")
+        db_manager = DatabaseManager(config.get('database'))
+        fail_updates = {
+            "start_time_metadataextract": process_start_time,
+            "end_time_metadataextract": datetime.now()
+        }
+        if needs_rulebased_processing: fail_updates["status_metadataextract_rulebased"] = 'fail'
+        if needs_ai_processing: fail_updates["status_metadataextract_ai"] = 'fail'
+        db_manager.update_enrichment_status(source_id, fail_updates)
+        db_manager.close_connection()
         return
 
-    # Step 1: Rule-based extraction
-    extractor = MetadataExtractor(field_mapping=field_mapping)
-    metadata, counsel_firm_mappings = extractor.extract_from_html(html_content)
+    # --- Step 1: Rule-based extraction ---
+    if needs_rulebased_processing:
+        logging.info(f"Running rule-based extraction for {source_id}")
+        start_time = time.time()
+        try:
+            extractor = MetadataExtractor(field_mapping=field_mapping)
+            extracted_meta, extracted_mappings = extractor.extract_from_html(html_content)
+            if extracted_meta:
+                metadata.update(extracted_meta)
+                counsel_firm_mappings.extend(extracted_mappings)
+                rulebased_status = 'pass'
+                logging.info("Rule-based extraction successful.")
+            else:
+                rulebased_status = 'fail'
+                logging.warning("Rule-based extraction yielded no metadata.")
+        except Exception as e:
+            rulebased_status = 'fail'
+            logging.error(f"Rule-based extraction error: {e}")
+        finally:
+            rulebased_duration = time.time() - start_time
 
-    if metadata:
-        rulebased_success = True
-        logging.info("Rule-based extraction successful.")
-    else:
-        logging.warning("Rule-based extraction yielded no metadata.")
-        metadata = {}
-
-    # Step 2: AI-based extraction (if enabled)
-    if use_ai_extraction:
-        s3_save_successful = False
-        logging.info(f"AI extraction is enabled for source_id: {source_id}. Calling Gemini API.")
+    # --- Step 2: AI-based extraction ---
+    if needs_ai_processing:
+        logging.info(f"Running AI extraction for {source_id}")
+        start_time = time.time()
         try:
             gemini_config = config.get('models', 'gemini')
             gemini_client = GeminiClient(model_name=gemini_config['model'])
+            raw_json, input_tokens, output_tokens = gemini_client.generate_json_from_text(prompt_content, html_content)
             
-            raw_json_response, input_tokens, output_tokens = gemini_client.generate_json_from_text(prompt_content, html_content)
+            pricing = gemini_config.get('pricing', {})
+            input_price = (input_tokens / 1_000_000) * pricing.get('input_per_million', 0.0)
+            output_price = (output_tokens / 1_000_000) * pricing.get('output_per_million', 0.0)
 
-            if raw_json_response:
-                try:
-                    # Correctly get the filename using the provided Config class
+            if gemini_client.is_valid_json(raw_json):
+                ai_data = json.loads(raw_json).get("filter_tags", {})
+                if ai_data:
+                    ai_status = 'pass'
                     json_filename = config.get('enrichment_filenames', 'jurismetadata_json')
-
-                    if json_filename:
-                        json_s3_folder = os.path.dirname(s3_file_key)
-                        json_s3_key = os.path.join(json_s3_folder, json_filename)
-                        
-                        logging.info(f"Saving Gemini response to s3://{bucket_name}/{json_s3_key}")
-                        s3_manager.save_json_file(bucket_name, json_s3_key, raw_json_response)
-                        s3_save_successful = True
-                    else:
-                        logging.error("Failed to save Gemini response to S3: 'jurismetadata_json' filename not found in config.")
-                except Exception as e:
-                    logging.error(f"Failed to save Gemini response to S3: {e}")
-
-            pricing_config = gemini_config.get('pricing', {})
-            price_per_million_input = pricing_config.get('input_per_million', 0.0)
-            price_per_million_output = pricing_config.get('output_per_million', 0.0)
-
-            input_price = (input_tokens / 1_000_000) * price_per_million_input
-            output_price = (output_tokens / 1_000_000) * price_per_million_output
-            logging.info(f"AI usage for {source_id}: Input Tokens={input_tokens} (${input_price:.6f}), Output Tokens={output_tokens} (${output_price:.6f})")
-
-            if gemini_client.is_valid_json(raw_json_response):
-                gemini_data = json.loads(raw_json_response)
-                ai_metadata = gemini_data.get("filter_tags", {})
-
-                if ai_metadata and s3_save_successful:
-                    ai_success = True
-                    logging.info("AI extraction and S3 save successful.")
-                    for key, value in ai_metadata.items():
+                    json_s3_key = os.path.join(os.path.dirname(s3_file_key), json_filename)
+                    s3_manager.save_json_file(bucket_name, json_s3_key, raw_json)
+                    for key, value in ai_data.items():
                         if not metadata.get(key) and value:
                             metadata[key] = value
                 else:
-                    if not ai_metadata:
-                        logging.warning("AI extraction failed: Response was missing 'filter_tags'.")
-                    if not s3_save_successful:
-                        logging.warning("AI extraction failed: Could not save response to S3.")
+                    ai_status = 'fail'
+                    logging.warning("AI response missing 'filter_tags'.")
             else:
-                logging.error("AI extraction failed: Invalid or empty JSON response.")
+                ai_status = 'fail'
+                logging.error("AI response was not valid JSON.")
         except Exception as e:
-            logging.error(f"An error occurred during AI extraction: {e}")
+            ai_status = 'fail'
+            logging.error(f"AI extraction error: {e}")
+        finally:
+            ai_duration = time.time() - start_time
 
-    # Step 3: Database operations
-    db_config = config.get('database')
-    db_manager = DatabaseManager(db_config)
-    
+    # --- Step 3: Database Operations ---
+    db_manager = DatabaseManager(config.get('database'))
     try:
         if metadata:
-            if db_manager.check_and_upsert_caselaw_metadata(metadata, source_id, expected_columns=db_columns):
-                if counsel_firm_mappings:
+            if db_manager.check_and_upsert_caselaw_metadata(metadata, source_id, db_columns):
+                if needs_rulebased_processing and counsel_firm_mappings:
                     db_ops_successful = db_manager.insert_counsel_firm_mapping(counsel_firm_mappings, source_id)
                 else:
                     db_ops_successful = True
         else:
-            logging.error("Metadata is empty, skipping database operations.")
-    finally:
-        end_time = datetime.now()
-        duration = (end_time - start_time).total_seconds()
-        
-        final_status = 'fail'
-        if use_ai_extraction:
-            if rulebased_success and ai_success and db_ops_successful:
-                final_status = 'pass'
-        else:
-            if rulebased_success and db_ops_successful:
-                final_status = 'pass'
+            db_ops_successful = True # No data to save, so not a DB failure.
 
-        db_manager.update_enrichment_status(
-            source_id, final_status, start_time, end_time, duration,
-            token_input=input_tokens,
-            token_output=output_tokens,
-            token_input_price=input_price,
-            token_output_price=output_price
-        )
+        process_end_time = datetime.now()
+        status_updates["start_time_metadataextract"] = process_start_time
+        status_updates["end_time_metadataextract"] = process_end_time
+
+        if needs_rulebased_processing:
+            status_updates["status_metadataextract_rulebased"] = 'pass' if rulebased_status == 'pass' and db_ops_successful else 'fail'
+            status_updates["duration_metadataextract_rulebased"] = rulebased_duration
+        
+        if needs_ai_processing:
+            status_updates["status_metadataextract_ai"] = 'pass' if ai_status == 'pass' and db_ops_successful else 'fail'
+            status_updates["duration_metadataextract_ai"] = ai_duration
+            status_updates["token_input_metadataextract"] = input_tokens
+            status_updates["token_output_metadataextract"] = output_tokens
+            status_updates["token_input_price_metadataextract"] = input_price
+            status_updates["token_output_price_metadataextract"] = output_price
+        
+        db_manager.update_enrichment_status(source_id, status_updates)
+    
+    finally:
         db_manager.close_connection()
 
-    if final_status == 'pass':
-        logging.info(f"Extraction process completed successfully for source_id: {source_id}.")
-    else:
-        logging.info(f"Extraction process failed for source_id: {source_id}.")
-    logging.info(f"Total duration: {duration:.2f} seconds.")
+    total_duration = (datetime.now() - process_start_time).total_seconds()
+    logging.info(f"Finished processing {source_id}. Total duration: {total_duration:.2f}s")
 
 
 def main():

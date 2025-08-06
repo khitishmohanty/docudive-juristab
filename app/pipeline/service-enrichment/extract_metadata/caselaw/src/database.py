@@ -142,36 +142,34 @@ class DatabaseManager:
         finally:
             cursor.close()
 
-    def update_enrichment_status(self, source_id, status, start_time, end_time, duration, token_input=0, token_output=0, token_input_price=0.0, token_output_price=0.0):
+    def update_enrichment_status(self, source_id, updates):
         """
-        Updates the caselaw_enrichment_status table with processing results,
-        including token metrics.
+        Updates the caselaw_enrichment_status table with processing results.
+        This version dynamically builds the SET clause based on the updates dictionary.
+
+        Args:
+            source_id (str): The unique ID for the case law.
+            updates (dict): A dictionary where keys are column names and values are the new values.
         """
         if not self._get_connection():
             return False
-            
+        
+        if not updates:
+            logging.info("No updates to perform for enrichment status.")
+            return True
+
         cursor = self.conn.cursor()
+        
         try:
-            update_query = """
-            UPDATE caselaw_enrichment_status
-            SET status_metadataextract = %s,
-                duration_metadataextract = %s,
-                start_time_metadataextract = %s,
-                end_time_metadataextract = %s,
-                token_input_metadataextract = %s,
-                token_output_metadataextract = %s,
-                token_input_price_metadataextract = %s,
-                token_output_price_metadataextract = %s
-            WHERE source_id = %s
-            """
-            params = (
-                status, duration, start_time, end_time,
-                token_input, token_output, token_input_price, token_output_price,
-                source_id
-            )
-            cursor.execute(update_query, params)
+            # Dynamically build the SET part of the query
+            set_clause = ", ".join([f"{key} = %s" for key in updates.keys()])
+            query = f"UPDATE caselaw_enrichment_status SET {set_clause} WHERE source_id = %s"
+            
+            params = list(updates.values()) + [source_id]
+            
+            cursor.execute(query, params)
             self.conn.commit()
-            logging.info(f"Updated enrichment status for source_id {source_id} to '{status}'.")
+            logging.info(f"Updated enrichment status for source_id {source_id} with keys: {list(updates.keys())}.")
             return True
         except mysql.connector.Error as err:
             logging.error(f"Failed to update enrichment status: {err}")
