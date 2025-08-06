@@ -57,4 +57,4 @@ json_line:
     storage:
       bucket_name: "juristab-legal-store"
       folder_name: "structured-files/"
-    chunk_size: 10000
+    chunk_size: 5000
