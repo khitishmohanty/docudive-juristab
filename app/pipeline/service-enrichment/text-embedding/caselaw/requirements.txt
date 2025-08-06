@@ -1,6 +1,6 @@
 #Core ML and data handling
 sentence-transformers
-torch
+torch==2.3.0
 numpy
 tqdm
 
@@ -12,3 +12,6 @@ mysql-connector-python
 #Configuration
 PyYAML
 python-dotenv
+
+#RunPod
+runpod

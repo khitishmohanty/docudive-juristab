@@ -23,7 +23,7 @@ class DatabaseHandler:
         # Connection string for the destination/status database
         conn_str = (
             f"{db_config['dialect']}+{db_config['driver']}://"
-            f"{DB_USER}:{DB_PASSWORD}@"
+            f"{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
             f"{db_config['host']}:{db_config['port']}/{db_config['name']}"
         )
         self.engine = create_engine(conn_str)
@@ -31,7 +31,7 @@ class DatabaseHandler:
         # Connection string for the source database
         source_conn_str = (
             f"{source_db_config['dialect']}+{source_db_config['driver']}://"
-            f"{DB_USER}:{DB_PASSWORD}@"
+            f"{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
             f"{source_db_config['host']}:{source_db_config['port']}/{source_db_config['name']}"
         )
         self.source_engine = create_engine(source_conn_str)
@@ -44,36 +44,48 @@ class DatabaseHandler:
         self.start_time_column = status_config['columns']['start_time']
         self.end_time_column = status_config['columns']['end_time']
 
-        # Metadata table config
-        metadata_config = config['tables']['tables_to_write'][1]
-        self.metadata_table = metadata_config['table']
-        self.char_count_column = metadata_config['columns']['char_count']
-        self.word_count_column = metadata_config['columns']['word_count']
-
         # Registry table config
         registry_config = config['tables_registry']
         self.registry_table = registry_config['table']
         self.registry_year_column = registry_config['column']
-        # --- NEW: Jurisdiction column is assumed to be 'jurisdiction_code' as per your request ---
         self.registry_jurisdiction_column = 'jurisdiction_code'
 
 
-    def get_cases_to_process(self, year, jurisdiction_code):
+    def get_cases_to_process(self, year=None, jurisdiction_code=None):
         """
-        Fetches a list of source_ids for a specific year and jurisdiction that have passed 
-        text processing but have not yet been successfully embedded.
+        Fetches a list of source_ids that have passed text processing but have not 
+        yet been successfully embedded. Optionally filters by year and/or jurisdiction.
         """
-        query = text(f"""
+        params = {}
+        # Base conditions that are always applied
+        where_clauses = [
+            "T1.status_text_processor = 'pass'",
+            f"(T1.{self.status_column} != 'pass' OR T1.{self.status_column} IS NULL)"
+        ]
+
+        # Base query joins the necessary tables
+        base_query = f"""
             SELECT T1.source_id 
             FROM {self.status_table} AS T1
             JOIN {self.registry_table} AS T2 ON T1.source_id = T2.source_id
-            WHERE T2.{self.registry_year_column} = :year
-            AND T2.{self.registry_jurisdiction_column} = :jurisdiction_code
-            AND T1.status_text_processor = 'pass'
-            AND (T1.{self.status_column} != 'pass' OR T1.{self.status_column} IS NULL)
-        """)
+        """
+
+        # Dynamically add filters if they are provided
+        if year:
+            where_clauses.append(f"T2.{self.registry_year_column} = :year")
+            params["year"] = year
+
+        if jurisdiction_code:
+            where_clauses.append(f"T2.{self.registry_jurisdiction_column} = :jurisdiction_code")
+            params["jurisdiction_code"] = jurisdiction_code
+
+        # Combine all conditions into a final query string
+        query_str = base_query + " WHERE " + " AND ".join(where_clauses)
+        
+        query = text(query_str)
+
         with self.engine.connect() as connection:
-            result = connection.execute(query, {"year": year, "jurisdiction_code": jurisdiction_code})
+            result = connection.execute(query, params)
             return [row[0] for row in result]
 
     def find_s3_folder_for_ids(self, source_ids, tables_to_read_config):
@@ -91,8 +103,6 @@ class DatabaseHandler:
                 table_name = table_config['table']
                 s3_folder = table_config['s3_folder']
                 
-                # Create a query to find which of our IDs exist in this table
-                # Ensure proper quoting for string IDs in the IN clause
                 id_list_str = ','.join([f"'{_id}'" for _id in source_ids])
                 if not id_list_str: continue
 
@@ -124,33 +134,11 @@ class DatabaseHandler:
         """
 
         with self.engine.connect() as connection:
-            # Set start time if it's the first attempt
             connection.execute(text(start_time_query), {"source_id": source_id})
-            # Update final status and duration
             connection.execute(text(update_query), {
                 "status": status,
                 "duration": duration,
                 "source_id": source_id
-            })
-            connection.commit()
-
-    def update_metadata_counts(self, source_id, char_count, word_count):
-        """Inserts or updates the character and word counts in the metadata table."""
-        # This query will create a row if one doesn't exist for the source_id,
-        # or update the existing one. Assumes `source_id` is a PRIMARY or UNIQUE key.
-        query = text(f"""
-            INSERT INTO {self.metadata_table} (source_id, {self.char_count_column}, {self.word_count_column})
-            VALUES (:source_id, :char_count, :word_count)
-            ON DUPLICATE KEY UPDATE
-                {self.char_count_column} = :char_count,
-                {self.word_count_column} = :word_count
-        """)
-        
-        with self.engine.connect() as connection:
-            connection.execute(query, {
-                "source_id": source_id,
-                "char_count": char_count,
-                "word_count": word_count
             })
             connection.commit()
 

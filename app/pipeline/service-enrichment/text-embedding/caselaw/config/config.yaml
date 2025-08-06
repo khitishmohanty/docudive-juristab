@@ -74,11 +74,6 @@ tables:
         processing_duration: "duration_text_embedding"
         start_time: "start_time_text_embedding"
         end_time: "end_time_text_embedding"
-    - database: legal_store
-      table: caselaw_metadata
-      columns:
-        char_count: "count_char"
-        word_count: "count_word"
 
 # -- File naming conventions for the enrichment service --
 enrichment_filenames:

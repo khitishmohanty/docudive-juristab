@@ -9,7 +9,7 @@
 /* Default state for tab links */
 .nav-tabs .nav-link {
     color: #6c757d; /* Grey color for default state */
-    border-bottom-width: 1px !important; 
+    border-bottom-width: 1px !important;
     background-color: transparent !important;
 }
 
@@ -24,4 +24,23 @@
     color: black !important; /* Black text for active tab */
     border-color: #dee2e6 #dee2e6 #fff !important;
     border-bottom: 2px solid #003366 !important; /* Dark blue bottom border */
+}
+
+/* --- NEW: MOBILE RESPONSIVE STYLES --- */
+
+/* Styles for screens smaller than 768px (Bootstrap's 'md' breakpoint) */
+@media (max-width: 767.98px) {
+    /*
+     On mobile, the results and viewer stack vertically. We remove the fixed
+     viewport height to allow for natural scrolling through all content.
+    */
+    #results-output, #doc-viewer-container {
+        max-height: none;
+        height: auto;
+    }
+
+    /* Add space between the results list and the viewer when they are stacked */
+    #results-output {
+        margin-bottom: 2rem;
+    }
 }

@@ -7,25 +7,34 @@ import re
 from dotenv import load_dotenv
 load_dotenv()
 
+# Assuming 'utils' and 'src' are in the same directory or accessible in the Python path
 from utils.auth import get_gcp_token
-from src.search_client import perform_search
+from src.search_client import perform_search, get_suggestions
 from utils.s3_client import load_s3_config, fetch_document_from_s3
 
+# --- CONFIGURATION ---
 S3_CONFIG = load_s3_config()
-
 POPPINS_FONT = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap"
 FONT_AWESOME = "https://use.fontawesome.com/releases/v5.15.4/css/all.css"
 
+# --- APP INITIALIZATION ---
 app = dash.Dash(
-    __name__, 
+    __name__,
     external_stylesheets=[dbc.themes.LUX, POPPINS_FONT, FONT_AWESOME],
-    suppress_callback_exceptions=True
+    suppress_callback_exceptions=True,
+    # --- CHANGE: Added viewport meta tag for mobile responsiveness ---
+    meta_tags=[
+        {"name": "viewport", "content": "width=device-width, initial-scale=1.0"}
+    ]
 )
 server = app.server
 
+# --- APP LAYOUT ---
 app.layout = dbc.Container([
+    # Stores data in the user's browser
     dcc.Store(id='selected-doc-store', data=None),
 
+    # Loading modal for search actions
     dbc.Modal(
         [
             dbc.ModalHeader(dbc.ModalTitle("Searching...")),
@@ -43,6 +52,7 @@ app.layout = dbc.Container([
         keyboard=False,
     ),
 
+    # Main title
     html.H1(
         [
             html.Span("JurisTab", style={'color': '#003366'}),
@@ -51,40 +61,65 @@ app.layout = dbc.Container([
         className="my-4 text-center",
         style={'textTransform': 'none'}
     ),
-    
+
+    # --- CHANGE: Updated search bar layout for mobile ---
     dbc.Row([
         dbc.Col(
-            dcc.Input(
-                id='search-input', type='text',
-                placeholder='e.g., cases handled by Mills Oakley',
-                style={'borderRadius': '30px', 'border': '1px solid #ced4da', 'height': '40px'},
-                className='form-control me-2', n_submit=0
-            ), width=8
+            # Wrapper for positioning the suggestions dropdown
+            html.Div([
+                dcc.Input(
+                    id='search-input', type='text',
+                    placeholder='e.g., cases handled by Mills Oakley',
+                    style={'borderRadius': '30px', 'border': '1px solid #ced4da', 'height': '40px'},
+                    className='form-control me-2', n_submit=0,
+                    autoComplete='off' # Disable browser's default autocomplete
+                ),
+                # Container for autocomplete suggestions
+                html.Div(id='suggestions-output', style={
+                    'position': 'absolute',
+                    'zIndex': '1050', # Ensure suggestions appear above other content
+                    'width': '100%'
+                })
+            ], style={'position': 'relative'}),
+            # On small screens (mobile), take up full width. On large screens, take up 8 of 12 columns.
+            width=12, lg=8
         ),
         dbc.Col(
-            html.Button('Search', id='search-button', n_clicks=0, 
-                style={
-                    'backgroundColor': '#003366', 'color': 'white', 
-                    'borderRadius': '30px', 'border': 'none', 
-                    'padding': '0 30px', 'height': '40px'
-                }),
-            width=4, className="d-flex"
+            # d-grid makes the button inside it expand to the full width of the column
+            html.Div(
+                html.Button('Search', id='search-button', n_clicks=0, className="w-100",
+                    style={
+                        'backgroundColor': '#003366', 'color': 'white',
+                        'borderRadius': '30px', 'border': 'none',
+                        'padding': '0 30px', 'height': '40px'
+                    }),
+                className="d-grid"
+            ),
+            # On small screens, take up full width. On large screens, 4 of 12 columns.
+            # Add margin-top on small screens (mt-2), but remove it on large screens (mt-lg-0).
+            width=12, lg=4, className="mt-2 mt-lg-0"
         )
     ], className="mb-4 justify-content-center"),
 
+    # Container for search results and document viewer
     html.Div(
         id='search-content-container',
-        style={'display': 'none'},
+        style={'display': 'none'}, # Initially hidden
         children=[
             html.Hr(),
             dbc.Row([
+                # Left column for search results
                 dbc.Col(
                     dcc.Loading(
                         id="loading-spinner", type="circle", color="primary",
                         children=html.Div(id="results-output", style={'maxHeight': '80vh', 'overflowY': 'auto', 'paddingRight': '15px'})
-                    ), md=5
+                    ),
+                    # On medium screens and up, take 5 of 12 columns. On small screens, it will stack.
+                    md=5
                 ),
+                # Right column for the document viewer
                 dbc.Col(
+                    # --- CHANGE: Added an ID to the viewer container for CSS targeting on mobile ---
                     html.Div([
                         dbc.Tabs(
                             id="doc-tabs",
@@ -101,13 +136,21 @@ app.layout = dbc.Container([
                             id="loading-viewer", type="circle", color="primary",
                             children=html.Div(id="tab-content", className="p-2")
                         )
-                    ], style={"height": "80vh", "border": "1px solid #e0e0e0", "borderRadius": "5px"}),
+                    ],
+                    id="doc-viewer-container", # ID for CSS styling
+                    style={"height": "80vh", "border": "1px solid #e0e0e0", "borderRadius": "5px"}),
+                    # On medium screens and up, take 7 of 12 columns.
                     md=7
                 )
             ])
         ]
     )
-], fluid=True, className="p-5", style={'fontFamily': "'Poppins', sans-serif"})
+# --- CHANGE: Use responsive padding for the main container ---
+# p-3 on small screens, p-md-5 on medium screens and larger
+], fluid=True, className="p-3 p-md-5", style={'fontFamily': "'Poppins', sans-serif"})
+
+
+# --- HELPER FUNCTION ---
 
 def format_results(response_json):
     """Helper function to format the API response into clickable result cards."""
@@ -141,7 +184,7 @@ def format_results(response_json):
             except (ValueError, IndexError) as e:
                 print(f"Error creating citation link for '{citation_num_str}': {e}")
             return citation_num_str
-        
+
         def render_text_with_markdown(text_segment):
             pattern = re.compile(r'(\*.*?\*)')
             parts = pattern.split(text_segment)
@@ -156,10 +199,9 @@ def format_results(response_json):
 
         summary_body_components = []
         citation_pattern = re.compile(r'(\[[\d,\s]+\])')
-        
+
         for paragraph in summary_text.strip().split('\n\n'):
             if not paragraph: continue
-            
             paragraph_components = []
             text_parts = citation_pattern.split(paragraph)
             for part in text_parts:
@@ -167,43 +209,27 @@ def format_results(response_json):
                 match = citation_pattern.fullmatch(part)
                 if match:
                     citation_numbers = match.group(1).strip('[]').split(',')
-                    linked_citations = []
-                    for num_str in citation_numbers:
-                        num_str = num_str.strip()
-                        if num_str:
-                            linked_citations.append(create_citation_link(num_str))
-                    
+                    linked_citations = [create_citation_link(num.strip()) for num in citation_numbers if num.strip()]
                     final_citation_block = []
                     for i, link in enumerate(linked_citations):
                         if i > 0: final_citation_block.append(", ")
                         final_citation_block.append(link)
-                    
-                    paragraph_components.append("[")
-                    paragraph_components.extend(final_citation_block)
-                    paragraph_components.append("]")
+                    paragraph_components.extend(["[", *final_citation_block, "]"])
                 else:
                     paragraph_components.extend(render_text_with_markdown(part))
-            
             summary_body_components.append(html.P(paragraph_components, className="card-text"))
 
         summary_card = [
             html.Div([
                 html.H5(
-                    [
-                        "Summary ",
-                        html.I(className="fas fa-chevron-down", id="summary-toggle-icon")
-                    ],
+                    ["Summary ", html.I(className="fas fa-chevron-down", id="summary-toggle-icon")],
                     id="summary-collapse-button",
                     className="mb-2",
                     style={'cursor': 'pointer', 'color': '#6c757d', 'textTransform': 'none'}
                 ),
                 dbc.Collapse(
-                    dbc.Card(
-                        dbc.CardBody(summary_body_components),
-                        className="border-0 bg-transparent p-0",
-                    ),
-                    id="summary-collapse",
-                    is_open=False,
+                    dbc.Card(dbc.CardBody(summary_body_components), className="border-0 bg-transparent p-0"),
+                    id="summary-collapse", is_open=False,
                 )
             ])
         ]
@@ -216,55 +242,81 @@ def format_results(response_json):
     for i, result in enumerate(response_json["results"]):
         doc = result.get('document', {})
         struct_data = doc.get('structData', {})
-        
-        book_name = struct_data.get('book_name', 'No Title Available')
-        neutral_citation = struct_data.get('neutral_citation')
         source_id = struct_data.get('source_id')
         jurisdiction_code = struct_data.get('jurisdiction_code')
         is_disabled = not (source_id and jurisdiction_code)
 
-        heading_div = html.Div(
-            [
+        card = dbc.Card(dbc.CardBody([
+            html.Div([
                 html.Span(
-                    neutral_citation,
+                    struct_data.get('neutral_citation'),
                     style={'backgroundColor': '#e9ecef', 'color': 'black', 'padding': '0.2rem 0.4rem', 'borderRadius': '4px', 'marginRight': '8px', 'fontSize': '0.9rem'}
-                ) if neutral_citation else None,
-                html.Span(book_name, style={'color': 'black', 'fontSize': '0.9rem'})
+                ) if struct_data.get('neutral_citation') else None,
+                html.Span(struct_data.get('book_name', 'No Title Available'), style={'color': 'black', 'fontSize': '0.9rem'})
             ],
             id={'type': 'view-doc-button', 'index': i, 'source_id': source_id or '', 'jurisdiction_code': jurisdiction_code or ''},
-            style={'cursor': 'pointer' if not is_disabled else 'not-allowed'},
-            className='mb-2'
-        )
-        
-        content_preview = []
-        full_content = struct_data.get('content')
-        if full_content:
-            words = full_content.split()
-            preview_text = " ".join(words[:30]) + ("..." if len(words) > 30 else "")
-            # --- UPDATED: Added style for smaller font size ---
-            content_preview.append(html.P(preview_text, className="card-text", style={'fontSize': '0.9rem'}))
-        else:
-            content_preview.append(html.P("No preview available.", className="card-text", style={'fontSize': '0.9rem'}))
-        
-        card = dbc.Card(dbc.CardBody([heading_div] + content_preview), className="mb-3")
+            style={'cursor': 'pointer' if not is_disabled else 'not-allowed', 'opacity': 1 if not is_disabled else 0.6},
+            className='mb-2'),
+            html.P(
+                (lambda c: " ".join(c.split()[:30]) + "..." if len(c.split()) > 30 else c)(struct_data.get('content', 'No preview available.')),
+                className="card-text", style={'fontSize': '0.9rem'}
+            )
+        ]), className="mb-3")
         result_cards.append(card)
 
     return summary_card + result_cards
 
+
+# --- CALLBACKS ---
+
 @app.callback(
     Output("summary-collapse", "is_open"),
     Output("summary-toggle-icon", "className"),
-    [Input("summary-collapse-button", "n_clicks")],
-    [State("summary-collapse", "is_open")],
+    Input("summary-collapse-button", "n_clicks"),
+    State("summary-collapse", "is_open"),
     prevent_initial_call=True,
 )
 def toggle_summary_collapse(n_clicks, is_open):
     if not n_clicks:
         return no_update, no_update
-    
     new_state = not is_open
     icon_class = "fas fa-chevron-up" if new_state else "fas fa-chevron-down"
     return new_state, icon_class
+
+@app.callback(
+    Output('suggestions-output', 'children'),
+    Input('search-input', 'value'),
+    prevent_initial_call=True
+)
+def update_suggestions(query):
+    if not query or len(query) < 3:
+        return None
+    try:
+        access_token = get_gcp_token()
+        response_json = get_suggestions(query, access_token)
+        if 'error' in response_json or not response_json.get('completionResults'):
+            return None
+        items = [
+            dbc.ListGroupItem(s['suggestion'], id={'type': 'suggestion-item', 'suggestion': s['suggestion']}, action=True)
+            for s in response_json['completionResults']
+        ]
+        return dbc.ListGroup(items, style={'boxShadow': '0 4px 8px rgba(0,0,0,0.1)'})
+    except Exception as e:
+        print(f"Error in suggestions callback: {e}")
+        return None
+
+@app.callback(
+    Output('search-input', 'value', allow_duplicate=True),
+    Output('suggestions-output', 'children', allow_duplicate=True),
+    Input({'type': 'suggestion-item', 'suggestion': ALL}, 'n_clicks'),
+    prevent_initial_call=True
+)
+def select_suggestion(n_clicks_list):
+    ctx = dash.callback_context
+    if not ctx.triggered or not any(n_clicks_list):
+        return no_update, no_update
+    suggestion_text = ctx.triggered[0]['id']['suggestion']
+    return suggestion_text, None
 
 @app.callback(
     Output('selected-doc-store', 'data'),
@@ -273,7 +325,8 @@ def toggle_summary_collapse(n_clicks, is_open):
     prevent_initial_call=True
 )
 def store_selected_document(n_clicks):
-    if not any(n_clicks): return no_update, no_update
+    if not any(n_clicks):
+        return no_update, no_update
     ctx = dash.callback_context
     button_id = ctx.triggered_id
     doc_data = {'source_id': button_id['source_id'], 'jurisdiction_code': button_id['jurisdiction_code']}
@@ -282,35 +335,40 @@ def store_selected_document(n_clicks):
 @app.callback(
     Output('tab-content', 'children'),
     Input('doc-tabs', 'active_tab'),
-    Input('selected-doc-store', 'data')
+    State('selected-doc-store', 'data')
 )
 def update_tab_content(active_tab, stored_data):
-    if not stored_data:
+    if not stored_data or not stored_data.get('source_id'):
         return html.Div("Please select a document from the search results.", className="p-3 text-center")
+
     source_id = stored_data['source_id']
     jurisdiction_code = stored_data['jurisdiction_code']
-    if active_tab == 'juris-link-tab':
-        return html.Div("Juris Link content will be available in a future update.", className="p-3 text-center")
     tab_to_file_key = {
         'content-tab': 'source_file',
         'juris-map-tab': 'juris_map',
         'juris-tree-tab': 'juris_tree',
         'juris-summary-tab': 'juris_summary'
     }
+
+    if active_tab == 'juris-link-tab':
+        return html.Div("Juris Link content will be available in a future update.", className="p-3 text-center")
+
     file_key = tab_to_file_key.get(active_tab)
-    if not file_key: return "Invalid tab selected."
+    if not file_key:
+        return "Invalid tab selected."
+
     html_content = fetch_document_from_s3(S3_CONFIG, jurisdiction_code, source_id, file_key)
-    return html.Iframe(srcDoc=html_content, style={"width": "100%", "height": "70vh", "border": "none"})
+    # Use 75vh to give it slightly more vertical space within its container
+    return html.Iframe(srcDoc=html_content, style={"width": "100%", "height": "75vh", "border": "none"})
 
 @app.callback(
     Output('loading-modal', 'is_open'),
     [Input('search-button', 'n_clicks'), Input('search-input', 'n_submit')],
-    [State('search-input', 'value')],
+    State('search-input', 'value'),
     prevent_initial_call=True
 )
-def open_loading_modal(n_clicks, n_submit, query):
-    triggered = dash.callback_context.triggered_id
-    if triggered and query:
+def toggle_loading_modal(n_clicks, n_submit, query):
+    if (n_clicks or n_submit) and query:
         return True
     return no_update
 
@@ -319,21 +377,23 @@ def open_loading_modal(n_clicks, n_submit, query):
     Output('loading-modal', 'is_open', allow_duplicate=True),
     Output('search-content-container', 'style'),
     [Input('search-button', 'n_clicks'), Input('search-input', 'n_submit')],
-    [State('search-input', 'value')],
+    State('search-input', 'value'),
     prevent_initial_call=True
 )
 def update_search_results(n_clicks, n_submit, query):
-    """Performs the search and updates the results panel and its visibility."""
-    triggered = dash.callback_context.triggered_id
-    if not triggered or not query:
-        return "", False, no_update
-    
+    if not (n_clicks or n_submit) or not query:
+        return no_update, False, {'display': 'none'}
     try:
         access_token = get_gcp_token()
         response_json = perform_search(query, access_token)
-        return format_results(response_json), False, {'display': 'block'}
+        formatted_results = format_results(response_json)
+        return formatted_results, False, {'display': 'block'}
     except Exception as e:
+        print(f"Error in search callback: {e}")
         return dbc.Alert(f"An application error occurred: {e}", color="danger"), False, {'display': 'block'}
 
+
+# --- RUN THE APP ---
 if __name__ == '__main__':
+    # Use port 8080 for compatibility with App Runner default
     app.run(debug=True, host='0.0.0.0', port=8081)
