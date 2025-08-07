@@ -144,12 +144,13 @@ class DatabaseManager:
 
     def update_enrichment_status(self, source_id, updates):
         """
-        Updates the caselaw_enrichment_status table with processing results.
-        This version dynamically builds the SET clause based on the updates dictionary.
+        Inserts or updates the caselaw_enrichment_status table using an atomic "upsert".
+        This method will create a new record if one doesn't exist, or update the
+        existing one if it does. Assumes 'source_id' is a unique key.
 
         Args:
             source_id (str): The unique ID for the case law.
-            updates (dict): A dictionary where keys are column names and values are the new values.
+            updates (dict): A dictionary where keys are column names and values for updating/inserting.
         """
         if not self._get_connection():
             return False
@@ -161,18 +162,35 @@ class DatabaseManager:
         cursor = self.conn.cursor()
         
         try:
-            # Dynamically build the SET part of the query
-            set_clause = ", ".join([f"{key} = %s" for key in updates.keys()])
-            query = f"UPDATE caselaw_enrichment_status SET {set_clause} WHERE source_id = %s"
+            # Prepare data for insertion, including a new UUID for the 'id' column
+            insert_data = updates.copy()
+            insert_data['source_id'] = source_id
+            insert_data['id'] = str(uuid4())
+
+            # Prepare the ON DUPLICATE KEY UPDATE clause
+            # This will update the specified columns if the source_id already exists
+            update_clause = ", ".join([f"{key} = VALUES({key})" for key in updates.keys()])
             
-            params = list(updates.values()) + [source_id]
+            # Construct the full "upsert" query
+            query = f"""
+                INSERT INTO caselaw_enrichment_status ({", ".join(insert_data.keys())})
+                VALUES ({", ".join(['%s'] * len(insert_data))})
+                ON DUPLICATE KEY UPDATE {update_clause}
+            """
             
-            cursor.execute(query, params)
+            cursor.execute(query, list(insert_data.values()))
+            
+            # MySQL returns 1 for an INSERT, 2 for an UPDATE
+            if cursor.rowcount == 1:
+                logging.info(f"Inserted new enrichment status for source_id {source_id}.")
+            else:
+                logging.info(f"Updated enrichment status for source_id {source_id}.")
+
             self.conn.commit()
-            logging.info(f"Updated enrichment status for source_id {source_id} with keys: {list(updates.keys())}.")
             return True
+            
         except mysql.connector.Error as err:
-            logging.error(f"Failed to update enrichment status: {err}")
+            logging.error(f"Failed to upsert enrichment status: {err}")
             self.conn.rollback()
             return False
         finally:

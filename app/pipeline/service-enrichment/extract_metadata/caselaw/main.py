@@ -66,21 +66,26 @@ def get_records_to_process(db_manager, registry_config, jurisdiction_codes, year
 def process_record(record, config, field_mapping, db_columns, use_ai_extraction, prompt_content):
     """
     Processes a single case law record, running rule-based and/or AI extraction
-    based on the record's current status.
+    based on the record's current status and logging individual start/end times.
     """
     source_id = record['source_id']
     logging.info(f"Processing record for source_id: {source_id}")
+    overall_start_time = datetime.now()
 
-    process_start_time = datetime.now()
+    # Initialize statuses, metrics, and timestamps
     status_updates = {}
-
     rulebased_status, ai_status = 'skip', 'skip'
-    rulebased_duration, ai_duration = 0.0, 0.0
-    input_tokens, output_tokens = 0, 0
-    input_price, output_price = 0.0, 0.0
-    
     metadata, counsel_firm_mappings = {}, []
     db_ops_successful = False
+    
+    # Timestamps and Durations
+    rulebased_start_time, rulebased_end_time = None, None
+    ai_start_time, ai_end_time = None, None
+    rulebased_duration, ai_duration = 0.0, 0.0
+
+    # Token metrics
+    input_tokens, output_tokens = 0, 0
+    input_price, output_price = 0.0, 0.0
 
     needs_rulebased_processing = record.get('status_metadataextract_rulebased') != 'pass'
     needs_ai_processing = record.get('status_metadataextract_ai') != 'pass' and use_ai_extraction
@@ -89,14 +94,13 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
         logging.info(f"Skipping source_id: {source_id} as both steps have passed.")
         return
 
+    # S3 setup
     aws_config = config.get('aws')
     s3_manager = S3Manager(region_name=aws_config['default_region'])
     s3_file_key = get_full_s3_key(record['source_id'], record['jurisdiction_code'], config)
-
     if not s3_file_key:
         logging.error(f"Could not construct S3 file key for {source_id}. Skipping.")
         return
-        
     bucket_name = next((s3_cfg['bucket_name'] for s3_cfg in config.get('aws', 's3') if s3_cfg['jurisdiction_code'] == record['jurisdiction_code']), None)
 
     try:
@@ -104,12 +108,15 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
     except Exception as e:
         logging.error(f"Failed to download HTML file for {source_id}: {e}. Cannot proceed.")
         db_manager = DatabaseManager(config.get('database'))
-        fail_updates = {
-            "start_time_metadataextract": process_start_time,
-            "end_time_metadataextract": datetime.now()
-        }
-        if needs_rulebased_processing: fail_updates["status_metadataextract_rulebased"] = 'fail'
-        if needs_ai_processing: fail_updates["status_metadataextract_ai"] = 'fail'
+        fail_updates = {}
+        if needs_rulebased_processing: 
+            fail_updates["status_metadataextract_rulebased"] = 'fail'
+            fail_updates["start_time_metadataextract_rulebased"] = overall_start_time
+            fail_updates["end_time_metadataextract_rulebased"] = datetime.now()
+        if needs_ai_processing: 
+            fail_updates["status_metadataextract_ai"] = 'fail'
+            fail_updates["start_time_metadataextract_ai"] = overall_start_time
+            fail_updates["end_time_metadataextract_ai"] = datetime.now()
         db_manager.update_enrichment_status(source_id, fail_updates)
         db_manager.close_connection()
         return
@@ -117,7 +124,7 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
     # --- Step 1: Rule-based extraction ---
     if needs_rulebased_processing:
         logging.info(f"Running rule-based extraction for {source_id}")
-        start_time = time.time()
+        rulebased_start_time = datetime.now()
         try:
             extractor = MetadataExtractor(field_mapping=field_mapping)
             extracted_meta, extracted_mappings = extractor.extract_from_html(html_content)
@@ -133,12 +140,13 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
             rulebased_status = 'fail'
             logging.error(f"Rule-based extraction error: {e}")
         finally:
-            rulebased_duration = time.time() - start_time
+            rulebased_end_time = datetime.now()
+            rulebased_duration = (rulebased_end_time - rulebased_start_time).total_seconds()
 
     # --- Step 2: AI-based extraction ---
     if needs_ai_processing:
         logging.info(f"Running AI extraction for {source_id}")
-        start_time = time.time()
+        ai_start_time = datetime.now()
         try:
             gemini_config = config.get('models', 'gemini')
             gemini_client = GeminiClient(model_name=gemini_config['model'])
@@ -168,42 +176,46 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
             ai_status = 'fail'
             logging.error(f"AI extraction error: {e}")
         finally:
-            ai_duration = time.time() - start_time
+            ai_end_time = datetime.now()
+            ai_duration = (ai_end_time - ai_start_time).total_seconds()
 
     # --- Step 3: Database Operations ---
     db_manager = DatabaseManager(config.get('database'))
     try:
         if metadata:
             if db_manager.check_and_upsert_caselaw_metadata(metadata, source_id, db_columns):
+                # Counsel mapping is tied to the rule-based step
                 if needs_rulebased_processing and counsel_firm_mappings:
                     db_ops_successful = db_manager.insert_counsel_firm_mapping(counsel_firm_mappings, source_id)
                 else:
                     db_ops_successful = True
         else:
-            db_ops_successful = True # No data to save, so not a DB failure.
+            db_ops_successful = True 
 
-        process_end_time = datetime.now()
-        status_updates["start_time_metadataextract"] = process_start_time
-        status_updates["end_time_metadataextract"] = process_end_time
-
+        # Populate the status update dictionary based on which steps were run
         if needs_rulebased_processing:
             status_updates["status_metadataextract_rulebased"] = 'pass' if rulebased_status == 'pass' and db_ops_successful else 'fail'
             status_updates["duration_metadataextract_rulebased"] = rulebased_duration
+            status_updates["start_time_metadataextract_rulebased"] = rulebased_start_time
+            status_updates["end_time_metadataextract_rulebased"] = rulebased_end_time
         
         if needs_ai_processing:
             status_updates["status_metadataextract_ai"] = 'pass' if ai_status == 'pass' and db_ops_successful else 'fail'
             status_updates["duration_metadataextract_ai"] = ai_duration
-            status_updates["token_input_metadataextract"] = input_tokens
-            status_updates["token_output_metadataextract"] = output_tokens
-            status_updates["token_input_price_metadataextract"] = input_price
-            status_updates["token_output_price_metadataextract"] = output_price
+            status_updates["start_time_metadataextract_ai"] = ai_start_time
+            status_updates["end_time_metadataextract_ai"] = ai_end_time
+            status_updates["token_input_metadataextract_ai"] = input_tokens
+            status_updates["token_output_metadataextract_ai"] = output_tokens
+            status_updates["token_input_price_metadataextract_ai"] = input_price
+            status_updates["token_output_price_metadataextract_ai"] = output_price
         
-        db_manager.update_enrichment_status(source_id, status_updates)
+        if status_updates:
+            db_manager.update_enrichment_status(source_id, status_updates)
     
     finally:
         db_manager.close_connection()
 
-    total_duration = (datetime.now() - process_start_time).total_seconds()
+    total_duration = (datetime.now() - overall_start_time).total_seconds()
     logging.info(f"Finished processing {source_id}. Total duration: {total_duration:.2f}s")
 
 
