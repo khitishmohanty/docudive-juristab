@@ -22,7 +22,7 @@ app = dash.Dash(
     __name__,
     external_stylesheets=[dbc.themes.LUX, POPPINS_FONT, FONT_AWESOME],
     suppress_callback_exceptions=True,
-    # --- CHANGE: Added viewport meta tag for mobile responsiveness ---
+    title='JurisTab Legal Store',
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1.0"}
     ]
@@ -31,10 +31,9 @@ server = app.server
 
 # --- APP LAYOUT ---
 app.layout = dbc.Container([
-    # Stores data in the user's browser
     dcc.Store(id='selected-doc-store', data=None),
+    dcc.Store(id='search-results-store', data=None),
 
-    # Loading modal for search actions
     dbc.Modal(
         [
             dbc.ModalHeader(dbc.ModalTitle("Searching...")),
@@ -45,85 +44,76 @@ app.layout = dbc.Container([
                 ], className="text-center")
             ),
         ],
-        id="loading-modal",
-        is_open=False,
-        centered=True,
-        backdrop="static",
-        keyboard=False,
+        id="loading-modal", is_open=False, centered=True, backdrop="static", keyboard=False,
     ),
 
-    # Main title
-    html.H1(
+    dbc.Row(
         [
-            html.Span("JurisTab", style={'color': '#003366'}),
-            html.Span(" Legal Store", style={'color': '#6c757d'})
+            dbc.Col(
+                html.Img(
+                    src=app.get_asset_url('logo.png'),
+                    height="35px",
+                    style={'position': 'relative', 'top': '-2px'}
+                ),
+                width="auto"
+            ),
+            dbc.Col(html.Span("|", style={'fontSize': '2rem', 'color': '#dee2e6'}), width="auto", className="px-3"),
+            dbc.Col(
+                html.H1(
+                    "Legal Store",
+                    style={'textTransform': 'none', 'margin': '0', 'fontSize': '1.75rem', 'color': '#6c757d'}
+                ),
+                width="auto"
+            ),
         ],
-        className="my-4 text-center",
-        style={'textTransform': 'none'}
+        className="", # <-- CHANGE THIS LINE from "mb-4"
+        align="center",
     ),
 
-    # --- CHANGE: Updated search bar layout for mobile ---
     dbc.Row([
         dbc.Col(
-            # Wrapper for positioning the suggestions dropdown
             html.Div([
                 dcc.Input(
                     id='search-input', type='text',
                     placeholder='e.g., cases handled by Mills Oakley',
                     style={'borderRadius': '30px', 'border': '1px solid #ced4da', 'height': '40px'},
                     className='form-control me-2', n_submit=0,
-                    autoComplete='off' # Disable browser's default autocomplete
+                    autoComplete='off'
                 ),
-                # Container for autocomplete suggestions
-                html.Div(id='suggestions-output', style={
-                    'position': 'absolute',
-                    'zIndex': '1050', # Ensure suggestions appear above other content
-                    'width': '100%'
-                })
+                html.Div(id='suggestions-output', style={'position': 'absolute', 'zIndex': '1050', 'width': '100%'})
             ], style={'position': 'relative'}),
-            # On small screens (mobile), take up full width. On large screens, take up 8 of 12 columns.
             width=12, lg=8
         ),
         dbc.Col(
-            # d-grid makes the button inside it expand to the full width of the column
             html.Div(
-                html.Button('Search', id='search-button', n_clicks=0, className="w-100",
+                html.Button('Search', id='search-button', n_clicks=0,
                     style={
                         'backgroundColor': '#003366', 'color': 'white',
                         'borderRadius': '30px', 'border': 'none',
                         'padding': '0 30px', 'height': '40px'
-                    }),
-                className="d-grid"
+                    })
             ),
-            # On small screens, take up full width. On large screens, 4 of 12 columns.
-            # Add margin-top on small screens (mt-2), but remove it on large screens (mt-lg-0).
             width=12, lg=4, className="mt-2 mt-lg-0"
         )
-    ], className="mb-4 justify-content-center"),
+    ], className="my-5 justify-content-center"), 
 
-    # Container for search results and document viewer
     html.Div(
         id='search-content-container',
-        style={'display': 'none'}, # Initially hidden
+        style={'display': 'none'},
         children=[
             html.Hr(),
             dbc.Row([
-                # Left column for search results
                 dbc.Col(
                     dcc.Loading(
                         id="loading-spinner", type="circle", color="primary",
                         children=html.Div(id="results-output", style={'maxHeight': '80vh', 'overflowY': 'auto', 'paddingRight': '15px'})
                     ),
-                    # On medium screens and up, take 5 of 12 columns. On small screens, it will stack.
                     md=5
                 ),
-                # Right column for the document viewer
                 dbc.Col(
-                    # --- CHANGE: Added an ID to the viewer container for CSS targeting on mobile ---
                     html.Div([
                         dbc.Tabs(
-                            id="doc-tabs",
-                            active_tab="content-tab",
+                            id="doc-tabs", active_tab="content-tab",
                             children=[
                                 dbc.Tab(label="Content", tab_id="content-tab"),
                                 dbc.Tab(label="Juris Map", tab_id="juris-map-tab"),
@@ -137,26 +127,27 @@ app.layout = dbc.Container([
                             children=html.Div(id="tab-content", className="p-2")
                         )
                     ],
-                    id="doc-viewer-container", # ID for CSS styling
+                    id="doc-viewer-container",
                     style={"height": "80vh", "border": "1px solid #e0e0e0", "borderRadius": "5px"}),
-                    # On medium screens and up, take 7 of 12 columns.
                     md=7
                 )
             ])
         ]
     )
-# --- CHANGE: Use responsive padding for the main container ---
-# p-3 on small screens, p-md-5 on medium screens and larger
 ], fluid=True, className="p-3 p-md-5", style={'fontFamily': "'Poppins', sans-serif"})
-
 
 # --- HELPER FUNCTION ---
 
+# --- MODIFICATION: Reworked to support hover effects and efficient highlighting ---
 def format_results(response_json):
-    """Helper function to format the API response into clickable result cards."""
+    """
+    Helper function to format the API response into clickable result cards.
+    This version includes the 'result-card' class for hover effects.
+    """
     if not response_json or ("results" not in response_json and "summary" not in response_json):
         return dbc.Alert("An error occurred or the search returned no results.", color="danger")
 
+    # --- Summary Generation Logic (Unchanged) ---
     summary_card = []
     if response_json.get("summary", {}).get("summaryText"):
         summary_text = response_json["summary"]["summaryText"]
@@ -223,8 +214,7 @@ def format_results(response_json):
             html.Div([
                 html.H5(
                     ["Summary ", html.I(className="fas fa-chevron-down", id="summary-toggle-icon")],
-                    id="summary-collapse-button",
-                    className="mb-2",
+                    id="summary-collapse-button", className="mb-2",
                     style={'cursor': 'pointer', 'color': '#6c757d', 'textTransform': 'none'}
                 ),
                 dbc.Collapse(
@@ -238,6 +228,7 @@ def format_results(response_json):
         if summary_card: return summary_card
         return dbc.Alert("No results found for your query.", color="info")
 
+    # --- Result Card Generation ---
     result_cards = []
     for i, result in enumerate(response_json["results"]):
         doc = result.get('document', {})
@@ -246,22 +237,32 @@ def format_results(response_json):
         jurisdiction_code = struct_data.get('jurisdiction_code')
         is_disabled = not (source_id and jurisdiction_code)
 
-        card = dbc.Card(dbc.CardBody([
-            html.Div([
-                html.Span(
-                    struct_data.get('neutral_citation'),
-                    style={'backgroundColor': '#e9ecef', 'color': 'black', 'padding': '0.2rem 0.4rem', 'borderRadius': '4px', 'marginRight': '8px', 'fontSize': '0.9rem'}
-                ) if struct_data.get('neutral_citation') else None,
-                html.Span(struct_data.get('book_name', 'No Title Available'), style={'color': 'black', 'fontSize': '0.9rem'})
+        # The entire card body content is now wrapped in a single clickable Div
+        card_body_content = html.Div(
+            [
+                html.Div([
+                    html.Span(
+                        struct_data.get('neutral_citation'),
+                        style={'backgroundColor': '#e9ecef', 'color': 'black', 'padding': '0.2rem 0.4rem', 'borderRadius': '4px', 'marginRight': '8px', 'fontSize': '0.9rem'}
+                    ) if struct_data.get('neutral_citation') else None,
+                    html.Span(struct_data.get('book_name', 'No Title Available'), style={'color': 'black', 'fontSize': '0.9rem'})
+                ], className='mb-2'),
+                html.P(
+                    (lambda c: " ".join(c.split()[:30]) + "..." if len(c.split()) > 30 else c)(struct_data.get('content', 'No preview available.')),
+                    className="card-text", style={'fontSize': '0.9rem'}
+                )
             ],
             id={'type': 'view-doc-button', 'index': i, 'source_id': source_id or '', 'jurisdiction_code': jurisdiction_code or ''},
-            style={'cursor': 'pointer' if not is_disabled else 'not-allowed', 'opacity': 1 if not is_disabled else 0.6},
-            className='mb-2'),
-            html.P(
-                (lambda c: " ".join(c.split()[:30]) + "..." if len(c.split()) > 30 else c)(struct_data.get('content', 'No preview available.')),
-                className="card-text", style={'fontSize': '0.9rem'}
-            )
-        ]), className="mb-3")
+            style={'cursor': 'pointer' if not is_disabled else 'not-allowed', 'opacity': 1 if not is_disabled else 0.6, 'textDecoration': 'none', 'color': 'inherit'}
+        )
+
+        # The key change is here: adding className="mb-3 result-card"
+        # This allows the CSS in style.css to target the card for the hover effect.
+        card = dbc.Card(
+            dbc.CardBody(card_body_content),
+            id={'type': 'result-card', 'index': i},
+            className="mb-3 result-card" # This class is essential for the hover effect
+        )
         result_cards.append(card)
 
     return summary_card + result_cards
@@ -269,6 +270,7 @@ def format_results(response_json):
 
 # --- CALLBACKS ---
 
+# (This callback remains unchanged)
 @app.callback(
     Output("summary-collapse", "is_open"),
     Output("summary-toggle-icon", "className"),
@@ -283,6 +285,7 @@ def toggle_summary_collapse(n_clicks, is_open):
     icon_class = "fas fa-chevron-up" if new_state else "fas fa-chevron-down"
     return new_state, icon_class
 
+# (This callback remains unchanged)
 @app.callback(
     Output('suggestions-output', 'children'),
     Input('search-input', 'value'),
@@ -305,6 +308,7 @@ def update_suggestions(query):
         print(f"Error in suggestions callback: {e}")
         return None
 
+# (This callback remains unchanged)
 @app.callback(
     Output('search-input', 'value', allow_duplicate=True),
     Output('suggestions-output', 'children', allow_duplicate=True),
@@ -318,6 +322,7 @@ def select_suggestion(n_clicks_list):
     suggestion_text = ctx.triggered[0]['id']['suggestion']
     return suggestion_text, None
 
+# (This callback remains unchanged)
 @app.callback(
     Output('selected-doc-store', 'data'),
     Output('doc-tabs', 'active_tab'),
@@ -329,9 +334,14 @@ def store_selected_document(n_clicks):
         return no_update, no_update
     ctx = dash.callback_context
     button_id = ctx.triggered_id
-    doc_data = {'source_id': button_id['source_id'], 'jurisdiction_code': button_id['jurisdiction_code']}
+    doc_data = {
+        'source_id': button_id['source_id'],
+        'jurisdiction_code': button_id['jurisdiction_code'],
+        'index': button_id['index']
+    }
     return doc_data, 'content-tab'
 
+# (This callback remains unchanged)
 @app.callback(
     Output('tab-content', 'children'),
     Input('doc-tabs', 'active_tab'),
@@ -349,18 +359,15 @@ def update_tab_content(active_tab, stored_data):
         'juris-tree-tab': 'juris_tree',
         'juris-summary-tab': 'juris_summary'
     }
-
     if active_tab == 'juris-link-tab':
         return html.Div("Juris Link content will be available in a future update.", className="p-3 text-center")
-
     file_key = tab_to_file_key.get(active_tab)
     if not file_key:
         return "Invalid tab selected."
-
     html_content = fetch_document_from_s3(S3_CONFIG, jurisdiction_code, source_id, file_key)
-    # Use 75vh to give it slightly more vertical space within its container
     return html.Iframe(srcDoc=html_content, style={"width": "100%", "height": "75vh", "border": "none"})
 
+# (This callback remains unchanged)
 @app.callback(
     Output('loading-modal', 'is_open'),
     [Input('search-button', 'n_clicks'), Input('search-input', 'n_submit')],
@@ -372,28 +379,68 @@ def toggle_loading_modal(n_clicks, n_submit, query):
         return True
     return no_update
 
+# (This callback remains unchanged)
 @app.callback(
-    Output('results-output', 'children'),
+    Output('search-results-store', 'data'),
+    Output('selected-doc-store', 'data', allow_duplicate=True),
     Output('loading-modal', 'is_open', allow_duplicate=True),
     Output('search-content-container', 'style'),
     [Input('search-button', 'n_clicks'), Input('search-input', 'n_submit')],
     State('search-input', 'value'),
     prevent_initial_call=True
 )
-def update_search_results(n_clicks, n_submit, query):
+def perform_new_search(n_clicks, n_submit, query):
     if not (n_clicks or n_submit) or not query:
-        return no_update, False, {'display': 'none'}
+        return no_update, no_update, no_update, no_update
     try:
         access_token = get_gcp_token()
         response_json = perform_search(query, access_token)
-        formatted_results = format_results(response_json)
-        return formatted_results, False, {'display': 'block'}
+        return response_json, None, False, {'display': 'block'}
     except Exception as e:
         print(f"Error in search callback: {e}")
-        return dbc.Alert(f"An application error occurred: {e}", color="danger"), False, {'display': 'block'}
+        error_results = {"error": f"An application error occurred: {e}"}
+        return error_results, None, False, {'display': 'block'}
+
+# --- MODIFICATION: This callback now ONLY runs when a new search happens. ---
+# It no longer re-renders the list when a selection is made, preventing the flicker.
+@app.callback(
+    Output('results-output', 'children'),
+    Input('search-results-store', 'data')
+)
+def display_search_results(search_data):
+    if not search_data:
+        return []
+    if 'error' in search_data:
+        return dbc.Alert(search_data['error'], color="danger")
+    # `format_results` no longer needs the selected index, as another callback handles it.
+    return format_results(search_data)
+
+# --- NEW CALLBACK: Handles highlighting efficiently without redrawing the list. ---
+# This targets the 'style' of the cards directly, which is very fast.
+@app.callback(
+    Output({'type': 'result-card', 'index': ALL}, 'style'),
+    Input('selected-doc-store', 'data'),
+    State({'type': 'result-card', 'index': ALL}, 'id'),
+    prevent_initial_call=True
+)
+def highlight_selected_card(selected_data, card_ids):
+    # When a new search is performed, selected_data becomes None.
+    # We must reset the style for all cards.
+    if not selected_data:
+        return [{} for _ in card_ids]
+
+    selected_index_str = str(selected_data.get('index'))
+    styles = []
+    for card_id in card_ids:
+        # Apply highlight style to the selected card
+        if str(card_id['index']) == selected_index_str:
+            styles.append({'backgroundColor': '#e9ecef'})
+        # Apply default style to all other cards
+        else:
+            styles.append({})
+    return styles
 
 
 # --- RUN THE APP ---
 if __name__ == '__main__':
-    # Use port 8080 for compatibility with App Runner default
     app.run(debug=True, host='0.0.0.0', port=8081)

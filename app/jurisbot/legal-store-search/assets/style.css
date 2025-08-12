@@ -26,6 +26,12 @@
     border-bottom: 2px solid #003366 !important; /* Dark blue bottom border */
 }
 
+/* --- NEW: RESULT CARD HOVER EFFECT (Corrected) --- */
+/* This rule applies a light grey background when you mouse over any result card. */
+.result-card:hover, .result-card:hover .card-body {
+    background-color: #f8f9fa !important;
+}
+
 /* --- NEW: MOBILE RESPONSIVE STYLES --- */
 
 /* Styles for screens smaller than 768px (Bootstrap's 'md' breakpoint) */
