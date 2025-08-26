@@ -17,11 +17,119 @@ class HtmlParser:
         soup = BeautifulSoup(html_content, 'html.parser')
         return soup.get_text(separator=' ', strip=True)
 
+    def _build_hierarchy(self, content_root):
+        """Builds a nested list data structure from the flat source HTML."""
+        if not content_root:
+            return [], "Document"
+
+        # Try to find a title for the document
+        first_header = content_root.find('block', class_='section-header')
+        title = "Document"
+        if first_header:
+            name_tag = first_header.find('inline', class_='section-name')
+            if name_tag:
+                title = name_tag.get_text(strip=True)
+
+        hierarchy = []
+        parent_stack = []
+        id_counters = {}
+
+        for element in content_root.find_all(recursive=False):
+            if element.name == 'block' and 'section-header' in element.get('class', []):
+                level_match = re.search(r'section-level-(\d+)', ' '.join(element.get('class', [])))
+                level = int(level_match.group(1)) if level_match else 1
+
+                # Generate a unique, hierarchical ID
+                if level > len(id_counters):
+                    id_counters[level] = 1
+                else:
+                    id_counters[level] += 1
+                # Reset counters for deeper levels
+                for l in range(level + 1, len(id_counters) + 1):
+                    id_counters[l] = 0
+                
+                id_parts = [str(id_counters.get(i, 0)) for i in range(1, level + 1)]
+                unique_id = f"section-{''.join(id_parts)}"
+
+                node = {
+                    'id': unique_id,
+                    'level': level,
+                    'heading_tag': element,
+                    'content_tags': [],
+                    'children': []
+                }
+
+                while parent_stack and parent_stack[-1]['level'] >= level:
+                    parent_stack.pop()
+
+                if parent_stack:
+                    parent_stack[-1]['children'].append(node)
+                else:
+                    hierarchy.append(node)
+                
+                parent_stack.append(node)
+            elif parent_stack:
+                parent_stack[-1]['content_tags'].append(element)
+        
+        return hierarchy, title
+
+    def _generate_toc_html(self, soup, nodes):
+        """Recursively generates the Table of Contents HTML."""
+        if not nodes:
+            return None
+        
+        ul = soup.new_tag('ul')
+        for node in nodes:
+            li = soup.new_tag('li')
+            a = soup.new_tag('a', href=f"#{node['id']}")
+            
+            # Clean up heading text for TOC display
+            heading_text_parts = [tag.get_text(strip=True) for tag in node['heading_tag'].find_all('inline')]
+            a.string = ' '.join(filter(None, heading_text_parts)) or "Untitled Section"
+            
+            li.append(a)
+            
+            if node['children']:
+                # Add class to the LI if it has children, making it collapsible
+                li['class'] = 'toc-collapsible'
+                li.append(self._generate_toc_html(soup, node['children']))
+            
+            ul.append(li)
+        return ul
+
+    def _generate_main_content_html(self, soup, nodes):
+        """Recursively generates the main content area HTML."""
+        container = soup.new_tag('div')
+        for node in nodes:
+            # The collapsible header div
+            header_div = soup.new_tag('div', attrs={
+                'class': f"collapsible level-{node['level']}",
+                'id': node['id']
+            })
+            # Add the original heading content inside the header
+            header_div.extend(node['heading_tag'].contents)
+            container.append(header_div)
+
+            # The content div that gets toggled
+            content_div = soup.new_tag('div', attrs={'class': 'content'})
+            
+            # Add associated content (paragraphs, lists, etc.)
+            for content_tag in node['content_tags']:
+                content_div.append(content_tag)
+                
+            # Recursively add children's content
+            if node['children']:
+                content_div.append(self._generate_main_content_html(soup, node['children']))
+            
+            container.append(content_div)
+            
+        return container
+
+
     def create_juriscontent_html(self, html_content: str) -> str:
         """
-        Creates a styled, hierarchical, and collapsible HTML file ('juriscontent.html').
-        This function restructures the HTML for a clean, readable layout and injects
-        the necessary CSS and JavaScript for the collapsible functionality.
+        Creates a styled, hierarchical, and collapsible HTML file with a two-panel layout.
+        This function transforms the source HTML into a structured, interactive view.
 
         Args:
             html_content (str): The original HTML content.
@@ -31,196 +139,196 @@ class HtmlParser:
         """
         soup = BeautifulSoup(html_content, 'html.parser')
 
-        # --- 1. Find or create the <head> tag ---
-        head = soup.find('head')
-        if not head:
-            head = soup.new_tag('head')
-            if soup.html:
-                soup.html.insert(0, head)
-            else:
-                soup.insert(0, head)
-
-        # Clear existing head content to avoid conflicts, then add our elements
-        head.clear()
+        # 1. Find the main content root and build the hierarchical data structure
+        content_root = soup.find('doc', class_='akbn-root')
+        hierarchy, title = self._build_hierarchy(content_root)
         
-        # Add meta viewport for responsive design
-        meta_viewport = soup.new_tag('meta', attrs={'name': 'viewport', 'content': 'width=device-width, initial-scale=1.0'})
-        head.append(meta_viewport)
+        # 2. Create the new, final HTML document from the template
+        final_soup = BeautifulSoup(f"""
+            <!DOCTYPE html><html lang="en"><head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Collapsible Hierarchical View</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+                <style>
+                    body {{ font-family: 'Inter', sans-serif; background-color: #ffffff; overflow: hidden; }}
+                    .main-container {{ display: flex; position: relative; }}
+                    #toc-panel {{ width: 300px; flex-shrink: 0; background-color: #ffffff; border-right: 1px solid #e5e7eb; transition: width 0.3s ease-in-out; overflow: hidden; font-size: 14px; }}
+                    .main-container.toc-collapsed #toc-panel {{ width: 0; }}
+                    #toc-content {{ padding: 1.5rem; height: 100vh; overflow-y: auto; white-space: normal; }}
+                    #toc-toggle {{ position: absolute; top: 1rem; left: 300px; transform: translateX(-50%); z-index: 10; background-color: #fff; border: 1px solid #e5e7eb; border-radius: 50%; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: left 0.3s ease-in-out; }}
+                    .main-container.toc-collapsed #toc-toggle {{ left: 1.25rem; transform: translateX(0); }}
+                    #toc-toggle svg {{ transition: transform 0.3s ease-in-out; }}
+                    .main-container.toc-collapsed #toc-toggle svg {{ transform: rotate(180deg); }}
+                    #toc-list a {{ text-decoration: none; color: #374151; display: block; padding: 0.25rem 0.5rem; border-radius: 0.375rem; }}
+                    #toc-list ul {{ padding-left: 1rem; }}
+                    #toc-list li.toc-collapsible > ul {{ display: none; }}
+                    #toc-list li.toc-collapsible.active > ul {{ display: block; }}
+                    #toc-list li.toc-collapsible > a {{ position: relative; }}
+                    #toc-list li.toc-collapsible > a::before {{
+                        content: '\\203A';
+                        position: absolute;
+                        left: -0.75rem;
+                        top: 50%;
+                        transform: translateY(-50%) rotate(0deg);
+                        transition: transform 0.2s ease-in-out;
+                        font-weight: bold;
+                    }}
+                    #toc-list li.toc-collapsible.active > a::before {{
+                        transform: translateY(-50%) rotate(90deg);
+                    }}
+                    #main-content {{ flex-grow: 1; padding: 2rem; overflow-y: auto; height: 100vh; font-family: 'Poppins', sans-serif; font-size: 14px; }}
+                    .collapsible {{ cursor: pointer; transition: background-color 0.3s ease; padding: 0.5rem; border-radius: 0.25rem;}}
+                    .content {{
+                        overflow: hidden;
+                        padding-left: 2rem;
+                        max-height: 0;
+                        transition: max-height 0.3s ease-out;
+                    }}
+                    .content.no-transition {{
+                        transition: none !important;
+                    }}
+                    .collapsible::before {{ content: '\\203A'; color: #6b7280; display: inline-block; margin-right: 0.5rem; transition: transform 0.3s ease; font-weight: bold; font-size: 1.25em; line-height: 1; }}
+                    .collapsible.active::before {{ transform: rotate(90deg); }}
+                    .level-1 {{ margin-left: 0; }} .level-2 {{ margin-left: 1.5rem; }} .level-3 {{ margin-left: 3rem; }} .level-4 {{ margin-left: 4.5rem; }} .level-5 {{ margin-left: 6rem; }}
+                    .content p, .content ul, .content block {{ margin-left: 0; padding-left: 0; }}
+                    .content .subclause, .content ul li {{ display: block; position: relative; padding-left: 2.5em; margin-bottom: 0.5rem; }}
+                    .content .subclause > .number, .content ul li > .li-label {{ position: absolute; left: 0; top: 0; width: 2.5em; text-align: left; }}
+                    .content .subclause > p, .content ul li > p {{ margin: 0; }}
+                    /* Table Styles */
+                    .content table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 1rem;
+                        margin-bottom: 1rem;
+                    }}
+                    .content th, .content td {{
+                        border: 1px solid #d1d5db; /* Light grey gridlines */
+                        padding: 0.5rem 0.75rem;
+                        text-align: left;
+                    }}
+                    .content th, .content thead td {{
+                        font-weight: 600;
+                    }}
+                </style></head><body class="text-gray-800">
+                <div class="main-container">
+                    <div id="toc-panel">
+                        <div id="toc-content">
+                            <h2 class="text-xl font-bold mb-4">Navigator</h2>
+                            <div id="toc-list"></div>
+                        </div>
+                    </div>
+                    <button id="toc-toggle" title="Toggle Table of Contents">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <div id="main-content">
+                        <div class="max-w-4xl mx-auto p-6">
+                            <div id="output"></div>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {{
+                        const mainContainer = document.querySelector('.main-container');
+                        const tocToggle = document.getElementById('toc-toggle');
+                        tocToggle.addEventListener('click', () => {{ mainContainer.classList.toggle('toc-collapsed'); }});
+                        
+                        document.body.addEventListener('click', function(event) {{
+                            // Handles collapsing for the main content panel
+                            const collapsible = event.target.closest('.collapsible');
+                            if (collapsible) {{
+                                collapsible.classList.toggle('active');
+                                const content = collapsible.nextElementSibling;
+                                const isOpening = !(content.style.maxHeight && content.style.maxHeight !== '0px');
 
-        # Add link to Google Fonts for Poppins
-        font_link_tag = soup.new_tag(
-            'link',
-            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap",
-            rel="stylesheet"
-        )
-        head.append(font_link_tag)
+                                // Find all open parent content elements
+                                const parents = [];
+                                let parent = content.parentElement.closest('.content');
+                                while(parent) {{
+                                    if (parent.style.maxHeight && parent.style.maxHeight !== '0px') {{
+                                        parents.push(parent);
+                                    }}
+                                    parent = parent.parentElement.closest('.content');
+                                }}
 
-        # --- 2. Add comprehensive CSS for styling and collapsibility ---
-        style_tag = soup.new_tag('style')
-        style_tag.string = """
-            body {
-                font-family: 'Poppins', sans-serif;
-                line-height: 1.7;
-                color: #000000; /* Text color set to black */
-                background-color: #f8f9fa;
-                margin: 0;
-                padding: 20px;
-                -webkit-font-smoothing: antialiased;
-                -moz-osx-font-smoothing: grayscale;
-            }
-            .container {
-                max-width: 850px;
-                margin: 20px auto;
-                background-color: #ffffff;
-                padding: 30px 50px;
-                border-radius: 8px;
-                box-shadow: 0 6px 12px rgba(0,0,0,0.08);
-                border: 1px solid #e9ecef;
-            }
-            h1, h2, h3, h4, h5, h6 {
-                font-weight: 600;
-                color: #000000; /* Headings color set to black */
-                margin-top: 1.5em;
-                margin-bottom: 0.5em;
-                line-height: 1.3;
-            }
-            h1 { font-size: 2.1em; padding-bottom: 0.3em;}
-            h2 { font-size: 1.8em; }
-            h3 { font-size: 1.5em; }
-            
-            /* -- MODIFIED STYLES FOR COLLAPSIBLE HEADINGS -- */
-            .collapsible {
-                cursor: pointer;
-                user-select: none; /* Prevent text selection on click */
-                transition: color 0.2s ease-in-out;
-            }
-            .collapsible:hover {
-                color: #3498db;
-            }
-            .collapsible::before {
-                content: '\\203A'; /* Right-pointing single angle quotation mark */
-                color: #000000; /* Icon color set to black */
-                font-weight: bold;
-                font-size: 1.2em; /* Adjusted size to fit better inline */
-                display: inline-block; /* Ensures the icon can be transformed */
-                margin-right: 8px; /* Creates space between the icon and the text */
-                transform: rotate(0deg);
-                transition: transform 0.2s ease-in-out;
-            }
-            .collapsible.active::before {
-                transform: rotate(90deg);
-            }
-            .content {
-                padding-left: 25px; /* Indent the content under the heading */
-                display: none; /* Hidden by default */
-                overflow: hidden;
-            }
-            p { margin-bottom: 1.2em; }
-            a { color: #3498db; text-decoration: none; }
-            a:hover { color: #2980b9; text-decoration: underline; }
-            ul, ol { padding-left: 25px; }
-            li { margin-bottom: 0.6em; }
-            blockquote {
-                padding-left: 20px;
-                margin-left: 0;
-                font-style: italic;
-                color: #000000; /* Blockquote text color set to black */
-            }
+                                // Add class to disable parent transitions, forcing them to snap
+                                parents.forEach(p => p.classList.add('no-transition'));
+                                
+                                if (isOpening) {{
+                                    const childHeight = content.scrollHeight;
+                                    // Instantly resize parents to make room
+                                    parents.forEach(p => {{
+                                        p.style.maxHeight = (parseInt(p.style.maxHeight, 10) + childHeight) + 'px';
+                                    }});
+                                    // Animate the child
+                                    content.style.maxHeight = childHeight + 'px';
+                                }} else {{
+                                    const childHeight = content.scrollHeight;
+                                    // Instantly resize parents
+                                    parents.forEach(p => {{
+                                        p.style.maxHeight = Math.max(0, (parseInt(p.style.maxHeight, 10) - childHeight)) + 'px';
+                                    }});
+                                    // Animate the child
+                                    content.style.maxHeight = '0px';
+                                }}
 
-            /* -- NEW STYLES FOR DEFINITION LISTS (enum and content) -- */
-            dt, dd {
-                display: inline;
-            }
-            dt {
-                font-weight: bold;
-            }
-            dd {
-                margin-left: 0.5em;
-            }
-            dd::after {
-                content: '';
-                display: block;
-            }
-            
-            /* Make paragraphs inside certain elements flow inline */
-            li p, .subclause > p {
-                display: inline;
-            }
-            
-            /* Style enum labels to flow inline and add a space after them */
-            li .li-label, .subclause > .number {
-                display: inline;
-                margin-right: 0.5em; /* Adds space between enum and text */
-            }
-            
-            /* -- NEW STYLES FOR TABLES -- */
-            table {
-                width: 100%;
-                border-collapse: collapse; /* Merges adjacent borders */
-                margin-top: 1.5em;
-                margin-bottom: 1.5em;
-            }
-            th, td {
-                border: 1px solid #dddddd; /* Light grey border for grid lines */
-                padding: 12px;
-                text-align: left;
-            }
-            th, thead td {
-                background-color: #f2f2f2; /* Lighter grey background for header */
-                font-weight: 600;
-            }
-        """
-        head.append(style_tag)
+                                // Remove the class to re-enable transitions after the browser has repainted
+                                setTimeout(() => {{
+                                    parents.forEach(p => p.classList.remove('no-transition'));
+                                }}, 50);
+                            }}
+
+                            // Handles link clicks in the Table of Contents
+                            const tocLink = event.target.closest('#toc-list a');
+                            if (tocLink) {{
+                                event.preventDefault();
+                                const parentLi = tocLink.parentElement;
+
+                                // Toggle the active class on the parent LI if it's collapsible
+                                if (parentLi.classList.contains('toc-collapsible')) {{
+                                    parentLi.classList.toggle('active');
+                                }}
+                                
+                                const targetId = tocLink.getAttribute('href').substring(1);
+                                const targetElement = document.getElementById(targetId);
+
+                                if (targetElement) {{
+                                    // Expand all parent sections of the target element in the main content
+                                    let parent = targetElement.closest('.content');
+                                    while(parent) {{
+                                        const parentCollapsible = parent.previousElementSibling;
+                                        if (parentCollapsible && parentCollapsible.classList.contains('collapsible') && !parentCollapsible.classList.contains('active')) {{
+                                            parentCollapsible.click();
+                                        }}
+                                        parent = parent.parentElement.closest('.content');
+                                    }}
+                                    
+                                    // Ensure the target itself is expanded if it's also a collapsible
+                                    if(targetElement.classList.contains('collapsible') && !targetElement.classList.contains('active')){{
+                                        targetElement.click();
+                                    }}
+                                    
+                                    targetElement.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                                }}
+                            }}
+                        }});
+                    }});
+                </script></body></html>
+            """, 'html.parser')
+
+        # 3. Generate and insert the Table of Contents
+        toc_list_div = final_soup.find('div', id='toc-list')
+        toc_html = self._generate_toc_html(final_soup, hierarchy)
+        if toc_html:
+            toc_list_div.append(toc_html)
+
+        # 4. Generate and insert the main collapsible content
+        output_div = final_soup.find('div', id='output')
+        main_content_html = self._generate_main_content_html(final_soup, hierarchy)
+        if main_content_html:
+            output_div.append(main_content_html)
         
-        # --- 3. Restructure the HTML body for hierarchy (Non-Destructive Method) ---
-        body = soup.find('body')
-        if body:
-            # --- Remove all image tags from the body ---
-            for img_tag in body.find_all('img'):
-                img_tag.decompose()
-
-            heading_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
-            
-            # Find all headings and wrap their subsequent content
-            for heading in body.find_all(heading_tags):
-                # Create a wrapper for the content that follows the heading
-                content_wrapper = soup.new_tag('div', attrs={'class': 'content'})
-                
-                # Move all subsequent siblings into the wrapper, until a heading of the same or higher level
-                for sibling in list(heading.find_next_siblings()):
-                    if sibling.name in heading_tags and heading_tags.index(sibling.name) <= heading_tags.index(heading.name):
-                        break
-                    content_wrapper.append(sibling.extract())
-                
-                # Add the collapsible class to the heading
-                heading['class'] = heading.get('class', []) + ['collapsible']
-                # Place the wrapper immediately after the heading
-                heading.insert_after(content_wrapper)
-            
-            # --- 4. Wrap everything in the final container for styling ---
-            container_div = soup.new_tag('div', attrs={'class': 'container'})
-            # Move all children of the body into the new container
-            container_div.extend(list(body.children))
-            # Replace the body's content with the new container
-            body.clear()
-            body.append(container_div)
-
-            # --- 5. Add JavaScript at the end of the body for interactivity ---
-            script_tag = soup.new_tag('script')
-            script_tag.string = """
-                var coll = document.getElementsByClassName("collapsible");
-                for (var i = 0; i < coll.length; i++) {
-                    coll[i].addEventListener("click", function() {
-                        this.classList.toggle("active");
-                        var content = this.nextElementSibling;
-                        if (content.style.display === "block") {
-                            content.style.display = "none";
-                        } else {
-                            content.style.display = "block";
-                        }
-                    });
-                }
-            """
-            body.append(script_tag)
-
-        return str(soup)
+        return str(final_soup)
