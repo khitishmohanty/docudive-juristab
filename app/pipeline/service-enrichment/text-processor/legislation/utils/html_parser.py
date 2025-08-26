@@ -137,10 +137,17 @@ class HtmlParser:
         Returns:
             str: The modified and styled HTML as a string.
         """
-        soup = BeautifulSoup(html_content, 'html.parser')
-
-        # 1. Find the main content root and build the hierarchical data structure
-        content_root = soup.find('doc', class_='akbn-root')
+        # 1. Pre-process the HTML to robustly find the content root
+        content_root = None
+        # Use regex to find content within the <doc> tag, as BeautifulSoup struggles with the malformed source
+        match = re.search(r'<doc class="akbn-root">(.*?)</doc>', html_content, re.DOTALL)
+        if match:
+            inner_html = match.group(1)
+            # Parse only the extracted, relevant HTML
+            content_soup = BeautifulSoup(inner_html, 'html.parser')
+            # The content_root is now the body of this new, clean soup object
+            content_root = content_soup.body
+            
         hierarchy, title = self._build_hierarchy(content_root)
         
         # 2. Create the new, final HTML document from the template
