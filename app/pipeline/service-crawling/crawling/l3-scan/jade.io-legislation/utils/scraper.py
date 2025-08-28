@@ -2,6 +2,7 @@ import os
 import logging
 import json
 import boto3
+import time # Import the time module
 from botocore.exceptions import NoCredentialsError, ClientError
 
 from selenium import webdriver
@@ -9,7 +10,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 from webdriver_manager.chrome import ChromeDriverManager
 
 # Build an absolute path to the project's root directory.
@@ -60,6 +61,7 @@ def handle_initial_popups(driver):
         )
         no_thanks_button.click()
         logging.info("Clicked 'No thanks' on the login/subscription pop-up.")
+        time.sleep(1) # Wait 1 second for the DOM to potentially settle after click
     except TimeoutException:
         logging.info("'No thanks' pop-up not found, continuing.")
 
@@ -69,6 +71,7 @@ def handle_initial_popups(driver):
         )
         got_it_button.click()
         logging.info("Clicked 'Got it' on the cookie banner.")
+        time.sleep(1) # Wait 1 second for the DOM to potentially settle after click
     except TimeoutException:
         logging.info("Cookie banner not found, continuing.")
 
@@ -90,6 +93,7 @@ def scrape_content(url):
     """
     Scrapes multiple content blocks from a URL based on the sitemap
     and combines them into a single HTML string.
+    Includes scrolling logic and logic to find ALL matching elements.
     """
     driver = get_webdriver()
     if not driver:
@@ -99,6 +103,18 @@ def scrape_content(url):
         logging.info(f"Navigating to URL: {url}")
         driver.get(url)
         handle_initial_popups(driver)
+
+        # --- SCROLL TO BOTTOM TO LOAD ALL DYNAMIC CONTENT ---
+        logging.info("Scrolling down the page to load all dynamic content...")
+        last_height = driver.execute_script("return document.body.scrollHeight")
+        while True:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)
+            new_height = driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+            last_height = new_height
+        logging.info("Finished scrolling. All content should be loaded.")
         
         sitemap = get_sitemap()
         if not sitemap:
@@ -110,19 +126,26 @@ def scrape_content(url):
         # Loop through all configured selectors in the sitemap
         for selector_info in sitemap.get('content_selectors', []):
             selector = selector_info['selector']
-            name = selector_info.get('name', selector) # Use name for logging
+            name = selector_info.get('name', selector)
             
             logging.info(f"Waiting for content block '{name}' with selector: '{selector}'")
             try:
-                content_element = wait.until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+                # Find ALL elements matching the selector
+                content_elements = wait.until(
+                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, selector))
                 )
-                logging.info(f"Found '{name}'. Extracting HTML.")
-                combined_html.append(content_element.get_attribute('outerHTML'))
+                logging.info(f"Found {len(content_elements)} element(s) for '{name}'. Extracting HTML.")
+                
+                # Loop through each found element and add its HTML
+                for element in content_elements:
+                    # --- THIS IS THE FIX ---
+                    # Add a brief pause to allow javascript to finish rendering the content of the element.
+                    time.sleep(0.2)
+                    combined_html.append(element.get_attribute('outerHTML'))
+                
             except TimeoutException:
                 logging.warning(f"Content block '{name}' not found with selector '{selector}'. Skipping.")
         
-        # Return the combined HTML of all found blocks, only if something was found
         return "\n".join(combined_html) if combined_html else None
         
     except Exception as e:
@@ -133,6 +156,29 @@ def scrape_content(url):
             logging.info("Closing the browser.")
             driver.quit()
 
+def get_s3_object_size(bucket_name, s3_key):
+    """
+    Fetches the size of an object in S3 without downloading it.
+    Returns the size in bytes, or -1 if the object is not found or an error occurs.
+    """
+    s3_client = boto3.client('s3')
+    try:
+        # head_object is efficient as it only fetches metadata (like size)
+        response = s3_client.head_object(Bucket=bucket_name, Key=s3_key)
+        size = response.get('ContentLength', 0)
+        logging.info(f"Baseline file s3://{bucket_name}/{s3_key} has size: {size} bytes.")
+        return size
+    except ClientError as e:
+        # Handle the case where the miniviewer.html file doesn't exist
+        if e.response['Error']['Code'] == '404':
+            logging.error(f"Baseline file not found at s3://{bucket_name}/{s3_key}")
+        else:
+            logging.error(f"An S3 client error occurred when fetching size for {s3_key}: {e}")
+        return -1
+    except NoCredentialsError:
+        logging.error("Credentials not available for AWS S3.")
+        return -1
+    
 def upload_to_s3(content, bucket_name, s3_key):
     """Uploads content to a specified S3 bucket."""
     s3_client = boto3.client('s3')

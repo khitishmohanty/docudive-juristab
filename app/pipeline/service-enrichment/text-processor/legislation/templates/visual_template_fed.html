@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: #f8f9fa; 
+            overflow: hidden; 
+        }
+        .main-container { 
+            display: flex; 
+            position: relative; 
+        }
+        #toc-panel { 
+            width: 320px; 
+            flex-shrink: 0; 
+            background-color: #ffffff; 
+            border-right: 1px solid #dee2e6; 
+            transition: width 0.3s ease-in-out; 
+            overflow: hidden; 
+            font-size: 14px; 
+        }
+        .main-container.toc-collapsed #toc-panel { 
+            width: 0; 
+        }
+        #toc-content { 
+            padding: 1.5rem; 
+            height: 100vh; 
+            overflow-y: auto; 
+            white-space: normal; 
+        }
+        #toc-toggle { 
+            position: absolute; 
+            top: 1rem; 
+            left: 320px; 
+            transform: translateX(-50%); 
+            z-index: 10; 
+            background-color: #fff; 
+            border: 1px solid #dee2e6; 
+            border-radius: 50%; 
+            width: 2.5rem; 
+            height: 2.5rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            transition: left 0.3s ease-in-out; 
+        }
+        .main-container.toc-collapsed #toc-toggle { 
+            left: 1.25rem; 
+            transform: translateX(0); 
+        }
+        #toc-toggle svg { 
+            transition: transform 0.3s ease-in-out; 
+        }
+        .main-container.toc-collapsed #toc-toggle svg { 
+            transform: rotate(180deg); 
+        }
+        #toc-list a { 
+            text-decoration: none; 
+            color: #495057; 
+            display: block; 
+            padding: 0.35rem 0.75rem; 
+            border-radius: 0.375rem; 
+            transition: background-color 0.2s;
+        }
+        #toc-list a:hover {
+            background-color: #e9ecef;
+        }
+        #toc-list ul { 
+            padding-left: 1rem; 
+            border-left: 1px solid #e9ecef;
+        }
+        #toc-list li.toc-collapsible > ul { 
+            display: none; 
+        }
+        #toc-list li.toc-collapsible.active > ul { 
+            display: block; 
+        }
+        #toc-list li.toc-collapsible > a { 
+            position: relative; 
+            font-weight: 500;
+        }
+        #toc-list li.toc-collapsible > a::before {
+            content: '\25B8';
+            position: absolute;
+            left: -0.5rem;
+            top: 50%;
+            transform: translateY(-50%) rotate(0deg);
+            transition: transform 0.2s ease-in-out;
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        #toc-list li.toc-collapsible.active > a::before {
+            transform: translateY(-50%) rotate(90deg);
+        }
+        #main-content { 
+            flex-grow: 1; 
+            padding: 2.5rem; 
+            overflow-y: auto; 
+            height: 100vh; 
+            font-family: 'Roboto Slab', serif; 
+            font-size: 16px; 
+            line-height: 1.7;
+            color: #212529;
+        }
+        .collapsible { 
+            cursor: pointer; 
+            transition: background-color 0.3s ease; 
+            padding: 0.75rem 1rem; 
+            border-radius: 0.25rem;
+            font-weight: 700;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .content {
+            overflow: hidden;
+            padding-left: 2.5rem;
+            max-height: 0;
+            transition: max-height 0.4s ease-in-out;
+            border-left: 2px solid #ced4da;
+            margin-left: 1rem;
+        }
+        .content.no-transition {
+            transition: none !important;
+        }
+        .collapsible::before { 
+            content: '\25B8'; 
+            color: #6c757d; 
+            display: inline-block; 
+            margin-right: 0.75rem; 
+            transition: transform 0.3s ease; 
+            font-size: 0.9em;
+        }
+        .collapsible.active::before { 
+            transform: rotate(90deg); 
+        }
+        .level-1 { font-size: 1.5em; color: #343a40; } 
+        .level-2 { font-size: 1.25em; color: #343a40; } 
+        .level-3 { font-size: 1.1em; font-weight: 500; } 
+        .level-4 { font-size: 1em; font-weight: 500; } 
+        .level-5 { font-size: 1em; font-style: italic; }
+        
+        /* Content specific styles for FED docs */
+        .content p, .content div {
+            margin-bottom: 1rem;
+        }
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-family: 'Roboto', sans-serif;
+        }
+        .content th, .content td {
+            border: 1px solid #dee2e6;
+            padding: 0.75rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        .content th, .content thead td, .content thead p {
+            font-weight: 700;
+            background-color: #f8f9fa;
+        }
+        .content blockquote {
+            margin-left: 2rem;
+            padding-left: 1rem;
+            border-left: 3px solid #e9ecef;
+            color: #495057;
+        }
+        .content .section-header {
+            font-weight: bold;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+    <div class="main-container">
+        <div id="toc-panel">
+            <div id="toc-content">
+                <h2 class="text-2xl font-bold mb-4 text-gray-700" style="font-family: 'Roboto Slab', serif;">Navigator</h2>
+                <div id="toc-list"></div>
+            </div>
+        </div>
+        <button id="toc-toggle" title="Toggle Table of Contents">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div id="main-content">
+            <div class="max-w-5xl mx-auto p-6 bg-white shadow-sm rounded-lg border border-gray-200">
+                <div id="output"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mainContainer = document.querySelector('.main-container');
+            const tocToggle = document.getElementById('toc-toggle');
+            tocToggle.addEventListener('click', () => { mainContainer.classList.toggle('toc-collapsed'); });
+            
+            document.body.addEventListener('click', function(event) {
+                const collapsible = event.target.closest('.collapsible');
+                if (collapsible) {
+                    collapsible.classList.toggle('active');
+                    const content = collapsible.nextElementSibling;
+                    const isOpening = content.style.maxHeight !== '0px' && content.style.maxHeight;
+
+                    // Temporarily disable transitions on parent elements to avoid jumpy animations
+                    const parents = [];
+                    let parent = content.parentElement.closest('.content');
+                    while(parent) {
+                        if (parent.style.maxHeight && parent.style.maxHeight !== '0px') {
+                            parents.push(parent);
+                        }
+                        parent = parent.parentElement.closest('.content');
+                    }
+                    parents.forEach(p => p.classList.add('no-transition'));
+
+                    if (!isOpening) {
+                        const childHeight = content.scrollHeight;
+                        content.style.maxHeight = childHeight + 'px';
+                        // Add height to all open parent .content divs
+                        parents.forEach(p => {
+                            p.style.maxHeight = (parseInt(p.style.maxHeight, 10) + childHeight) + 'px';
+                        });
+                    } else {
+                        const childHeight = content.scrollHeight;
+                        content.style.maxHeight = '0px';
+                        // Subtract height from all open parent .content divs
+                        parents.forEach(p => {
+                            p.style.maxHeight = Math.max(0, (parseInt(p.style.maxHeight, 10) - childHeight)) + 'px';
+                        });
+                    }
+                    
+                    // Re-enable transitions after the size adjustment
+                    setTimeout(() => parents.forEach(p => p.classList.remove('no-transition')), 50);
+                }
+
+                const tocLink = event.target.closest('#toc-list a');
+                if (tocLink) {
+                    event.preventDefault();
+                    const parentLi = tocLink.parentElement;
+                    if (parentLi.classList.contains('toc-collapsible')) {
+                        parentLi.classList.toggle('active');
+                    }
+                    const targetId = tocLink.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        // Open all parent collapsible sections
+                        let parent = targetElement.closest('.content');
+                        while(parent) {
+                            const parentCollapsible = parent.previousElementSibling;
+                            if (parentCollapsible && !parentCollapsible.classList.contains('active')) {
+                                parentCollapsible.click();
+                            }
+                            parent = parent.parentElement.closest('.content');
+                        }
+                        // Open the target element itself if it's a collapsible
+                        if(targetElement.classList.contains('collapsible') && !targetElement.classList.contains('active')) {
+                            targetElement.click();
+                        }
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Optional: Add a highlight effect
+                        targetElement.style.backgroundColor = 'rgba(255, 229, 100, 0.3)';
+                        setTimeout(() => {
+                            targetElement.style.backgroundColor = '';
+                        }, 2000);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

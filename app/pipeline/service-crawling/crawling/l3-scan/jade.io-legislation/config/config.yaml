@@ -10,6 +10,8 @@ database:
 s3:
   bucket_name: "legal-store"
   output_filename: "full_book_content.html"
+  baseline_filename: "miniviewer.html"
+  validate_content_size: false
 
 # List of tables to be crawled with their corresponding S3 subfolder names
 tables_to_crawl:

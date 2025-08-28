@@ -21,12 +21,11 @@ class TextProcessor:
             config (dict): The application configuration dictionary.
         """
         self.config = config
+        # Initializing HtmlParser is now simpler as it takes no arguments.
         self.html_parser = HtmlParser()
         
-        # Initialize the S3 manager using the region from the config
         self.s3_manager = S3Manager(region_name=config['aws']['default_region'])
         
-        # This processor connects to both source and destination databases
         self.source_db = DatabaseConnector(db_config=config['database']['source'])
         self.dest_db = DatabaseConnector(db_config=config['database']['destination'])
 
@@ -38,7 +37,7 @@ class TextProcessor:
         """
         dest_table_info = self.config['tables']['tables_to_write'][0]
         dest_table = dest_table_info['table']
-        status_column = dest_table_info['step_columns']['text_extract']['status'] # This correctly gets 'status_text_processor' from config.yaml
+        status_column = dest_table_info['step_columns']['text_extract']['status']
 
         registry_config = self.config.get('tables_registry')
         if not registry_config:
@@ -84,13 +83,32 @@ class TextProcessor:
                 s3_base_folder = jurisdiction_info['s3_folder']
                 print(f"\n--- Checking Jurisdiction: {jurisdiction} ---")
 
+                # --- NEW: Load the jurisdiction-specific HTML template ---
+                template_filename = jurisdiction_info.get('html_template')
+                if not template_filename:
+                    print(f"WARNING: 'html_template' not defined for jurisdiction '{jurisdiction}' in config. Skipping.")
+                    continue
+                
+                template_content = ""
+                try:
+                    template_path = os.path.join('templates', template_filename)
+                    with open(template_path, 'r', encoding='utf-8') as f:
+                        template_content = f.read()
+                    print(f"INFO: Successfully loaded template '{template_filename}' for jurisdiction '{jurisdiction}'.")
+                except FileNotFoundError:
+                    print(f"ERROR: Template file '{template_path}' not found for jurisdiction '{jurisdiction}'. Skipping.")
+                    continue
+                except Exception as e:
+                    print(f"ERROR: Could not read template file '{template_path}'. Skipping. Error: {e}")
+                    continue
+                # --- END NEW ---
+
                 try:
                     query_parts = [
                         f"SELECT reg.source_id",
                         f"FROM {registry_table} AS reg",
                         f"LEFT JOIN {dest_table} AS dest ON reg.source_id = dest.source_id",
                         f"WHERE reg.jurisdiction_code = :jurisdiction",
-                        # ADDED CONDITIONS: Ensure prerequisite steps in the registry are complete
                         f"AND reg.status_registration = 'pass'",
                         f"AND reg.status_content_download = 'pass'"
                     ]
@@ -100,7 +118,6 @@ class TextProcessor:
                         query_parts.append(f"AND reg.{registry_year_col} = :year")
                         params["year"] = year
                     
-                    # This condition now only runs AFTER the registry statuses are confirmed to be 'pass'
                     query_parts.append(f"AND (dest.source_id IS NULL OR dest.{status_column} != 'pass')")
                     query = "\n".join(query_parts)
                     
@@ -123,20 +140,24 @@ class TextProcessor:
                     html_file_key = os.path.join(case_folder, filenames['source_html'])
                     txt_file_key = os.path.join(case_folder, filenames['extracted_text'])
                     
+                    # Pass the loaded template content to the processing method
                     self._extract_and_save_text(
-                        s3_bucket, html_file_key, txt_file_key, dest_table, source_id, case_folder
+                        s3_bucket, html_file_key, txt_file_key, dest_table, source_id, case_folder, template_content
                     )
             
         print("\n--- Text extraction check completed for all configured years and jurisdictions. ---")
 
-    def _extract_and_save_text(self, bucket: str, html_key: str, txt_key: str, status_table: str, source_id: str, case_folder: str):
+    def _extract_and_save_text(self, bucket: str, html_key: str, txt_key: str, status_table: str, source_id: str, case_folder: str, template_content: str):
         start_time_utc = datetime.now(timezone.utc)
         dest_table_info = self.config['tables']['tables_to_write'][0]
         step_columns_config = dest_table_info['step_columns']
         
         try:
             html_content = self.s3_manager.get_file_content(bucket, html_key)
-            styled_html_content = self.html_parser.create_juriscontent_html(html_content)
+            
+            # Pass the template content to the parser
+            styled_html_content = self.html_parser.create_juriscontent_html(html_content, template_content)
+            
             visual_filename = self.config['enrichment_filenames']['visual_file']
             visual_file_key = os.path.join(case_folder, visual_filename)
             self.s3_manager.save_text_file(bucket, visual_file_key, styled_html_content)
@@ -163,7 +184,6 @@ class TextProcessor:
             end_time_utc = datetime.now(timezone.utc)
             duration = (end_time_utc - start_time_utc).total_seconds()
             
-            # Use the new upsert function
             self.dest_db.upsert_step_result(
                 status_table, source_id, 'text_extract', 'pass', duration, 
                 start_time_utc, end_time_utc, step_columns_config
@@ -173,10 +193,7 @@ class TextProcessor:
             end_time_utc = datetime.now(timezone.utc)
             duration = (end_time_utc - start_time_utc).total_seconds()
             print(f"FAILED to process case {source_id}. Error: {e}")
-            # Use the new upsert function for failures as well
             self.dest_db.upsert_step_result(
                 status_table, source_id, 'text_extract', 'failed', duration,
                 start_time_utc, end_time_utc, step_columns_config
             )
-            
-    
