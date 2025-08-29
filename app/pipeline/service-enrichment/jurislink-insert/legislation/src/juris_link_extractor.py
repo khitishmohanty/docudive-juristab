@@ -101,7 +101,7 @@ class JurisLinkExtractor:
     def _get_source_ids_from_registry(self):
         """
         Fetches source_id and file_path from the caselaw_registry table 
-        for records that have not already been successfully processed.
+        for records that have not already been successfully processed and have passed content download.
         """
         try:
             with open(self.config_path, 'r') as file:
@@ -111,23 +111,34 @@ class JurisLinkExtractor:
             years = registry_config['processing_years']
             jurisdictions = registry_config['jurisdiction_codes']
             
-            # Get the specific status column name from the config
+            # --- MODIFICATION START ---
+
+            # 1. Read the new required status column from the config
+            required_status_column = registry_config.get('required_status_column')
+
+            # Get the specific status column name for this script's processing
             status_column = self.enrichment_cols['processing_status']
 
-            self.logger.info(f"Querying for records with years: {years} and jurisdictions: {jurisdictions} that have not passed processing.")
+            self.logger.info(f"Querying for records with years: {years} and jurisdictions: {jurisdictions}.")
 
-            # MODIFIED QUERY:
-            # - LEFT JOINs caselaw_enrichment_status to check the processing status.
-            # - WHERE clause now also checks if the status is NOT 'pass'.
-            #   Records not in caselaw_enrichment_status will have a NULL status and be included.
-            query = text(f"""
+            # 2. Build the query dynamically
+            query_sql = f"""
                 SELECT cr.source_id, cr.file_path 
                 FROM {self.caselaw_registry_table} cr
                 LEFT JOIN {self.enrichment_status_table} ces ON cr.source_id = ces.source_id
                 WHERE cr.{registry_config['column']} IN :years 
                 AND cr.jurisdiction_code IN :jurisdiction_codes
                 AND (ces.{status_column} IS NULL OR ces.{status_column} != 'pass')
-            """)
+            """
+
+            # 3. Add the new condition if it's defined in the config
+            if required_status_column:
+                self.logger.info(f"Adding prerequisite: Records must have '{required_status_column}' status as 'pass'.")
+                query_sql += f" AND cr.{required_status_column} = 'pass'"
+            
+            query = text(query_sql)
+            
+            # --- MODIFICATION END ---
 
             result = self.db_session.execute(query.bindparams(
                 bindparam('years', expanding=True),
@@ -269,7 +280,7 @@ class JurisLinkExtractor:
             else:
                 # Insert new record
                 insert_query = text(f"""
-                    INSERT INTO {self.enrichment_status_table} (source_id, {status_col}, {duration_col}, {start_time_col}, {end_col}) 
+                    INSERT INTO {self.enrichment_status_table} (source_id, {status_col}, {duration_col}, {start_time_col}, {end_time_col}) 
                     VALUES (:source_id, :status, :duration, :start_time, :end_time)
                 """)
                 self.db_session.execute(insert_query, {

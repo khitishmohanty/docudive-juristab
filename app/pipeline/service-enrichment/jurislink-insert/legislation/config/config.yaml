@@ -56,3 +56,4 @@ tables_registry:
     column: "year"
     processing_years: [2025,2024]
     jurisdiction_codes: ['ACT','VIC','NT','QLD','WA','SA','TAS','NSW','FED']
+    required_status_column: "status_content_download"
