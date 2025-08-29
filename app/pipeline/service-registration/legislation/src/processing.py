@@ -152,7 +152,9 @@ def process_legislation_data():
                     record_exists = source_id in existing_records
 
                     context_details = parse_legislation_context(row['book_context'])
-                    start_date = context_details['start_date']
+                    start_date = context_details.get('start_date')
+                    book_version = context_details.get('book_version') # Extract book_version
+                    
                     storage_folder_s3_path = f"{filepath_from_config}{storage_folder}/"
                     file_path = f"{filepath_from_config}{storage_folder}/{source_id}"
                     content_download_status = verify_content_files(storage_folder_s3_path, source_id)
@@ -160,6 +162,7 @@ def process_legislation_data():
                     record_data = {
                         'source_id': source_id,
                         'book_name': row['book_name'],
+                        'book_version': book_version, # Add book_version to record
                         'jurisdiction_code': jurisdiction_code,
                         'start_date': start_date,
                         'year': start_date.year if start_date else None,
