@@ -21,11 +21,8 @@ class TextProcessor:
             config (dict): The application configuration dictionary.
         """
         self.config = config
-        # Initializing HtmlParser is now simpler as it takes no arguments.
         self.html_parser = HtmlParser()
-        
         self.s3_manager = S3Manager(region_name=config['aws']['default_region'])
-        
         self.source_db = DatabaseConnector(db_config=config['database']['source'])
         self.dest_db = DatabaseConnector(db_config=config['database']['destination'])
 
@@ -83,26 +80,6 @@ class TextProcessor:
                 s3_base_folder = jurisdiction_info['s3_folder']
                 print(f"\n--- Checking Jurisdiction: {jurisdiction} ---")
 
-                # --- NEW: Load the jurisdiction-specific HTML template ---
-                template_filename = jurisdiction_info.get('html_template')
-                if not template_filename:
-                    print(f"WARNING: 'html_template' not defined for jurisdiction '{jurisdiction}' in config. Skipping.")
-                    continue
-                
-                template_content = ""
-                try:
-                    template_path = os.path.join('templates', template_filename)
-                    with open(template_path, 'r', encoding='utf-8') as f:
-                        template_content = f.read()
-                    print(f"INFO: Successfully loaded template '{template_filename}' for jurisdiction '{jurisdiction}'.")
-                except FileNotFoundError:
-                    print(f"ERROR: Template file '{template_path}' not found for jurisdiction '{jurisdiction}'. Skipping.")
-                    continue
-                except Exception as e:
-                    print(f"ERROR: Could not read template file '{template_path}'. Skipping. Error: {e}")
-                    continue
-                # --- END NEW ---
-
                 try:
                     query_parts = [
                         f"SELECT reg.source_id",
@@ -140,14 +117,13 @@ class TextProcessor:
                     html_file_key = os.path.join(case_folder, filenames['source_html'])
                     txt_file_key = os.path.join(case_folder, filenames['extracted_text'])
                     
-                    # Pass the loaded template content to the processing method
                     self._extract_and_save_text(
-                        s3_bucket, html_file_key, txt_file_key, dest_table, source_id, case_folder, template_content
+                        s3_bucket, html_file_key, txt_file_key, dest_table, source_id
                     )
             
         print("\n--- Text extraction check completed for all configured years and jurisdictions. ---")
 
-    def _extract_and_save_text(self, bucket: str, html_key: str, txt_key: str, status_table: str, source_id: str, case_folder: str, template_content: str):
+    def _extract_and_save_text(self, bucket: str, html_key: str, txt_key: str, status_table: str, source_id: str):
         start_time_utc = datetime.now(timezone.utc)
         dest_table_info = self.config['tables']['tables_to_write'][0]
         step_columns_config = dest_table_info['step_columns']
@@ -155,16 +131,11 @@ class TextProcessor:
         try:
             html_content = self.s3_manager.get_file_content(bucket, html_key)
             
-            # Pass the template content to the parser
-            styled_html_content = self.html_parser.create_juriscontent_html(html_content, template_content)
-            
-            visual_filename = self.config['enrichment_filenames']['visual_file']
-            visual_file_key = os.path.join(case_folder, visual_filename)
-            self.s3_manager.save_text_file(bucket, visual_file_key, styled_html_content)
-            
+            # Extract plain text content for the .txt file
             text_content = self.html_parser.extract_text(html_content)
             self.s3_manager.save_text_file(bucket, txt_key, text_content)
 
+            # Calculate metadata
             char_count = len(text_content)
             word_count = len(text_content.split())
             
