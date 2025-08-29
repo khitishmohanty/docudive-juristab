@@ -41,7 +41,8 @@ tables:
         start_time: "start_time_jurislink"
         end_time: "end_time_jurislink"
     - database: legal_store
-      table: juris_link
+      key: "juris_link"
+      table: juris_link_extract_from_caselaw
 
 # -- File naming conventions for the enrichment service --
 enrichment_filenames:

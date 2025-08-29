@@ -34,25 +34,33 @@ def get_db_connection(config_path='config/config.yaml'):
     Session = sessionmaker(bind=engine)
     return Session()
 
-def get_table_name(config_path, table_key):
+def get_table_name(config_path, logical_key):
     """
-    Gets a table name from the config file.
+    Gets a table's actual name from the config file using its logical key.
     """
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
-    
-    for table_info in config['tables']['tables_to_write']:
-        if table_info['table'] == table_key:
+
+    # Search in tables_to_write
+    for table_info in config['tables'].get('tables_to_write', []):
+        if table_info.get('key') == logical_key:
             return table_info['table']
-    
-    for table_info in config['tables']['tables_to_read']:
-        if table_info['table'] == table_key:
+            
+    # Search in tables_to_read
+    for table_info in config['tables'].get('tables_to_read', []):
+        if table_info.get('key') == logical_key: # You can add keys here too if needed
             return table_info['table']
 
-    if config['tables_registry']['table'] == table_key:
-        return table_key
+    # Handle special cases like the registry table if needed
+    if logical_key == 'caselaw_registry' and config.get('tables_registry', {}).get('table') == 'caselaw_registry':
+        return 'caselaw_registry'
 
-    raise ValueError(f"Table key '{table_key}' not found in config file.")
+    # Fallback for tables without a key (like caselaw_enrichment_status)
+    for table_info in config['tables'].get('tables_to_write', []):
+        if table_info['table'] == logical_key:
+            return table_info['table']
+
+    raise ValueError(f"Table with logical key '{logical_key}' not found in config file.")
 
 def get_column_names(config_path, table_key):
     """
