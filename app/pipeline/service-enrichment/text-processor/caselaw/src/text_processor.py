@@ -147,7 +147,7 @@ class TextProcessor:
 
     def _extract_and_save_text(self, bucket: str, html_key: str, txt_key: str, status_table: str, source_id: str, case_folder: str):
         """
-        Handles HTML download, text extraction, HTML modification, saving artifacts to S3,
+        Handles HTML download, text extraction, saving artifacts to S3,
         and updating the status database.
         """
         start_time_utc = datetime.now(timezone.utc)
@@ -157,10 +157,6 @@ class TextProcessor:
         
         try:
             html_content = self.s3_manager.get_file_content(bucket, html_key)
-            modified_html_content = self.html_parser.modify_html_font(html_content)
-            visual_filename = self.config['enrichment_filenames']['visual_file']
-            visual_file_key = os.path.join(case_folder, visual_filename)
-            self.s3_manager.save_text_file(bucket, visual_file_key, modified_html_content)
             
             text_content = self.html_parser.extract_text(html_content)
             self.s3_manager.save_text_file(bucket, txt_key, text_content)
@@ -187,7 +183,7 @@ class TextProcessor:
             end_time_utc = datetime.now(timezone.utc)
             duration = (end_time_utc - start_time_utc).total_seconds()
             
-            print(f"Successfully extracted text and created visual file for {source_id}.")
+            print(f"Successfully extracted text for {source_id}.")
             self.dest_db.update_step_result(
                 status_table, source_id, 'text_extract', 'pass', duration, 
                 start_time_utc, end_time_utc, step_columns_config
@@ -195,7 +191,7 @@ class TextProcessor:
         except Exception as e:
             end_time_utc = datetime.now(timezone.utc)
             duration = (end_time_utc - start_time_utc).total_seconds()
-            print(f"Text extraction and visual file creation FAILED for {source_id}. Error: {e}")
+            print(f"Text extraction FAILED for {source_id}. Error: {e}")
             self.dest_db.update_step_result(
                 status_table, source_id, 'text_extract', 'failed', duration,
                 start_time_utc, end_time_utc, step_columns_config

@@ -82,12 +82,10 @@ tables:
       table: audit_log
       job_name: "caselaw_enrichment_nt"
 
-
 # -- File naming conventions for the enrichment service --
 enrichment_filenames:
   source_html: "miniviewer.html"
   extracted_text: "miniviewer.txt"
-  visual_file: "juriscontent.html"
 
 # -- Audit log configuration --
 audit_log:
