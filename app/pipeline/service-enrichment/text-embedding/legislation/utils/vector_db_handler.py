@@ -45,7 +45,6 @@ class VectorDBHandler:
             self.client.index(
                 index=self.index_name,
                 body=document,
-                id=doc_id, # Use the source_id as the document's _id for idempotency
                 refresh=False 
             )
             print(f"Successfully indexed doc_id {doc_id} into OpenSearch.")

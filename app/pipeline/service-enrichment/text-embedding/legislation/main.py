@@ -101,19 +101,18 @@ def main():
                     s3_handler.upload_embedding(embedding_s3_key, embedding_bytes)
 
                     # Step B: Index document into OpenSearch Vector DB
-                    try:
-                        vector_db_handler.index_document(source_id, embedding_vector)
-                    except Exception as e_vec:
-                        # Log the vector DB error but don't fail the entire process for this item.
-                        # The main status will still be 'pass' as the embedding exists in S3.
-                        print(f"\nWARNING: Succeeded for {source_id} but failed to index in Vector DB. Error: {e_vec}")
+                    # The inner try/except block has been removed. If this step fails,
+                    # the main exception handler below will catch it and mark the status as 'fail'.
+                    vector_db_handler.index_document(source_id, embedding_vector)
 
                     # Step C: Update status in relational DB
+                    # This will now only run if both embedding and indexing are successful.
                     duration = time.time() - start_time
                     price = (duration / 3600) * server_pod_price
                     db_handler.update_embedding_status(source_id, 'pass', duration, price)
 
                 except Exception as e:
+                    # This block will now correctly handle errors from S3 or OpenSearch.
                     print(f"\nERROR processing source_id {source_id}: {e}")
                     db_handler.update_embedding_status(source_id, 'fail', price=None)
 
