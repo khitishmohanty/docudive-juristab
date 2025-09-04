@@ -43,33 +43,41 @@ class DatabaseHandler:
         self.duration_column = status_config['columns']['processing_duration']
         self.start_time_column = status_config['columns']['start_time']
         self.end_time_column = status_config['columns']['end_time']
-        # --- Added price column from config ---
         self.price_column = status_config['columns']['price']
 
-        # Registry table config
-        registry_config = config['tables_registry']
+        # Registry and metadata table config from the new structure
+        registry_config = config['registry']['legislation_registry']
         self.registry_table = registry_config['table']
-        self.registry_year_column = registry_config['column']
-        self.registry_jurisdiction_column = 'jurisdiction_code'
+        self.registry_year_column = registry_config['year_column']
+        self.registry_jurisdiction_column = registry_config['jurisdiction_column']
+
+        metadata_config = config['registry']['legislation_metadata']
+        self.metadata_table = metadata_config['table']
+        self.word_count_column = metadata_config['word_count_column']
+        self.word_count_threshold = metadata_config['word_count_threshold']
 
 
     def get_cases_to_process(self, year=None, jurisdiction_code=None):
         """
-        Fetches a list of source_ids that have passed text processing but have not 
-        yet been successfully embedded. Optionally filters by year and/or jurisdiction.
+        Fetches a list of source_ids that have passed text processing, have a word count
+        above the threshold, and have not yet been successfully embedded. 
+        Optionally filters by year and/or jurisdiction.
         """
-        params = {}
-        # Base conditions that are always applied
+        params = {"threshold": self.word_count_threshold}
+        
+        # Base conditions including the new word count check
         where_clauses = [
             "T1.status_text_processor = 'pass'",
-            f"(T1.{self.status_column} != 'pass' OR T1.{self.status_column} IS NULL)"
+            f"(T1.{self.status_column} != 'pass' OR T1.{self.status_column} IS NULL)",
+            f"T3.{self.word_count_column} >= :threshold"
         ]
 
-        # Base query joins the necessary tables
+        # Base query now joins status, registry, and metadata tables
         base_query = f"""
             SELECT T1.source_id 
             FROM {self.status_table} AS T1
             JOIN {self.registry_table} AS T2 ON T1.source_id = T2.source_id
+            JOIN {self.metadata_table} AS T3 ON T1.source_id = T3.source_id
         """
 
         # Dynamically add filters if they are provided
@@ -118,7 +126,6 @@ class DatabaseHandler:
         
         return id_to_folder_map
 
-    # --- Modified function to accept and store price ---
     def update_embedding_status(self, source_id, status, duration=None, price=None):
         """Updates the embedding status, duration, and price for a given source_id."""
         update_query = f"""

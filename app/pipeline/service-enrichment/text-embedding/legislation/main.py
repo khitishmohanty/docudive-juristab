@@ -9,6 +9,7 @@ from tqdm import tqdm
 load_dotenv()
 
 from utils.helpers import load_config, DatabaseHandler, S3Handler
+from utils.vector_db_handler import VectorDBHandler
 from src.embedding_generator import EmbeddingGenerator
 
 def main():
@@ -20,7 +21,6 @@ def main():
     # 1. Load Configuration
     config = load_config('config/config.yaml')
     
-    # --- This part is unchanged ---
     server_pod_price = config.get('server_pod_price', {}).get('hour_price', 0.28)
     print(f"Using server pod hourly price: ${server_pod_price}")
 
@@ -29,16 +29,16 @@ def main():
         db_handler = DatabaseHandler(config)
         s3_handler = S3Handler(config)
         embedding_generator = EmbeddingGenerator(config)
+        vector_db_handler = VectorDBHandler(config)
     except Exception as e:
         print(f"FATAL: Could not initialize handlers. Error: {e}")
         return
 
     # 3. Get years and jurisdictions to process from the config
-    registry_config = config.get('tables_registry', {})
+    registry_config = config.get('registry', {}).get('legislation_registry', {})
     processing_years = registry_config.get('processing_years', [])
     jurisdiction_codes = registry_config.get('jurisdiction_codes', [])
 
-    # --- MODIFICATION ---
     # If lists are empty, replace them with a list containing 'None'.
     # This ensures the loop runs once and treats the filter as "all-inclusive".
     if not processing_years:
@@ -46,14 +46,12 @@ def main():
     if not jurisdiction_codes:
         jurisdiction_codes = [None]
 
-    # The fatal error check has been removed.
     print(f"Configured to process years: {processing_years if processing_years != [None] else 'All'}")
     print(f"Configured to process jurisdictions: {jurisdiction_codes if jurisdiction_codes != [None] else 'All'}")
 
     # 4. Loop through each year and then each jurisdiction from the config
     for year in processing_years:
         for jurisdiction in jurisdiction_codes:
-            # --- MODIFICATION ---
             # Construct a descriptive name for the current processing batch
             year_str = str(year) if year else "All-Years"
             jur_str = jurisdiction if jurisdiction else "All-Jurisdictions"
@@ -62,7 +60,6 @@ def main():
 
             # 5. Get list of cases to process for the current year and jurisdiction
             try:
-                # The get_cases_to_process function already handles None for year/jurisdiction
                 source_ids_to_process = db_handler.get_cases_to_process(year, jurisdiction)
                 if not source_ids_to_process:
                     print(f"No new cases to process for {year_str}-{jur_str}. Continuing.")
@@ -89,15 +86,29 @@ def main():
                     db_handler.update_embedding_status(source_id, 'fail_mapping', price=None)
                     continue
                 try:
+                    # Step A: Generate embedding and upload to S3
                     s3_folder = id_to_folder_map[source_id]
                     text_s3_key = f"{s3_folder}{source_id}/{source_text_filename}"
                     embedding_s3_key = f"{s3_folder}{source_id}/{embedding_output_filename}"
+                    
                     caselaw_text = s3_handler.get_caselaw_text(text_s3_key)
                     embedding_vector = embedding_generator.generate_embedding_for_text(caselaw_text)
+                    
                     if embedding_vector is None:
                         raise ValueError("Embedding generation returned None.")
+                    
                     embedding_bytes = embedding_generator.save_embedding_to_bytes(embedding_vector)
                     s3_handler.upload_embedding(embedding_s3_key, embedding_bytes)
+
+                    # Step B: Index document into OpenSearch Vector DB
+                    try:
+                        vector_db_handler.index_document(source_id, embedding_vector)
+                    except Exception as e_vec:
+                        # Log the vector DB error but don't fail the entire process for this item.
+                        # The main status will still be 'pass' as the embedding exists in S3.
+                        print(f"\nWARNING: Succeeded for {source_id} but failed to index in Vector DB. Error: {e_vec}")
+
+                    # Step C: Update status in relational DB
                     duration = time.time() - start_time
                     price = (duration / 3600) * server_pod_price
                     db_handler.update_embedding_status(source_id, 'pass', duration, price)
