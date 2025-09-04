@@ -114,7 +114,7 @@ def main():
                 except Exception as e:
                     # This block will now correctly handle errors from S3 or OpenSearch.
                     print(f"\nERROR processing source_id {source_id}: {e}")
-                    db_handler.update_embedding_status(source_id, 'fail', price=None)
+                    db_handler.update_embedding_status(source_id, 'failed', price=None)
 
     print("\nCaselaw Embedding Service batch job finished.")
 

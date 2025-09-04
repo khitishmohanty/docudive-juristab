@@ -20,6 +20,14 @@ database:
         port: "3306"
         name: "legal_store"
 
+#OpenSearch Details
+vector_db:
+    host: "f4xiu02cfrb0zrwqwob5.ap-southeast-2.aoss.amazonaws.com"
+    index_name: "legal-store"
+    embedding_dimension: 1024
+    default_region: "ap-southeast-2"
+    doc_type: "case-law"
+
 # -- AWS connection details --
 aws:
     default_region: "ap-southeast-2"
@@ -82,13 +90,24 @@ enrichment_filenames:
   embedding_output: "embeddings.npy"
 
 # -- Registry details
-tables_registry:
-    database: "legal_store"
-    table: "caselaw_registry"
-    column: "year"
-    processing_years: []
-    jurisdiction_codes: ['ACT','VIC','NT','QLD','WA','SA','TAS','FED','NSW']
+registry:
+    # Used for filtering by year and jurisdiction
+    caselaw_registry:
+        database: "legal_store"
+        table: "caselaw_registry"
+        year_column: "year"
+        jurisdiction_column: "jurisdiction_code"
+        processing_years: []
+        jurisdiction_codes: ['ACT','VIC','NT','QLD','WA','SA','TAS','FED','NSW']
+    
+    # Used for the new word count pre-processing check
+    caselaw_metadata:
+        database: "legal_store"
+        table: "caselaw_metadata"
+        word_count_column: "count_word"
+        word_count_threshold: 5
+
 
 # -- Server POD price
 server_pod_price:
-    hour_price: 0.28
+    hour_price: 3.28
