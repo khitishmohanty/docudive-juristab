@@ -15,3 +15,7 @@ python-dotenv
 
 #RunPod
 runpod
+
+#Opensearch API
+opensearch-py
+aws-requests-auth
