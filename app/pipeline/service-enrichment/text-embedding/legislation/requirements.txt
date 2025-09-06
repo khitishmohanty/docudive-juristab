@@ -19,3 +19,4 @@ runpod
 #Opensearch API
 opensearch-py
 aws-requests-auth
+requests-aws4auth
