@@ -34,15 +34,14 @@ def connect_db(db_config, db_user, db_password):
         logging.error(f"Database connection error: {e}")
         return None
 
-def fetch_caselaws_for_gcp_ingestion(conn, update_table_config):
+def fetch_caselaws_for_gcp_ingestion(conn, columns_to_select, ingestion_criteria):
     """
-    Fetches records that are ready for ingestion into GCP.
-    It joins metadata, enrichment status, and registry tables, and filters out
-    records that have already been successfully ingested.
+    Fetches records that are ready for ingestion into GCP based on dynamic criteria.
     
     Args:
         conn: The database connection object.
-        update_table_config (dict): The write configuration from the YAML file.
+        columns_to_select (list): A list of column names for the SELECT statement.
+        ingestion_criteria (dict): Configuration for the WHERE clause.
         
     Returns:
         list: A list of dictionaries, where each dictionary is a record.
@@ -51,54 +50,33 @@ def fetch_caselaws_for_gcp_ingestion(conn, update_table_config):
         return []
     
     cursor = conn.cursor(dictionary=True)
-    status_column = update_table_config['columns']['processing_status']
     
-    # This query joins the necessary tables to get all metadata for records
-    # that have successfully passed the metadata extraction and text processing stages,
-    # and have not yet been ingested into GCP.
+    # Build the SELECT part of the query
+    select_columns_str = ", ".join(columns_to_select)
+
+    # Build the WHERE clause dynamically from the config
+    where_conditions = ingestion_criteria['conditions']
+    table_alias = ingestion_criteria['alias']
+    
+    where_clause_parts = []
+    for condition in where_conditions:
+        # Note: The 'value' in config.yaml must include quotes for SQL strings
+        part = f"{table_alias}.`{condition['column']}` {condition['operator']} {condition['value']}"
+        where_clause_parts.append(part)
+    
+    where_clause_str = " AND ".join(where_clause_parts)
+    
+    # Construct the final query
     query = f"""
     SELECT 
-        cm.id,
-        cm.source_id,
-        cm.count_char,
-        cm.count_word,
-        cm.file_no,
-        cm.presiding_officer,
-        cm.counsel,
-        cm.law_firm_agency,
-        cm.court_type,
-        cm.hearing_location,
-        cm.judgment_date,
-        cm.hearing_dates,
-        cm.incident_date,
-        cm.keywords,
-        cm.legislation_cited,
-        cm.affected_sectors,
-        cm.practice_areas,
-        cm.citation,
-        cm.key_issues,
-        cm.panelist,
-        cm.orders,
-        cm.decision,
-        cm.cases_cited,
-        cm.matter_type,
-        cm.parties,
-        cm.representation,
-        cm.category,
-        cm.bjs_number,
-        cr.neutral_citation,
-        cr.jurisdiction_code,
-        cr.decision_date,
-        cr.book_name
+        {select_columns_str}
     FROM legal_store.caselaw_metadata cm
     JOIN legal_store.caselaw_enrichment_status ces 
         ON cm.source_id = ces.source_id
     JOIN legal_store.caselaw_registry cr 
         ON cm.source_id = cr.source_id
     WHERE 
-        ces.status_metadataextract = 'pass'
-        AND ces.status_text_processor = 'pass'
-        AND ces.`{status_column}` != 'pass';
+        {where_clause_str};
     """
 
     try:
@@ -116,18 +94,6 @@ def fetch_caselaws_for_gcp_ingestion(conn, update_table_config):
 def update_enrichment_status(conn, update_config, source_id, status, duration, start_time, end_time):
     """
     Updates the caselaw_enrichment_status table.
-    
-    Args:
-        conn: The database connection object.
-        update_config (dict): The configuration for the table to write to.
-        source_id (str): The source_id of the record to update.
-        status (str): The processing status ('pass' or 'failed').
-        duration (float): The duration of the process in seconds.
-        start_time (datetime): The start timestamp.
-        end_time (datetime): The end timestamp.
-        
-    Returns:
-        bool: True on success, False on failure.
     """
     if not conn:
         return False
@@ -138,7 +104,6 @@ def update_enrichment_status(conn, update_config, source_id, status, duration, s
     columns = update_config['columns']
     
     try:
-        # Construct the UPDATE query dynamically
         query = f"""
         UPDATE `{table_name}`
         SET
@@ -158,3 +123,4 @@ def update_enrichment_status(conn, update_config, source_id, status, duration, s
         return False
     finally:
         cursor.close()
+

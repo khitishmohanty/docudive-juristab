@@ -126,44 +126,38 @@ class DataTransfer:
 
         logging.info(f"Starting JSONL file creation for {len(records_data)} records.")
         
-        jsonl_config = self.config.get('json_line', {}) #
+        jsonl_config = self.config.get('json_line', {}) 
         if not jsonl_config:
-            logging.error("JSONL configuration ('json_line') not found in config. Exiting JSONL creation.") #
+            logging.error("JSONL configuration ('json_line') not found in config. Exiting JSONL creation.") 
             return
 
-        bucket_name = jsonl_config.get('storage', {}).get('bucket_name') #
-        folder_name = jsonl_config.get('storage', {}).get('folder_name', '') #
+        bucket_name = jsonl_config.get('storage', {}).get('bucket_name') 
+        folder_name = jsonl_config.get('storage', {}).get('folder_name', '') 
 
         if not bucket_name:
-            logging.error("Bucket name for JSONL storage not found in config.") #
+            logging.error("Bucket name for JSONL storage not found in config.") 
             return
 
-        # Read chunk_size from config, with a default of 1000 for safety
-        chunk_size = jsonl_config.get('chunk_size', 1000) #
+        chunk_size = jsonl_config.get('chunk_size', 1000) 
 
-        for i in range(0, len(records_data), chunk_size): #
-            chunk = records_data[i:i + chunk_size] #
+        for i in range(0, len(records_data), chunk_size): 
+            chunk = records_data[i:i + chunk_size] 
             
-            # Create JSONL content: each JSON object is a line, joined by a newline
-            # This creates the correct JSON Lines format.
-            jsonl_content = '\n'.join([json.dumps(record) for record in chunk]) #
-            jsonl_data_bytes = jsonl_content.encode('utf-8') #
+            jsonl_content = '\n'.join([json.dumps(record) for record in chunk]) 
+            jsonl_data_bytes = jsonl_content.encode('utf-8') 
 
-            # Generate a unique identifier and get the current date for the filename
-            file_uuid = uuid.uuid4() #
-            current_date_str = datetime.datetime.now().strftime('%Y%m%d') #
+            file_uuid = uuid.uuid4() 
+            current_date_str = datetime.datetime.now().strftime('%Y%m%d') 
 
-            # Define the destination blob name for the JSONL file with the new format
-            destination_file_name = f"legal-store-repo-{current_date_str}-{file_uuid}.jsonl" #
-            gcp_blob_name = os.path.join(folder_name, destination_file_name) #
+            destination_file_name = f"legal-store-repo-{current_date_str}-{file_uuid}.jsonl" 
+            gcp_blob_name = os.path.join(folder_name, destination_file_name) 
 
-            logging.info(f"Uploading file to gs://{bucket_name}/{gcp_blob_name}") #
+            logging.info(f"Uploading file to gs://{bucket_name}/{gcp_blob_name}") 
 
-            # Upload the JSONL data to GCP
-            if not upload_file_from_memory(self.gcp_client, bucket_name, gcp_blob_name, jsonl_data_bytes): #
-                logging.error(f"Failed to upload JSONL file {destination_file_name} to GCP Storage.") #
+            if not upload_file_from_memory(self.gcp_client, bucket_name, gcp_blob_name, jsonl_data_bytes): 
+                logging.error(f"Failed to upload JSONL file {destination_file_name} to GCP Storage.") 
             else:
-                logging.info(f"Successfully uploaded {destination_file_name}.") #
+                logging.info(f"Successfully uploaded {destination_file_name}.") 
 
 
     def run(self):
@@ -178,10 +172,16 @@ class DataTransfer:
 
         try:
             # 1. Fetch data from the database
+            schema_config = self.config['output_schema']
             registry_config = self.config['tables_registry']
             update_table_config = self.config['tables']['tables_to_write'][0]
+            ingestion_criteria_config = self.config['ingestion_criteria']
             
-            records = fetch_caselaws_for_gcp_ingestion(self.db_conn, update_table_config)
+            records = fetch_caselaws_for_gcp_ingestion(
+                self.db_conn, 
+                schema_config['database_columns'],
+                ingestion_criteria_config
+            )
             
             if not records:
                 logging.info("No new records to process. Exiting.")
@@ -199,9 +199,13 @@ class DataTransfer:
             source_content_file = self.config['enrichment_filenames']['source_file']
             
             for record in records:
-                source_id = record['source_id']
-                jurisdiction = record['jurisdiction_code']
-                sub_folder = jurisdiction_map.get(jurisdiction, jurisdiction.lower())
+                source_id = record.get('source_id', record.get('cm.source_id'))
+                if not source_id:
+                    logging.warning(f"Skipping record due to missing 'source_id': {record}")
+                    continue
+
+                jurisdiction = record.get('jurisdiction_code', record.get('cr.jurisdiction_code'))
+                sub_folder = jurisdiction_map.get(jurisdiction, str(jurisdiction).lower())
 
                 start_time = datetime.datetime.now()
                 status = 'failed'
@@ -219,15 +223,20 @@ class DataTransfer:
                     # Create the JSON object with a flat structure
                     json_output = {}
                     for key, value in record.items():
+                        clean_key = key.split('.')[-1]
                         if value is not None:
                             if isinstance(value, (datetime.datetime, datetime.date)):
-                                json_output[key] = value.isoformat()
+                                json_output[clean_key] = value.isoformat()
                             else:
-                                json_output[key] = value
+                                json_output[clean_key] = value
                     
-                    json_output["document_type"] = "caselaw"
-                    json_output["content"] = file_content_str
-                    
+                    added_fields_config = schema_config.get('added_fields', {})
+                    content_key = added_fields_config.get('content_key', 'content')
+                    static_fields = added_fields_config.get('static_fields', {})
+
+                    json_output[content_key] = file_content_str
+                    json_output.update(static_fields)
+
                     # For the individual file, we still use indented JSON for readability
                     json_data_bytes_indented = json.dumps(json_output, indent=4).encode('utf-8')
 
@@ -240,7 +249,6 @@ class DataTransfer:
                         raise ValueError("Failed to upload JSON file to GCP Storage.")
                         
                     status = 'pass'
-                    # For the JSONL file, we append the non-indented JSON object
                     successful_records_data.append(json_output) 
                     logging.info(f"Successfully processed and uploaded JSON for source_id: {source_id}")
 
@@ -265,3 +273,4 @@ class DataTransfer:
 
         finally:
             self._close_connections()
+
