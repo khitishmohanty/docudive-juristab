@@ -176,7 +176,9 @@ class DataTransfer:
             registry_config = self.config['tables_registry']
             update_table_config = self.config['tables']['tables_to_write'][0]
             ingestion_criteria_config = self.config['ingestion_criteria']
-            
+            jsonl_config = self.config.get('json_line', {})
+            max_line_chars = jsonl_config.get('max_line_chars')
+
             records = fetch_caselaws_for_gcp_ingestion(
                 self.db_conn, 
                 schema_config['database_columns'],
@@ -212,7 +214,6 @@ class DataTransfer:
                 duration = 0.0
 
                 try:
-                    # Fetch the caselaw content from S3
                     s3_object_key = os.path.join(aws_s3_folder, sub_folder, source_id, source_content_file)
                     file_content_bytes = download_file_to_memory(self.s3_client, aws_s3_bucket, s3_object_key)
                     if file_content_bytes is None:
@@ -220,7 +221,6 @@ class DataTransfer:
                     
                     file_content_str = file_content_bytes.decode('utf-8')
 
-                    # Create the JSON object with a flat structure
                     json_output = {}
                     for key, value in record.items():
                         clean_key = key.split('.')[-1]
@@ -236,21 +236,48 @@ class DataTransfer:
 
                     json_output[content_key] = file_content_str
                     json_output.update(static_fields)
-
-                    # For the individual file, we still use indented JSON for readability
+                    
+                    # Upload the individual, non-split JSON file
                     json_data_bytes_indented = json.dumps(json_output, indent=4).encode('utf-8')
-
-                    # Define the destination blob name for the individual JSON file
                     destination_file_name = f"{source_id}.json"
                     gcp_blob_name = os.path.join(gcp_storage_folder, sub_folder, source_id, destination_file_name)
-
-                    # Upload the individual JSON data to GCP
                     if not upload_file_from_memory(self.gcp_client, gcp_storage_bucket, gcp_blob_name, json_data_bytes_indented):
-                        raise ValueError("Failed to upload JSON file to GCP Storage.")
+                        raise ValueError("Failed to upload individual JSON file to GCP Storage.")
+
+                    # --- NEW: Logic to split record for JSONL if it exceeds the character limit ---
+                    full_line_str = json.dumps(json_output)
+                    if max_line_chars and len(full_line_str) > max_line_chars:
+                        logging.warning(f"Record {source_id} exceeds {max_line_chars} chars and will be split for JSONL.")
+                        
+                        # Separate metadata from the content that needs splitting
+                        metadata = json_output.copy()
+                        content_to_split = metadata.pop(content_key)
+                        
+                        # Calculate the character overhead of the metadata
+                        # This is the length of the JSON object without the content's value
+                        overhead = len(json.dumps(metadata)) - 1 + len(f',"{content_key}":""')
+                        available_content_len = max_line_chars - overhead
+                        
+                        if available_content_len <= 0:
+                            raise ValueError(f"Metadata for {source_id} alone exceeds the max_line_chars limit.")
+
+                        # Split the content and create a new record for each chunk
+                        content_chunks = [content_to_split[i:i + available_content_len] for i in range(0, len(content_to_split), available_content_len)]
+                        
+                        for chunk in content_chunks:
+                            new_record = metadata.copy()
+                            new_record[content_key] = chunk
+                            successful_records_data.append(new_record)
+                        
+                        logging.info(f"Split record {source_id} into {len(content_chunks)} chunks for JSONL.")
+
+                    else:
+                        # If the record is within the limit, add it as is
+                        successful_records_data.append(json_output)
+                    # --- End of splitting logic ---
                         
                     status = 'pass'
-                    successful_records_data.append(json_output) 
-                    logging.info(f"Successfully processed and uploaded JSON for source_id: {source_id}")
+                    logging.info(f"Successfully processed and prepared JSON for source_id: {source_id}")
 
                 except Exception as e:
                     logging.error(f"Error processing record source_id {source_id}: {e}")

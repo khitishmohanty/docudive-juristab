@@ -58,6 +58,8 @@ json_line:
       bucket_name: "juristab-legal-store"
       folder_name: "structured-files/"
     chunk_size: 5000
+    # NEW: Maximum number of characters allowed per line in the JSONL file.
+    max_line_chars: 1000000
 
 # -- Output Schema Definition --
 output_schema:
