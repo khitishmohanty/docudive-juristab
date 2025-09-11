@@ -7,6 +7,7 @@ from config.config import Config
 from src.extractor import MetadataExtractor
 from src.database import DatabaseManager
 from utils.gemini_client import GeminiClient
+from utils.llama_client import LlamaClient
 from utils.file_utils import get_full_s3_key
 from utils.s3_client import S3Manager
 import mysql.connector
@@ -19,13 +20,30 @@ def get_records_to_process(db_manager, registry_config, jurisdiction_codes, year
     Retrieves records from the caselaw_registry table that need processing.
     Selects records where either rule-based or AI extraction has not passed.
     """
+    if not jurisdiction_codes:
+        logging.warning("No jurisdictions provided for processing. Skipping database query.")
+        return []
+
     if not db_manager._get_connection():
         return []
 
     cursor = db_manager.conn.cursor(dictionary=True)
     try:
-        jurisdiction_placeholders = ', '.join(['%s'] * len(jurisdiction_codes))
-        year_placeholders = ', '.join(['%s'] * len(years))
+        # --- MODIFIED: Dynamically build the WHERE clause ---
+        params = jurisdiction_codes[:]
+        where_clauses = [
+            "cr.status_content_download = 'pass'",
+            f"cr.jurisdiction_code IN ({', '.join(['%s'] * len(jurisdiction_codes))})"
+        ]
+
+        # Only add the year filter if the 'years' list is not empty
+        if years:
+            year_placeholders = ', '.join(['%s'] * len(years))
+            where_clauses.append(f"cr.{registry_config['column']} IN ({year_placeholders})")
+            params.extend(years)
+        
+        where_statement = " AND ".join(where_clauses)
+        # --- END OF MODIFICATION ---
         
         query = f"""
             SELECT 
@@ -40,9 +58,7 @@ def get_records_to_process(db_manager, registry_config, jurisdiction_codes, year
             LEFT JOIN 
                 caselaw_enrichment_status AS ces ON cr.source_id = ces.source_id
             WHERE 
-                cr.status_content_download = 'pass' 
-                AND cr.jurisdiction_code IN ({jurisdiction_placeholders}) 
-                AND cr.{registry_config['column']} IN ({year_placeholders})
+                {where_statement}
                 AND (
                     ces.source_id IS NULL 
                     OR ces.status_metadataextract_rulebased != 'pass' 
@@ -50,10 +66,11 @@ def get_records_to_process(db_manager, registry_config, jurisdiction_codes, year
                 )
         """
         
-        params = jurisdiction_codes + years
         cursor.execute(query, params)
         records = cursor.fetchall()
-        logging.info(f"Found {len(records)} records to process for jurisdictions {jurisdiction_codes} and years {years}.")
+        
+        year_log_message = f"and years {years}" if years else "for all years"
+        logging.info(f"Found {len(records)} records to process for jurisdictions {jurisdiction_codes} {year_log_message}.")
         return records
     except mysql.connector.Error as err:
         logging.error(f"Failed to query registry table: {err}")
@@ -63,7 +80,7 @@ def get_records_to_process(db_manager, registry_config, jurisdiction_codes, year
         db_manager.close_connection()
 
 
-def process_record(record, config, field_mapping, db_columns, use_ai_extraction, prompt_content):
+def process_record(record, config, field_mapping, db_columns, use_ai_extraction, prompt_content, ai_provider):
     """
     Processes a single case law record, running rule-based and/or AI extraction
     based on the record's current status and logging individual start/end times.
@@ -83,9 +100,9 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
     ai_start_time, ai_end_time = None, None
     rulebased_duration, ai_duration = 0.0, 0.0
 
-    # Token metrics
+    # Metrics
     input_tokens, output_tokens = 0, 0
-    input_price, output_price = 0.0, 0.0
+    total_price = 0.0
 
     needs_rulebased_processing = record.get('status_metadataextract_rulebased') != 'pass'
     needs_ai_processing = record.get('status_metadataextract_ai') != 'pass' and use_ai_extraction
@@ -110,11 +127,11 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
         db_manager = DatabaseManager(config.get('database'))
         fail_updates = {}
         if needs_rulebased_processing: 
-            fail_updates["status_metadataextract_rulebased"] = 'fail'
+            fail_updates["status_metadataextract_rulebased"] = 'failed'
             fail_updates["start_time_metadataextract_rulebased"] = overall_start_time
             fail_updates["end_time_metadataextract_rulebased"] = datetime.now()
         if needs_ai_processing: 
-            fail_updates["status_metadataextract_ai"] = 'fail'
+            fail_updates["status_metadataextract_ai"] = 'failed'
             fail_updates["start_time_metadataextract_ai"] = overall_start_time
             fail_updates["end_time_metadataextract_ai"] = datetime.now()
         db_manager.update_enrichment_status(source_id, fail_updates)
@@ -134,10 +151,10 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
                 rulebased_status = 'pass'
                 logging.info("Rule-based extraction successful.")
             else:
-                rulebased_status = 'fail'
+                rulebased_status = 'failed'
                 logging.warning("Rule-based extraction yielded no metadata.")
         except Exception as e:
-            rulebased_status = 'fail'
+            rulebased_status = 'failed'
             logging.error(f"Rule-based extraction error: {e}")
         finally:
             rulebased_end_time = datetime.now()
@@ -145,18 +162,31 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
 
     # --- Step 2: AI-based extraction ---
     if needs_ai_processing:
-        logging.info(f"Running AI extraction for {source_id}")
+        logging.info(f"Running AI extraction for {source_id} using provider: {ai_provider}")
         ai_start_time = datetime.now()
-        try:
-            gemini_config = config.get('models', 'gemini')
-            gemini_client = GeminiClient(model_name=gemini_config['model'])
-            raw_json, input_tokens, output_tokens = gemini_client.generate_json_from_text(prompt_content, html_content)
-            
-            pricing = gemini_config.get('pricing', {})
-            input_price = (input_tokens / 1_000_000) * pricing.get('input_per_million', 0.0)
-            output_price = (output_tokens / 1_000_000) * pricing.get('output_per_million', 0.0)
+        ai_client = None
+        raw_json = None
+        is_valid = False
 
-            if gemini_client.is_valid_json(raw_json):
+        try:
+            if ai_provider == 'gemini':
+                gemini_config = config.get('models', 'gemini')
+                ai_client = GeminiClient(model_name=gemini_config['model'])
+                raw_json, input_tokens, output_tokens = ai_client.generate_json_from_text(prompt_content, html_content)
+                
+                pricing = gemini_config.get('pricing', {})
+                input_price = (input_tokens / 1_000_000) * pricing.get('input_per_million', 0.0)
+                output_price = (output_tokens / 1_000_000) * pricing.get('output_per_million', 0.0)
+                total_price = input_price + output_price
+                is_valid = ai_client.is_valid_json(raw_json)
+
+            elif ai_provider == 'huggingface':
+                hf_config = config.get('models', 'huggingface')
+                ai_client = LlamaClient(model_name=hf_config['model'], base_url=hf_config['base_url'])
+                raw_json = ai_client.generate_json_from_text(prompt_content, html_content)
+                is_valid = ai_client.is_valid_json(raw_json)
+            
+            if is_valid:
                 ai_data = json.loads(raw_json).get("filter_tags", {})
                 if ai_data:
                     ai_status = 'pass'
@@ -167,17 +197,21 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
                         if not metadata.get(key) and value:
                             metadata[key] = value
                 else:
-                    ai_status = 'fail'
+                    ai_status = 'failed'
                     logging.warning("AI response missing 'filter_tags'.")
             else:
-                ai_status = 'fail'
+                ai_status = 'failed'
                 logging.error("AI response was not valid JSON.")
         except Exception as e:
-            ai_status = 'fail'
+            ai_status = 'failed'
             logging.error(f"AI extraction error: {e}")
         finally:
             ai_end_time = datetime.now()
             ai_duration = (ai_end_time - ai_start_time).total_seconds()
+            if ai_provider == 'huggingface' and ai_status == 'pass':
+                hf_config = config.get('models', 'huggingface')
+                hourly_rate = hf_config.get('pricing', {}).get('perhour', 0.0)
+                total_price = (ai_duration / 3600) * hourly_rate
 
     # --- Step 3: Database Operations ---
     db_manager = DatabaseManager(config.get('database'))
@@ -194,20 +228,21 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
 
         # Populate the status update dictionary based on which steps were run
         if needs_rulebased_processing:
-            status_updates["status_metadataextract_rulebased"] = 'pass' if rulebased_status == 'pass' and db_ops_successful else 'fail'
+            status_updates["status_metadataextract_rulebased"] = 'pass' if rulebased_status == 'pass' and db_ops_successful else 'failed'
             status_updates["duration_metadataextract_rulebased"] = rulebased_duration
             status_updates["start_time_metadataextract_rulebased"] = rulebased_start_time
             status_updates["end_time_metadataextract_rulebased"] = rulebased_end_time
         
         if needs_ai_processing:
-            status_updates["status_metadataextract_ai"] = 'pass' if ai_status == 'pass' and db_ops_successful else 'fail'
+            status_updates["status_metadataextract_ai"] = 'pass' if ai_status == 'pass' and db_ops_successful else 'failed'
             status_updates["duration_metadataextract_ai"] = ai_duration
             status_updates["start_time_metadataextract_ai"] = ai_start_time
             status_updates["end_time_metadataextract_ai"] = ai_end_time
             status_updates["token_input_metadataextract_ai"] = input_tokens
             status_updates["token_output_metadataextract_ai"] = output_tokens
-            status_updates["token_input_price_metadataextract_ai"] = input_price
-            status_updates["token_output_price_metadataextract_ai"] = output_price
+            # Store the calculated total price in one column and zero out the other for consistency
+            status_updates["token_input_price_metadataextract_ai"] = total_price
+            status_updates["token_output_price_metadataextract_ai"] = 0.0
         
         if status_updates:
             db_manager.update_enrichment_status(source_id, status_updates)
@@ -239,10 +274,28 @@ def main():
             
         use_ai_extraction = rulebased_on and ai_on
         
+        # Determine which AI provider to use based on the config
+        ai_provider = None
         if use_ai_extraction:
-            logging.info("Configuration loaded. Rule-based and AI extraction are enabled.")
+            ai_model_name = config.get('ai_service_provider')
+            if config.get('models', 'gemini', 'model') == ai_model_name:
+                ai_provider = 'gemini'
+                logging.info(f"AI Service Provider configured: Gemini (model: {ai_model_name})")
+            elif config.get('models', 'huggingface', 'model') == ai_model_name:
+                ai_provider = 'huggingface'
+                logging.info(f"AI Service Provider configured: Hugging Face (model: {ai_model_name})")
+            else:
+                logging.warning(f"AI service provider '{ai_model_name}' not found in model configurations. AI extraction will be skipped.")
+                use_ai_extraction = False
+        
+        if not ai_provider and ai_on:
+            use_ai_extraction = False
+            logging.warning("AI extraction is on, but no valid provider was configured.")
+
+        if use_ai_extraction:
+            logging.info("Rule-based and AI extraction are enabled.")
         else:
-            logging.info("Configuration loaded. Only rule-based extraction is enabled.")
+            logging.info("Only rule-based extraction is enabled.")
 
     except (FileNotFoundError, ValueError) as e:
         logging.error(f"Failed to load configuration: {e}")
@@ -264,17 +317,10 @@ def main():
     jurisdiction_codes = [s3_config['jurisdiction_code'] for s3_config in config.get('aws', 's3')]
     processing_years = config.get('tables_registry', 'processing_years')
 
-    caselaw_metadata_config = None
-    for table_config in config.get('tables', 'tables_to_write'):
-        if table_config.get('table') == 'caselaw_metadata':
-            caselaw_metadata_config = table_config
-            break
-    
-    if not caselaw_metadata_config:
-        logging.error("Could not find 'caselaw_metadata' configuration in config.yaml.")
+    db_columns = config.get('database', 'caselaw_metadata_columns')
+    if not db_columns:
+        logging.error("Could not find 'caselaw_metadata_columns' in config.yaml.")
         return
-
-    db_columns = list(caselaw_metadata_config['columns'].keys())
 
     field_mapping = {
         "Citation": "citation",
@@ -304,9 +350,10 @@ def main():
         return
 
     for record in records_to_process:
-        process_record(record, config, field_mapping, db_columns, use_ai_extraction, prompt_content)
+        process_record(record, config, field_mapping, db_columns, use_ai_extraction, prompt_content, ai_provider)
 
     logging.info("All records processed.")
 
 if __name__ == "__main__":
     main()
+

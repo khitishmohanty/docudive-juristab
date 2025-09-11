@@ -3,6 +3,10 @@ google_cloud:
     project_id: "silver-osprey-468906-b1"
     region: "us"
 
+# --- AI service provider ---
+# Set to 'gemini' or 'huggingface' to choose the AI model service
+ai_service_provider: "meta-llama/Llama-3.1-70B-Instruct"
+
 # -- AI model configuration --
 models:
     gemini:
@@ -11,7 +15,16 @@ models:
         pricing:
             input_per_million: 2.50
             output_per_million: 15.00
+    huggingface:
+        model: "meta-llama/Llama-3.1-70B-Instruct"
+        base_url: "https://router.huggingface.co/v1"
+        pricing:
+            perhour: 8
 
+extraction_switch:
+  rulebased_extract: true
+  AI_extract: true
+  
 # -- Database connection details --
 database:
     dialect: "mysql"
@@ -21,92 +34,78 @@ database:
     name: "legal_store"
     user: "${DB_USER}"
     password: "${DB_PASSWORD}"
+    # ADDED: List of columns for the caselaw_metadata table
+    caselaw_metadata_columns:
+        - "caseTitle"
+        - "caseSubtitle"
+        - "citation"
+        - "key_issues"
+        - "keywords"
+        - "presiding_officer"
+        - "panelist"
+        - "orders"
+        - "decision"
+        - "judgment_date"
+        - "cases_cited"
+        - "legislation_cited"
+        - "file_no"
+        - "hearing_dates"
+        - "matter_type"
+        - "parties"
+        - "category"
+        - "bjs_number"
+        - "court_type"
+        - "counsel"
+        - "law_firm_agency"
+        - "hearing_location"
+        - "incident_date"
+        - "affected_sectors"
+        - "practice_areas"
+        - "representation"
 
 # -- AWS connection details --
 aws:
     default_region: "ap-southeast-2"
     s3:
       - bucket_name: "legal-store"
-        s3_dest_folder: "case-laws/nt/"
-        jurisdiction_code: "NT"
-      - bucket_name: "legal-store"
-        s3_dest_folder: "case-laws/act/"
-        jurisdiction_code: "ACT"
-      - bucket_name: "legal-store"
-        s3_dest_folder: "case-laws/qld/"
-        jurisdiction_code: "QLD"
-      - bucket_name: "legal-store"
-        s3_dest_folder: "case-laws/sa/"
-        jurisdiction_code: "SA"
-      - bucket_name: "legal-store"
-        s3_dest_folder: "case-laws/tas/"
-        jurisdiction_code: "TAS"
+        s3_dest_folder: "case-laws/nsw/"
+        jurisdiction_code: "NSW"
       - bucket_name: "legal-store"
         s3_dest_folder: "case-laws/vic/"
         jurisdiction_code: "VIC"
       - bucket_name: "legal-store"
+        s3_dest_folder: "case-laws/qld/"
+        jurisdiction_code: "QLD"
+      - bucket_name: "legal-store"
+        s3_dest_folder: "case-laws/act/"
+        jurisdiction_code: "ACT"
+      - bucket_name: "legal-store"
+        s3_dest_folder: "case-laws/nt/"
+        jurisdiction_code: "NT"
+      - bucket_name: "legal-store"
+        s3_dest_folder: "case-laws/sa/"
+        jurisdiction_code: "SA"
+      - bucket_name: "legal-store"
         s3_dest_folder: "case-laws/wa/"
         jurisdiction_code: "WA"
       - bucket_name: "legal-store"
-        s3_dest_folder: "case-laws/nsw/"
-        jurisdiction_code: "NSW"
-      - bucket_name: "legal-store"
         s3_dest_folder: "case-laws/commonwealth/"
         jurisdiction_code: "FED"
-    # Credentials are now loaded from the .env file
-    access_key_id: "${AWS_ACCESS_KEY_ID}"
-    secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
-    
-# List of tables to be read by the connector
+      - bucket_name: "legal-store"
+        s3_dest_folder: "case-laws/tas/"
+        jurisdiction_code: "TAS"
+
+# -- Table column mapping --
 tables:
-  tables_to_read:
-    - database: legal_store
-      table: caselaw_registry
-      
-  tables_to_write:
     - database: legal_store
       table: caselaw_enrichment_status
       columns:
-        processing_status_ai: "status_metadataextract_ai"
-        processing_duration_ai: "duration_metadataextract_ai"
-        processing_status_rulebased: "status_metadataextract_rulebased"
-        processing_duration_rulebased: "duration_metadataextract_rulebased"
-        start_time_ai: "start_time_metadataextract_ai"
-        end_time_ai: "end_time_metadataextract_ai"
-        start_time_rulebased: "start_time_metadataextract_rulebased"
-        end_time_rulebased: "end_time_metadataextract_rulebased"
-        token_input: "token_input_metadataextract_ai"
-        token_output: "token_output_metadataextract_ai"
+        status_metadataextract_rulebased: "status_metadataextract_rulebased"
+        status_metadataextract_ai: "status_metadataextract_ai"
+        token_input_count: "token_input_count_metadataextract_ai"
+        token_output_count: "token_output_count_metadataextract_ai"
         token_input_price: "token_input_price_metadataextract_ai"
         token_output_price: "token_output_price_metadataextract_ai"
-
-    - database: legal_store
-      table: caselaw_metadata
-      columns:
-        citation: "citation"
-        key_issues: "key_issues"
-        keywords: "keywords"
-        presiding_officer: "presiding_officer"
-        panelist: "panelist"
-        orders: "orders"
-        decision: "decision"
-        judgment_date: "judgment_date"
-        cases_cited: "cases_cited"
-        legislation_cited: "legislation_cited"
-        file_no: "file_no"
-        hearing_dates: "hearing_dates"
-        matter_type: "matter_type"
-        parties: "parties"
-        category: "category"
-        bjs_number: "bjs_number"
-        court_type: "court_type"
-        counsel: "counsel"
-        law_firm_agency: "law_firm_agency"
-        hearing_location: "hearing_location"
-        incident_date: "incident_date"
-        affected_sectors: "affected_sectors"
-        practice_areas: "practice_areas"
-        representation: "representation"
 
     - database: legal_store
       table: mapping_counsel_firm
@@ -116,7 +115,7 @@ tables:
 
 # -- File to process --
 enrichment_filenames:
-  source_file: "summary.html"
+  source_file: "miniviewer.txt"
   jurismetadata_json: "jurismetadata.json"
 
 # -- Registry details
@@ -124,9 +123,5 @@ tables_registry:
     database: "legal_store"
     table: "caselaw_registry"
     column: "year"
-    processing_years: [2025,2024]
+    processing_years: []
 
-# -- Extraction switch
-extraction_switch:
-    rulebased_extract: True
-    AI_extract: True

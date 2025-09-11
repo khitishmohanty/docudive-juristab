@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class MetadataExtractor:
     """
-    Extracts structured metadata from an HTML case law summary file.
+    Extracts structured metadata from a plain text or HTML case law summary file.
     """
     def __init__(self, field_mapping):
         # Mapping from HTML table label to database column name
@@ -41,7 +41,8 @@ class MetadataExtractor:
         final_mappings = []
         counsel_name = None
         
-        representation_lines = [self._clean_text(line) for line in representation_text.split('<br>') if self._clean_text(line)]
+        # Split by newline for text files
+        representation_lines = [self._clean_text(line) for line in representation_text.splitlines() if self._clean_text(line)]
 
         for line in representation_lines:
             if 'For the ' in line or 'Self-represented' in line:
@@ -67,52 +68,58 @@ class MetadataExtractor:
         return final_mappings
 
 
-    def extract_from_html(self, html_content):
+    def extract_from_html(self, file_content):
         """
-        Parses the HTML content to extract case law metadata.
+        MODIFIED: This function now handles plain text extraction. The name is kept
+        for compatibility with the calling function in main.py.
 
         Args:
-            html_content (str): The raw HTML content of the summary file.
+            file_content (str): The raw text content of the summary file.
 
         Returns:
             tuple: A tuple containing a dictionary of metadata and a list of
                    counsel/firm mappings. Returns (None, None) on failure.
         """
         try:
-            soup = BeautifulSoup(html_content, 'html.parser')
             metadata = {}
             counsel_firm_mappings = []
             
-            metadata_table = soup.find('table', class_='metadata')
-            if not metadata_table:
-                logging.warning("Could not find the metadata table.")
-                return None, None
+            # Create a regex pattern from the field mapping keys to find all matches
+            # e.g., (Citation|Key issues|Catchwords|...):
+            pattern = re.compile(r'(' + '|'.join(re.escape(key) for key in self.field_mapping.keys()) + r'):\s*(.*)', re.IGNORECASE)
+            
+            lines = file_content.splitlines()
+            
+            # Use a lookahead to find the content between two field labels
+            for i, line in enumerate(lines):
+                match = pattern.match(line)
+                if match:
+                    label = match.group(1).strip()
+                    # Find the correctly cased label from the mapping
+                    found_label = next((k for k in self.field_mapping if k.lower() == label.lower()), None)
 
-            for row in metadata_table.find_all('tr'):
-                cells = row.find_all('td')
-                if len(cells) == 2:
-                    label_cell = cells[0]
-                    value_cell = cells[1]
-
-                    label = self._clean_text(label_cell.get_text())
-                    value = self._clean_text(value_cell.get_text())
-                    
-                    # Only add the field if its value is not empty or a placeholder.
-                    # This allows the AI to correctly fill in the gaps later.
-                    if value and label in self.field_mapping:
-                        db_column = self.field_mapping[label]
+                    if found_label:
+                        # Value starts on the same line and can continue on subsequent lines
+                        value_lines = [match.group(2).strip()]
                         
-                        if db_column == 'presiding_officer' and 'presiding_officer' in metadata:
-                            metadata[db_column] = value
-                        else:
-                            metadata[db_column] = value
-                    
-                    if label == "Representation":
-                        counsel_firm_mappings = self._extract_counsel_firm_mapping(value_cell.get_text('<br>'))
+                        # Look at the next lines until we find another label or the end of the file
+                        for next_line in lines[i+1:]:
+                            if pattern.match(next_line):
+                                break # Stop when we hit the next known label
+                            value_lines.append(next_line.strip())
+                        
+                        full_value = self._clean_text("\n".join(value_lines).strip())
 
-            logging.info("Successfully extracted metadata from HTML.")
+                        if full_value:
+                            db_column = self.field_mapping[found_label]
+                            metadata[db_column] = full_value
+                            
+                            if found_label == "Representation":
+                                counsel_firm_mappings = self._extract_counsel_firm_mapping(full_value)
+
+            logging.info("Successfully extracted metadata from text file.")
             return metadata, counsel_firm_mappings
 
         except Exception as e:
-            logging.error(f"An error occurred during HTML extraction: {e}")
+            logging.error(f"An error occurred during text extraction: {e}")
             return None, None
