@@ -115,7 +115,8 @@ tables:
 
 # -- File to process --
 enrichment_filenames:
-  source_file: "miniviewer.txt"
+  source_file_ai: "miniviewer.txt"
+  source_file_rulebased: "summary.html"
   jurismetadata_json: "jurismetadata.json"
 
 # -- Registry details

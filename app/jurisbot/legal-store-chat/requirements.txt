@@ -1,8 +1,4 @@
 dash
 dash-bootstrap-components
-requests
-google-auth
+openai
 gunicorn
-python-dotenv
-boto3
-PyYAML

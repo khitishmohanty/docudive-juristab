@@ -70,11 +70,10 @@ class MetadataExtractor:
 
     def extract_from_html(self, file_content):
         """
-        MODIFIED: This function now handles plain text extraction. The name is kept
-        for compatibility with the calling function in main.py.
+        MODIFIED: This function now properly extracts data from an HTML table structure.
 
         Args:
-            file_content (str): The raw text content of the summary file.
+            file_content (str): The raw HTML content of the summary file.
 
         Returns:
             tuple: A tuple containing a dictionary of metadata and a list of
@@ -83,43 +82,36 @@ class MetadataExtractor:
         try:
             metadata = {}
             counsel_firm_mappings = []
+            soup = BeautifulSoup(file_content, 'html.parser')
             
-            # Create a regex pattern from the field mapping keys to find all matches
-            # e.g., (Citation|Key issues|Catchwords|...):
-            pattern = re.compile(r'(' + '|'.join(re.escape(key) for key in self.field_mapping.keys()) + r'):\s*(.*)', re.IGNORECASE)
+            # Find the metadata table and iterate through its rows
+            table = soup.find('table', class_='metadata')
+            if not table:
+                logging.warning("Could not find a table with class='metadata' in the HTML content.")
+                return None, None
             
-            lines = file_content.splitlines()
-            
-            # Use a lookahead to find the content between two field labels
-            for i, line in enumerate(lines):
-                match = pattern.match(line)
-                if match:
-                    label = match.group(1).strip()
-                    # Find the correctly cased label from the mapping
-                    found_label = next((k for k in self.field_mapping if k.lower() == label.lower()), None)
+            rows = table.find_all('tr')
 
-                    if found_label:
-                        # Value starts on the same line and can continue on subsequent lines
-                        value_lines = [match.group(2).strip()]
+            for row in rows:
+                cells = row.find_all('td')
+                if len(cells) == 2:
+                    # The first cell is the label, the second is the value
+                    label = self._clean_text(cells[0].get_text(strip=True))
+                    
+                    # The value might contain <br> tags, so we join text parts with newlines
+                    value = self._clean_text(cells[1].get_text(separator='\n', strip=True))
+
+                    if label and value and label in self.field_mapping:
+                        db_column = self.field_mapping[label]
+                        metadata[db_column] = value
                         
-                        # Look at the next lines until we find another label or the end of the file
-                        for next_line in lines[i+1:]:
-                            if pattern.match(next_line):
-                                break # Stop when we hit the next known label
-                            value_lines.append(next_line.strip())
-                        
-                        full_value = self._clean_text("\n".join(value_lines).strip())
+                        # If we find the "Representation" field, parse it for counsel details
+                        if label == "Representation":
+                            counsel_firm_mappings = self._extract_counsel_firm_mapping(value)
 
-                        if full_value:
-                            db_column = self.field_mapping[found_label]
-                            metadata[db_column] = full_value
-                            
-                            if found_label == "Representation":
-                                counsel_firm_mappings = self._extract_counsel_firm_mapping(full_value)
-
-            logging.info("Successfully extracted metadata from text file.")
+            logging.info("Successfully extracted metadata from HTML file.")
             return metadata, counsel_firm_mappings
 
         except Exception as e:
-            logging.error(f"An error occurred during text extraction: {e}")
+            logging.error(f"An error occurred during HTML extraction: {e}")
             return None, None

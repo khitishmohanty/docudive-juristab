@@ -114,37 +114,23 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
     # S3 setup
     aws_config = config.get('aws')
     s3_manager = S3Manager(region_name=aws_config['default_region'])
-    s3_file_key = get_full_s3_key(record['source_id'], record['jurisdiction_code'], config)
-    if not s3_file_key:
-        logging.error(f"Could not construct S3 file key for {source_id}. Skipping.")
-        return
     bucket_name = next((s3_cfg['bucket_name'] for s3_cfg in config.get('aws', 's3') if s3_cfg['jurisdiction_code'] == record['jurisdiction_code']), None)
-
-    try:
-        html_content = s3_manager.get_file_content(bucket_name, s3_file_key)
-    except Exception as e:
-        logging.error(f"Failed to download HTML file for {source_id}: {e}. Cannot proceed.")
-        db_manager = DatabaseManager(config.get('database'))
-        fail_updates = {}
-        if needs_rulebased_processing: 
-            fail_updates["status_metadataextract_rulebased"] = 'failed'
-            fail_updates["start_time_metadataextract_rulebased"] = overall_start_time
-            fail_updates["end_time_metadataextract_rulebased"] = datetime.now()
-        if needs_ai_processing: 
-            fail_updates["status_metadataextract_ai"] = 'failed'
-            fail_updates["start_time_metadataextract_ai"] = overall_start_time
-            fail_updates["end_time_metadataextract_ai"] = datetime.now()
-        db_manager.update_enrichment_status(source_id, fail_updates)
-        db_manager.close_connection()
-        return
 
     # --- Step 1: Rule-based extraction ---
     if needs_rulebased_processing:
         logging.info(f"Running rule-based extraction for {source_id}")
         rulebased_start_time = datetime.now()
         try:
+            # Fetch the HTML file for rule-based extraction
+            s3_file_key_rulebased = get_full_s3_key(source_id, record['jurisdiction_code'], config, 'rulebased')
+            if not s3_file_key_rulebased:
+                 raise FileNotFoundError("Could not construct S3 key for rule-based file.")
+            
+            html_content = s3_manager.get_file_content(bucket_name, s3_file_key_rulebased)
+            
             extractor = MetadataExtractor(field_mapping=field_mapping)
             extracted_meta, extracted_mappings = extractor.extract_from_html(html_content)
+            
             if extracted_meta:
                 metadata.update(extracted_meta)
                 counsel_firm_mappings.extend(extracted_mappings)
@@ -169,10 +155,17 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
         is_valid = False
 
         try:
+            # Fetch the text file for AI extraction
+            s3_file_key_ai = get_full_s3_key(source_id, record['jurisdiction_code'], config, 'ai')
+            if not s3_file_key_ai:
+                 raise FileNotFoundError("Could not construct S3 key for AI file.")
+            
+            text_content = s3_manager.get_file_content(bucket_name, s3_file_key_ai)
+
             if ai_provider == 'gemini':
                 gemini_config = config.get('models', 'gemini')
                 ai_client = GeminiClient(model_name=gemini_config['model'])
-                raw_json, input_tokens, output_tokens = ai_client.generate_json_from_text(prompt_content, html_content)
+                raw_json, input_tokens, output_tokens = ai_client.generate_json_from_text(prompt_content, text_content)
                 
                 pricing = gemini_config.get('pricing', {})
                 input_price = (input_tokens / 1_000_000) * pricing.get('input_per_million', 0.0)
@@ -183,7 +176,7 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
             elif ai_provider == 'huggingface':
                 hf_config = config.get('models', 'huggingface')
                 ai_client = LlamaClient(model_name=hf_config['model'], base_url=hf_config['base_url'])
-                raw_json = ai_client.generate_json_from_text(prompt_content, html_content)
+                raw_json = ai_client.generate_json_from_text(prompt_content, text_content)
                 is_valid = ai_client.is_valid_json(raw_json)
             
             if is_valid:
@@ -191,7 +184,7 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
                 if ai_data:
                     ai_status = 'pass'
                     json_filename = config.get('enrichment_filenames', 'jurismetadata_json')
-                    json_s3_key = os.path.join(os.path.dirname(s3_file_key), json_filename)
+                    json_s3_key = os.path.join(os.path.dirname(s3_file_key_ai), json_filename) # Use AI key for path
                     s3_manager.save_json_file(bucket_name, json_s3_key, raw_json)
                     for key, value in ai_data.items():
                         if not metadata.get(key) and value:
@@ -212,8 +205,9 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
                 hf_config = config.get('models', 'huggingface')
                 hourly_rate = hf_config.get('pricing', {}).get('perhour', 0.0)
                 total_price = (ai_duration / 3600) * hourly_rate
-
+    
     # --- Step 3: Database Operations ---
+    # This part of the function remains the same as before
     db_manager = DatabaseManager(config.get('database'))
     try:
         if metadata:
@@ -240,7 +234,6 @@ def process_record(record, config, field_mapping, db_columns, use_ai_extraction,
             status_updates["end_time_metadataextract_ai"] = ai_end_time
             status_updates["token_input_metadataextract_ai"] = input_tokens
             status_updates["token_output_metadataextract_ai"] = output_tokens
-            # Store the calculated total price in one column and zero out the other for consistency
             status_updates["token_input_price_metadataextract_ai"] = total_price
             status_updates["token_output_price_metadataextract_ai"] = 0.0
         
