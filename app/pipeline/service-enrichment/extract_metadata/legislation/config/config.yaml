@@ -104,7 +104,7 @@ tables_registry:
     database: "legal_store"
     table: "legislation_registry"
     column: "year"
-    processing_years: [2025,2024,2023,2022,2021,2020]
+    processing_years: []
 
 # -- Extraction process switches --
 extraction_switch:
