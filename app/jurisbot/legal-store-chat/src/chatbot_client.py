@@ -1,21 +1,25 @@
+# src/chatbot_client.py
+
 import os
 from openai import OpenAI
 
-# It's better practice to load your API key from an environment variable.
-# For this example, I'm using the one you provided in the sample.
-# In a real application, you would use: os.environ.get("HUGGINGFACE_API_KEY")
-# You can set this as an environment variable where you deploy your application.
-API_KEY = "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" 
+# Load the API key from an environment variable named 'HF_API_KEY'
+API_KEY = os.environ.get("HF_API_KEY")
 
 # Initialize the client to connect to the Hugging Face Inference API
-try:
-    client = OpenAI(
-        base_url="https://router.huggingface.co/v1",
-        api_key=API_KEY,
-    )
-except Exception as e:
-    print(f"Error initializing OpenAI client: {e}")
-    client = None
+client = None
+if API_KEY:
+    try:
+        client = OpenAI(
+            base_url="https://router.huggingface.co/v1",
+            api_key=API_KEY,
+        )
+    except Exception as e:
+        print(f"Error initializing OpenAI client: {e}")
+else:
+    # This message will be printed in your server logs if the key isn't set
+    print("ERROR: The 'HF_API_KEY' environment variable is not set.")
+
 
 def get_chatbot_response(question: str, history: list):
     """
@@ -30,7 +34,7 @@ def get_chatbot_response(question: str, history: list):
         str: The chatbot's text response.
     """
     if not client:
-        return "Sorry, the chatbot service is not configured correctly. The API client failed to initialize."
+        return "Sorry, the chatbot service is not configured correctly. The API key may be missing."
         
     # Each interaction consists of a user message and an assistant message.
     # To get the last 2 interactions, we need the last 4 messages.

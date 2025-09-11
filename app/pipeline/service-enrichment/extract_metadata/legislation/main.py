@@ -23,36 +23,51 @@ def get_records_to_process(db_manager, registry_config, jurisdiction_codes, year
 
     cursor = db_manager.conn.cursor(dictionary=True)
     try:
-        jurisdiction_placeholders = ', '.join(['%s'] * len(jurisdiction_codes))
-        year_placeholders = ', '.join(['%s'] * len(years))
-        
+        # Base query
         query = f"""
             SELECT 
                 lr.source_id, 
                 lr.file_path, 
                 lr.jurisdiction_code, 
                 lr.status_content_download,
-                -- Use 'not started' as the default status if no record exists
                 COALESCE(les.status_metadataextract_ai, 'not started') AS status_metadataextract_ai
             FROM 
                 legislation_registry AS lr
             LEFT JOIN 
                 legislation_enrichment_status AS les ON lr.source_id = les.source_id
             WHERE 
-                lr.status_content_download = 'pass' 
-                AND lr.jurisdiction_code IN ({jurisdiction_placeholders}) 
-                AND lr.{registry_config['column']} IN ({year_placeholders})
-                AND (
-                    les.source_id IS NULL 
-                    -- Only pick up records that are not started or have failed
-                    OR les.status_metadataextract_ai IN ('not started', 'failed')
-                )
+                lr.status_content_download = 'pass'
         """
         
-        params = jurisdiction_codes + years
+        params = []
+        
+        # Add jurisdiction filter if codes are provided
+        if jurisdiction_codes:
+            jurisdiction_placeholders = ', '.join(['%s'] * len(jurisdiction_codes))
+            query += f" AND lr.jurisdiction_code IN ({jurisdiction_placeholders})"
+            params.extend(jurisdiction_codes)
+            
+        # Conditionally add the year filter only if the years list is not empty
+        if years:
+            year_placeholders = ', '.join(['%s'] * len(years))
+            query += f" AND lr.{registry_config['column']} IN ({year_placeholders})"
+            params.extend(years)
+            
+        # Add the final status filter
+        query += """
+            AND (
+                les.source_id IS NULL 
+                OR les.status_metadataextract_ai IN ('not started', 'failed')
+            )
+        """
+        
         cursor.execute(query, params)
         records = cursor.fetchall()
-        logging.info(f"Found {len(records)} records to process for jurisdictions {jurisdiction_codes} and years {years}.")
+        
+        # Construct a log message that adapts to whether years are being filtered
+        year_log_message = f"and years {years}" if years else "for all years"
+        logging.info(f"Found {len(records)} records to process for jurisdictions {jurisdiction_codes} {year_log_message}.")
+        
         return records
     except mysql.connector.Error as err:
         logging.error(f"Failed to query registry table: {err}")
